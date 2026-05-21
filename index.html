@@ -662,13 +662,17 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     document.getElementById('timerDisplay').textContent = '时间到！';
-                    // 自动跳到下一题
+                    // 自动跳到下一题，检查答案是否正确
                     setTimeout(() => {
+                        const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+                        const correctAnswer = selectedWords[currentIndex].toLowerCase();
+                        const isCorrect = userAnswer === correctAnswer;
+                        
                         results.push({
                             word: selectedWords[currentIndex],
-                            userAnswer: document.getElementById('answerInput').value.trim() || '(未作答)',
-                            isCorrect: false,
-                            skipped: true
+                            userAnswer: userAnswer || '(未作答)',
+                            isCorrect: isCorrect,
+                            skipped: userAnswer === ''
                         });
                         nextQuestion();
                     }, 800);
