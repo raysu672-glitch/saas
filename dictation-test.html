@@ -672,7 +672,7 @@
                             word: selectedWords[currentIndex],
                             userAnswer: userAnswer || '(未作答)',
                             isCorrect: isCorrect,
-                            skipped: !isCorrect && userAnswer !== ''
+                            skipped: userAnswer === ''
                         });
                         nextQuestion();
                     }, 800);
