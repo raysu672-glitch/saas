@@ -3,822 +3,982 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英语听写测试 - 2400词词表</title>
+    <title>藕叶英语 - 学习追踪系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 900px; margin: 0 auto; }
         .card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             padding: 40px;
             margin-bottom: 20px;
         }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .start-screen {
-            text-align: center;
-        }
-
-        .info-box {
-            background: #f8f9fa;
+        h1 { text-align: center; color: #333; margin-bottom: 10px; font-size: 1.8rem; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+        .logo { text-align: center; font-size: 2.5rem; margin-bottom: 10px; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid #e9ecef;
             border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
+            transition: border-color 0.3s;
         }
-
-        .info-box h3 {
-            color: #667eea;
-            margin-bottom: 10px;
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
         }
-
-        .info-box ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .info-box li {
-            padding: 8px 0;
-            color: #555;
-            display: flex;
-            align-items: center;
-        }
-
-        .info-box li::before {
-            content: "✓";
-            color: #667eea;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
+        
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
+            padding: 12px 30px;
+            font-size: 1rem;
             border-radius: 50px;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
             display: inline-block;
-            text-decoration: none;
         }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .btn-success:hover {
-            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
-        }
-
-        /* Test Screen */
-        .test-screen {
-            display: none;
-        }
-
-        .progress-bar {
-            background: #e9ecef;
-            border-radius: 10px;
-            height: 10px;
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100%;
-            transition: width 0.3s;
-            border-radius: 10px;
-        }
-
-        .question-counter {
-            text-align: center;
-            color: #667eea;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-
-        .status-icon {
-            text-align: center;
-            margin: 30px 0;
-            font-size: 4rem;
-        }
-
-        .status-icon.playing {
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .timer-display {
-            text-align: center;
-            font-size: 2rem;
-            color: #667eea;
-            margin: 20px 0;
-        }
-
-        .timer-display.warning {
-            color: #dc3545;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .input-group {
-            margin: 30px 0;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 10px;
-            color: #333;
-            font-size: 1.1rem;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 1.3rem;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            transition: border-color 0.3s;
-            text-align: center;
-            text-transform: lowercase;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .input-group input.correct {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-
-        .input-group input.incorrect {
-            border-color: #dc3545;
-            background: #f8d7da;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        /* Results Screen */
-        .results-screen {
-            display: none;
-            text-align: center;
-        }
-
-        .score-display {
-            font-size: 5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 20px 0;
-        }
-
-        .score-label {
-            font-size: 1.5rem;
-            color: #666;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .stat-box {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            color: #666;
-            margin-top: 5px;
-        }
-
-        .stat-box.correct .stat-value {
-            color: #28a745;
-        }
-
-        .stat-box.incorrect .stat-value {
-            color: #dc3545;
-        }
-
-        .error-list {
-            text-align: left;
-            margin: 30px 0;
-        }
-
-        .error-list h3 {
-            color: #dc3545;
-            margin-bottom: 15px;
-        }
-
-        .error-item {
-            background: #fff3cd;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .error-item .word {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .error-item .your-answer {
-            color: #dc3545;
-        }
-
-        .error-item .correct-answer {
-            color: #28a745;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 600px) {
-            .card {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.4); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: #6c757d; }
+        .btn-success { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .btn-danger { background: #dc3545; }
+        .btn-sm { padding: 8px 16px; font-size: 0.9rem; }
+        
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* 教师端样式 */
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .admin-header h2 { color: #667eea; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e9ecef; }
+        th { background: #f8f9fa; color: #667eea; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+        
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        
+        .pass-status { font-size: 1.2rem; padding: 15px; border-radius: 10px; text-align: center; margin: 15px 0; }
+        .pass-status.pass { background: #d4edda; color: #155724; }
+        .pass-status.fail { background: #f8d7da; color: #721c24; }
+        
+        .progress-bar { background: #e9ecef; border-radius: 10px; height: 10px; margin: 15px 0; overflow: hidden; }
+        .progress-fill { background: linear-gradient(135deg, #667eea, #764ba2); height: 100%; transition: width 0.3s; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-box { background: #f8f9fa; border-radius: 10px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; font-size: 0.9rem; margin-top: 5px; }
+        
+        .error-list { max-height: 300px; overflow-y: auto; margin-top: 15px; }
+        .error-item { background: #fff3cd; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e9ecef; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab.active { border-bottom-color: #667eea; color: #667eea; font-weight: 600; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 50px; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+        .toast.show { opacity: 1; }
+        .toast.error { background: #dc3545; }
+        .toast.success { background: #28a745; }
+        
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .loading::after { content: '...'; animation: dots 1.5s infinite; }
+        @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+        
+        .history-chart { height: 200px; margin: 20px 0; }
+        
+        @media (max-width: 768px) {
+            .card { padding: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            table { font-size: 0.85rem; }
+            th, td { padding: 8px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Start Screen -->
-        <div class="card start-screen" id="startScreen">
-            <h1>🎧 英语听写测试</h1>
-            <p class="subtitle">2400词词表随机练习</p>
-
-            <div class="info-box">
-                <h3>📋 测试说明</h3>
-                <ul>
-                    <li>系统将随机抽取 <strong>50个单词</strong></li>
-                    <li>每个单词会播放<strong>一次</strong>英文发音</li>
-                    <li>你需要在输入框中<strong>拼写</strong>听到的单词</li>
-                    <li>点击"播放"按钮可<strong>重播</strong>发音</li>
-                    <li>提交后可查看成绩并<strong>下载错误列表</strong></li>
-                </ul>
+        <!-- Logo -->
+        <div class="logo">α 藕叶英语</div>
+        
+        <!-- 入口选择 -->
+        <div class="card screen active" id="entryScreen">
+            <h1>欢迎使用学习追踪系统</h1>
+            <p class="subtitle">选择你的身份进入</p>
+            <div class="btn-group">
+                <button class="btn" onclick="showScreen('studentLoginScreen')">👨‍🎓 学生入口</button>
+                <button class="btn btn-secondary" onclick="showScreen('teacherLoginScreen')">👨‍🏫 教师入口</button>
             </div>
-
-            <button class="btn" onclick="startTest()">开始测试</button>
         </div>
-
-        <!-- Test Screen -->
-        <div class="card test-screen" id="testScreen">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-
-            <div class="question-counter" id="questionCounter">第 1 / 50 题</div>
-
-            <div class="status-icon" id="statusIcon">🔊</div>
-
-            <div class="timer-display" id="timerDisplay">准备中...</div>
-
+        
+        <!-- 教师密码验证 -->
+        <div class="card screen" id="teacherLoginScreen">
+            <h1>👨‍🏫 教师登录</h1>
+            <p class="subtitle">请输入教师密码</p>
             <div class="input-group">
-                <label for="answerInput">请输入你听到的单词：</label>
-                <input type="text" id="answerInput" placeholder="输入单词..." autocomplete="off" onkeypress="handleKeyPress(event)">
+                <label>教师密码</label>
+                <input type="password" id="teacherPassword" placeholder="请输入密码" onkeypress="if(event.key==='Enter')verifyTeacherPassword()">
             </div>
-
-            <div class="action-buttons">
+            <div class="btn-group">
+                <button class="btn" onclick="verifyTeacherPassword()">确认</button>
+                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">返回</button>
+            </div>
+        </div>
+        
+        <!-- 学生登录 -->
+        <div class="card screen" id="studentLoginScreen">
+            <h1>👨‍🎓 学生登录</h1>
+            <div class="input-group">
+                <label>学号</label>
+                <input type="text" id="studentId" placeholder="请输入学号" onkeypress="if(event.key==='Enter')studentLogin()">
+            </div>
+            <div class="input-group">
+                <label>密码</label>
+                <input type="password" id="studentPassword" placeholder="请输入密码" onkeypress="if(event.key==='Enter')studentLogin()">
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="studentLogin()">登录</button>
+                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">返回</button>
+            </div>
+        </div>
+        
+        <!-- 教师后台 -->
+        <div class="card screen" id="teacherDashboard">
+            <div class="admin-header">
+                <h2>👨‍🏫 教师后台</h2>
+                <button class="btn btn-secondary btn-sm" onclick="teacherLogout()">退出</button>
+            </div>
+            
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchTeacherTab('students')">学生管理</div>
+                <div class="tab" onclick="switchTeacherTab('records')">测试记录</div>
+                <div class="tab" onclick="switchTeacherTab('standards')">达标标准</div>
+            </div>
+            
+            <!-- 学生管理 -->
+            <div id="tabStudents" class="tab-content">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                    <button class="btn btn-sm" onclick="showAddStudentModal()">+ 添加学生</button>
+                    <button class="btn btn-sm btn-secondary" onclick="showBatchImportModal()">批量导入</button>
+                    <button class="btn btn-sm btn-secondary" onclick="exportStudentsExcel()">导出学生名单</button>
+                    <button class="btn btn-sm btn-secondary" onclick="exportRecordsExcel()">导出测试记录</button>
+                </div>
+                <div id="studentsList"></div>
+            </div>
+            
+            <!-- 测试记录 -->
+            <div id="tabRecords" class="tab-content" style="display:none;">
+                <div class="input-group" style="max-width:300px;">
+                    <label>筛选学生</label>
+                    <select id="filterStudent" onchange="loadRecords()">
+                        <option value="">全部学生</option>
+                    </select>
+                </div>
+                <div id="recordsList"></div>
+            </div>
+            
+            <!-- 达标标准 -->
+            <div id="tabStandards" class="tab-content" style="display:none;">
+                <div id="standardsList"></div>
+            </div>
+        </div>
+        
+        <!-- 学生主页 -->
+        <div class="card screen" id="studentHome">
+            <div class="admin-header">
+                <div>
+                    <h2 id="studentWelcome">你好！</h2>
+                    <p style="color:#666; font-size:0.9rem;">目标分数：<span id="studentTargetScore">6.5</span> 分</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" onclick="showChangePasswordModal()">改密码</button>
+                    <button class="btn btn-secondary btn-sm" onclick="studentLogout()">退出</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="statTotalTests">0</div>
+                    <div class="stat-label">总测试次数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statPassRate">0%</div>
+                    <div class="stat-label">历史达标率</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statBestScore">0%</div>
+                    <div class="stat-label">最高正确率</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statWrongWords">0</div>
+                    <div class="stat-label">待复习错题</div>
+                </div>
+            </div>
+            
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchStudentTab('test')">开始测试</div>
+                <div class="tab" onclick="switchStudentTab('history')">历史记录</div>
+            </div>
+            
+            <!-- 测试选择 -->
+            <div id="studentTabTest">
+                <div style="text-align:center; padding:30px 0;">
+                    <h3 style="margin-bottom:20px;">🎧 听力2400词</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="startTest('random')">📋 随机测试</button>
+                        <button class="btn btn-success" onclick="startTest('wrong_words')">📝 错题测试</button>
+                    </div>
+                    <p style="color:#666; margin-top:15px; font-size:0.9rem;">目标分数 <span id="moduleTarget">6.5分</span>：达标线 <span id="moduleThreshold">80%</span></p>
+                </div>
+            </div>
+            
+            <!-- 历史记录 -->
+            <div id="studentTabHistory" style="display:none;">
+                <div class="history-chart" id="historyChart"></div>
+                <div id="studentHistoryList"></div>
+            </div>
+        </div>
+        
+        <!-- 测试页面 -->
+        <div class="card screen" id="testScreen">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="question-counter" id="questionCounter">第 1 / 50 题</div>
+            <div style="text-align:center;">
+                <span id="testModeLabel" style="background:#e9ecef; padding:5px 15px; border-radius:20px; font-size:0.9rem;">随机测试</span>
+            </div>
+            <div style="text-align:center; margin:20px 0;">
+                <div id="statusIcon" style="font-size:3rem;">🔊</div>
+                <div id="timerDisplay" style="font-size:1.5rem; color:#667eea;">准备中...</div>
+            </div>
+            <div class="input-group">
+                <label>请输入你听到的单词：</label>
+                <input type="text" id="answerInput" placeholder="输入单词..." autocomplete="off" onkeypress="if(event.key==='Enter')submitAnswer()">
+            </div>
+            <div class="btn-group">
                 <button class="btn btn-secondary" onclick="skipWord()">跳过</button>
                 <button class="btn" onclick="submitAnswer()">提交</button>
             </div>
         </div>
-
-        <!-- Results Screen -->
-        <div class="card results-screen" id="resultsScreen">
+        
+        <!-- 结果页面 -->
+        <div class="card screen" id="resultScreen">
             <h1>📊 测试完成！</h1>
-
-            <div class="score-display" id="scoreDisplay">0%</div>
-            <p class="score-label">正确率</p>
-
+            <div id="resultStudentInfo" style="text-align:center; color:#667eea; margin:10px 0;"></div>
+            <div id="resultPassStatus" class="pass-status"></div>
+            <div style="text-align:center;">
+                <div id="resultScore" style="font-size:4rem; font-weight:bold; background:linear-gradient(135deg,#667eea,#764ba2); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">0%</div>
+                <p style="color:#666;">正确率（达标线：<span id="resultThreshold">80%</span>）</p>
+            </div>
             <div class="stats-grid">
-                <div class="stat-box correct">
-                    <div class="stat-value" id="correctCount">0</div>
-                    <div class="stat-label">正确</div>
-                </div>
-                <div class="stat-box incorrect">
-                    <div class="stat-value" id="incorrectCount">0</div>
-                    <div class="stat-label">错误</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="skippedCount">0</div>
-                    <div class="stat-label">跳过</div>
-                </div>
+                <div class="stat-box"><div class="stat-value" id="resultCorrect">0</div><div class="stat-label">正确</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultIncorrect">0</div><div class="stat-label">错误</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultSkipped">0</div><div class="stat-label">跳过</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultWrongCount">0</div><div class="stat-label">新增错题</div></div>
             </div>
-
-            <div class="error-list" id="errorList">
-                <h3>❌ 错误/跳过单词</h3>
-                <div id="errorItems"></div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn" onclick="downloadResults()">📥 下载结果</button>
-                <button class="btn btn-success" onclick="restartTest()">🔄 再来一次</button>
+            <div id="resultErrorList"></div>
+            <div class="btn-group">
+                <button class="btn" onclick="downloadResult()">📥 下载结果</button>
+                <button class="btn btn-secondary" onclick="backToStudentHome()">返回主页</button>
             </div>
         </div>
     </div>
+    
+    <!-- 添加学生弹窗 -->
+    <div class="modal" id="addStudentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加学生</h3>
+                <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
+            </div>
+            <div class="input-group">
+                <label>姓名 *</label>
+                <input type="text" id="newStudentName" placeholder="请输入姓名">
+            </div>
+            <div class="input-group">
+                <label>目标分数 *</label>
+                <select id="newStudentTarget">
+                    <option value="6">6 分</option>
+                    <option value="6.5" selected>6.5 分</option>
+                    <option value="7">7 分</option>
+                </select>
+            </div>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:15px;">学号将自动生成，初始密码为 123456</p>
+            <div class="btn-group">
+                <button class="btn" onclick="addStudent()">添加</button>
+                <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量导入弹窗 -->
+    <div class="modal" id="batchImportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量导入学生</h3>
+                <button class="modal-close" onclick="closeModal('batchImportModal')">×</button>
+            </div>
+            <p style="margin-bottom:15px;">每行一个学生，格式：姓名,目标分数（可选，默认6.5）</p>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:10px;">示例：<br>张三<br>李四,6<br>王五,7</p>
+            <div class="input-group">
+                <label>学生列表</label>
+                <textarea id="batchStudentList" rows="10" placeholder="每行一个学生"></textarea>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="batchImportStudents()">导入</button>
+                <button class="btn btn-secondary" onclick="closeModal('batchImportModal')">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 修改密码弹窗 -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>修改密码</h3>
+                <button class="modal-close" onclick="closeModal('changePasswordModal')">×</button>
+            </div>
+            <div class="input-group">
+                <label>新密码</label>
+                <input type="password" id="newPassword" placeholder="请输入新密码">
+            </div>
+            <div class="input-group">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" placeholder="请再次输入新密码">
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="changePassword()">确认修改</button>
+                <button class="btn btn-secondary" onclick="closeModal('changePasswordModal')">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script>
-        // Word list (all 2400+ words from the vocabulary list)
-        const allWords = [
-            "brain", "booklet", "bridges", "social", "national", "rats", "marketing", "snakes", "round", "agency",
-            "insects", "children", "early", "cleaning", "cloud", "conference", "ants", "hospital", "open", "insurance",
-            "supermarket", "pencil", "normal", "medal", "illness", "pillow", "Arranging", "interviews", "pizza", "magazines",
-            "dinner", "clever", "bathrooms", "tickets", "accents", "save", "club", "end", "water", "fireworks",
-            "time", "glass", "goat", "rice", "hiking", "education", "against", "engineering", "orange", "pencils",
-            "welcome", "rules", "knees", "sister", "toys", "wait", "fitness", "citizen", "songs", "hat",
-            "watch", "packing", "communication", "winds", "colds", "tourists", "break", "blood", "bookshop", "teeth",
-            "balcony", "block", "birth", "beaches", "dark", "cooperation", "keyboard", "hunting", "company", "meals",
-            "address", "spelling", "wedding", "Northeast", "corners", "check", "cultures", "booking", "shirt", "crying",
-            "visitors", "grammar", "lunch", "ocean", "male", "gold", "rocks", "season", "tiger", "store",
-            "gender", "circles", "campus", "tower", "rubber", "stars", "discussion", "advertising", "central", "change",
-            "oven", "international", "reading", "recorders", "kite", "plants", "advertise", "Mold", "actors", "classification",
-            "rivers", "day", "legal", "dance", "lions", "map", "bike", "watering", "view", "sand",
-            "chain", "swimming", "technology", "sun hat", "protection", "sheep", "numbers", "organize", "outdoor", "difficult",
-            "India", "noisy", "quiet", "summer", "confidence", "price", "chocolate", "breakdown", "couple", "results",
-            "special", "scientific", "course", "fires", "worker", "files", "healthcare", "guard", "selfish", "greenfield",
-            "lines", "planner", "chemical", "aunt", "manager", "autumn", "chemist", "eyesight", "farmers", "fear",
-            "kitchen", "management", "lights", "information", "wild", "humans", "bikes", "location", "search", "relationships",
-            "feet", "gas", "messages", "choose", "sales", "bedroom", "pollution", "politics", "museum", "bill",
-            "cleaner", "choosing", "hungry", "bicycle", "salts", "skin", "leaders", "neck", "note", "noise",
-            "bones", "parks", "patience", "printer", "programs", "rope", "salt", "none", "backdoor", "artists",
-            "forests", "answer", "crops", "soft", "Internet", "mapping", "blue", "mountains", "outside", "mining",
-            "aging", "tests", "floodwater", "storm", "global", "healthy", "oldest", "personal", "math", "wide",
-            "lakes", "volcano", "grain", "harm", "driver", "pictures", "beginning", "financial", "calls", "products",
-            "guide", "notebook", "reporter", "salads", "pets", "engineers", "leg", "radio", "tires", "hotels",
-            "island", "furniture", "lighting", "market", "methods", "notes", "warm", "energy", "environmental", "factory",
-            "small", "emails", "bears", "flowers", "medicines", "housing", "income", "airports", "flat", "production",
-            "fruits", "eyedrops", "unsure", "trains", "milk", "villages", "workshop", "babies", "unhealthy", "tears",
-            "media", "gym", "friendship", "garage", "tutors", "feeding", "fans", "minerals", "Thursday", "problems",
-            "profits", "left", "band", "forecast", "weekend", "military", "shadow", "smooth", "foot", "still",
-            "unfair", "voices", "warning", "write", "family", "shipbuilding", "training", "unanswered", "frame", "customers",
-            "dangerous", "dry", "traveling", "lost", "design", "footprints", "games", "hard", "images", "improvement",
-            "king", "lab", "monkeys", "evenings", "samples", "workplace", "town", "drive", "foods", "gardening",
-            "approaches", "beer", "country", "department", "exercises", "negative", "outline", "modern", "sandwiches", "jeans",
-            "guest", "cycling", "danger", "beginners", "frogs", "printed", "bright", "industry", "ink", "writing",
-            "objects", "living", "account", "items", "right", "land", "memories", "mental", "prisoners", "stage",
-            "highway", "computer", "increase", "potatoes", "morning", "strong", "carpets", "cable", "parents", "paining",
-            "wrong", "arts", "exhibitor", "factories", "nests", "quality", "rural", "structure", "green", "hardworking",
-            "quite", "tape", "promotion", "maps", "bricks", "traffic", "unfriendly", "yellow", "garden", "spring",
-            "eyes", "Eat", "cameraman", "poison", "flooding", "ages", "distance", "colours", "cleanest", "driving",
-            "plates", "roads", "technical", "timetable", "gun", "hairs", "fieldwork", "climbing", "creativity", "list",
-            "machines", "control", "focus", "wallet", "geese", "pianist", "salesman", "size", "runner", "choice",
-            "urban", "tunnel", "fashion", "plans", "main", "waste", "codes", "tour", "silver", "sandy",
-            "economy", "economics", "movies", "hands", "contract", "cattle", "cave", "telephone", "drinking", "accidents",
-            "snowboarding", "fields", "escape", "dried", "floors", "deserts", "films", "friends", "grasses", "natural",
-            "printers", "sport", "experience", "key", "heat", "videos", "adults", "ships", "flight", "engine",
-            "boots", "stomach", "entrance", "surprise", "chicken", "farming", "stairs", "bananas", "plan", "doctors",
-            "waterfall", "friendly", "glasses", "oil", "printing", "seat", "government", "stories", "painting", "castles",
-            "remember", "arms", "coloured", "animals", "fact", "political", "airplane", "firework", "closed", "army",
-            "groundplan", "meetings", "raining", "half", "sunset", "advance", "package", "drinks", "horsehair", "crime",
-            "policies", "free pick", "export", "smart", "heart", "type", "horses", "reports", "value", "undeveloped",
-            "surveys", "self-drive", "recording", "references", "photographs", "computers", "common", "cafe", "fill", "bath",
-            "Russia", "cashier", "cameras", "airline", "groups", "fireplaces", "rainwear", "drying", "tourism", "science",
-            "gaps", "cash", "free", "sugar", "waiter", "TRUE", "rainfall", "clothes", "double", "finance",
-            "parking", "person", "writers", "rainwater", "fresh", "newspapers", "station", "scientist", "back", "passport",
-            "topics", "climate", "languages", "sailing", "postcard", "restaurant", "postbox", "meat", "varies", "researcher",
-            "actions", "learner", "birds", "singing", "teams", "streets", "apartment", "colony", "words", "sleep",
-            "Safety", "various", "jacket", "present", "shipping", "loyalty", "wheelchair", "vitamin A", "shoppers", "plastic",
-            "politician", "sunscreen", "nurse", "concert", "super", "taxes", "weathers", "identity", "heater", "photos",
-            "specialist", "headache", "society", "wheels", "workforce", "analysis", "biology", "challenge", "nesting", "administration",
-            "harmful", "worksheet", "coursework", "strategies", "overfill", "picnic", "knowledge", "fridge", "racecar", "essays",
-            "downhill", "impossible", "lounge", "objectives", "quiz", "range", "harvest", "rubbish", "antiseptic", "bins",
-            "cement", "observation", "trousers", "cabin", "performance", "nuts", "organic", "breakfast", "metals", "migrate",
-            "overfishing", "painters", "hairdresser", "rare trees", "pennies", "swans", "breed", "commitment", "concrete", "Confirmation",
-            "journals", "port", "gravity", "habitat", "transportation", "gene", "extra", "retail", "microwave", "relatively",
-            "literature", "license", "pioneer", "handle", "entry", "basement", "entertainment", "clinic", "minibus", "woodland",
-            "polluted", "sharing", "reliable", "primary", "network", "estimate", "data", "air pump", "tastes", "relaxation",
-            "laundry", "non-native", "internal", "taxi", "vision", "cheque", "recycling", "behaviors", "attitude", "deposit",
-            "dentist", "resident", "innovation", "biological", "commercial", "comparison", "emotions", "leaflet", "ice pack", "videotape",
-            "originality", "prison", "grade", "diseases", "durable", "flexibility", "handouts", "return", "underground", "interest",
-            "play area", "seminars", "bronze", "painkiller", "teamwork", "backpacker", "religions", "employee", "employer", "refreshments",
-            "darkroom", "roof", "satisfaction", "part-time", "selection", "environment", "evaporation", "Exhibitions", "campsite", "relatives",
-            "typing", "smell", "security", "riverside", "monthly", "defense", "summarize", "garbage", "designers", "seating",
-            "mail", "agriculture", "daylight", "golf", "joining", "traders", "website", "minivan", "brother-in-law", "fruitcake",
-            "variety", "decline", "arrangement", "password", "traditional", "camp", "reasonable", "stand", "long-term", "purpose",
-            "reasons", "tents", "seasonal", "diary", "creature", "total", "lifestyle", "boards", "carbon", "homework",
-            "personality", "branches", "worms", "wool", "develop", "landlady", "secretary", "freedom", "general", "petrol",
-            "documentation", "economical", "tutorials", "intermediate", "joint", "development", "gifts", "imported", "frozen", "guidelines",
-            "iron", "corn", "nets", "diet", "cooperate", "diaries", "wealthy", "speeches", "opera", "stolen",
-            "self-defense", "documents", "necessary", "slide", "section", "handbook", "lower", "nursing", "online", "lateral-line",
-            "lecture", "liberty", "leadership", "cookery", "clay", "shells", "shape", "headphones", "direct", "direction",
-            "lectures", "lecturer", "wildlife", "towels", "flexible", "theory", "permit", "secondary", "conversation", "diving",
-            "long stick", "singer", "growing", "surface", "textbooks", "drums", "lifting", "chairman", "basic", "sharks",
-            "apologize", "guitar", "pest", "candles", "built", "cartoons", "heavy", "process", "services", "levels",
-            "spiders", "concentrate", "temperature", "Scotland", "expensive", "hearing", "whiteboard", "trade", "cheese", "crowded",
-            "shower", "tools", "aid", "square", "navigation", "pattern", "pegs", "theatre", "whales", "example",
-            "creation", "sun-cream", "checklist", "pool", "ability", "collecting", "studio", "coast", "collection", "college",
-            "shelf", "concerts", "position", "smoking", "preserved", "weight", "card index", "sleeping bag", "polished", "processing",
-            "evidence", "settle", "ban", "jewelry", "feathers", "viewpoint", "consumers", "contact", "benefits", "fuel",
-            "dirt", "cap", "blanket", "downstairs", "mistake", "vocabulary", "subway", "restrictions", "agent", "subjects",
-            "chess", "grandfather", "drugs", "rest area", "earning", "spoon", "explain", "semester", "credit", "bookkeeping",
-            "empty", "cab", "spare", "indoor", "balloons", "goldfish", "yoga", "stream", "charge", "honest",
-            "donkeys", "understand", "version", "alternative", "fell", "pure", "soup", "sky", "canal", "success",
-            "running", "individual", "builder", "female", "important", "exam", "whole", "proof", "football", "hunger",
-            "investment", "middle", "rabbit", "kilometers", "pass", "native", "robots", "salary", "realistic", "ropes",
-            "order", "moods", "reduction", "starvation", "storage", "relevant", "style", "wings", "pairs", "sign",
-            "patients", "stress", "repair", "voice", "walking", "seeds", "jokes", "invitations", "hero", "hire",
-            "minutes", "rainbow", "miss", "inside", "front", "overseas", "paragraphs", "opinion", "stressful", "transparent",
-            "soccer", "sharp", "reservation", "uncomfortable", "calendar", "dairy", "casual", "responsible", "decision", "calm",
-            "boring", "stick", "upstairs", "armchair", "reception", "cigar", "packaging", "different", "balance", "clubhouse",
-            "companionship", "productivity", "waterproof", "unnatural", "specific", "community", "causes", "honey", "accept",
-            "prizes", "multimedia", "conclusions", "talent", "regulations", "accountants", "client", "emotional", "pressure", "decrease",
-            "professor", "lakeside", "safeguard", "condition", "feedback", "crisis", "conservation", "pounds", "amount", "certificates",
-            "carrots", "specialized", "firewood", "unlimited", "oxygen", "windsurfing", "loyal", "hive", "cover", "lockers",
-            "genetic", "articles", "enjoyable", "entire", "electricity", "silk", "footbridges", "competitive", "presentations", "seagrass",
-            "pleasure", "massage", "floated", "teenagers", "receptionist", "nutrition", "workload", "threat", "perception", "noticeboard",
-            "windmills", "containers", "qualification", "issue", "abroad", "technician", "punctual", "screen", "electronic", "wax",
-            "statistics", "networking", "tropical", "variable", "diploma", "call diversion", "fertilizers", "methodology", "maturity", "washbasin",
-            "lifespan", "theoretical", "concentration", "smoother", "preservation", "acceptable", "flashing", "altitude", "frustration", "ambulance",
-            "signature", "mushroom", "badge", "ambition", "lizard", "bacteria", "angle", "fluctuate", "fluent", "psychologist",
-            "expansion", "funding", "accurate", "slang", "argument", "terrace", "artificial", "archives", "territory", "shuttle",
-            "therapy", "slaves", "assess", "limestone", "assignment", "expose", "liable", "reflective", "refund", "voluntary",
-            "subtopics", "publication", "acknowledgement", "welfare", "toothache", "acid", "fringe", "microscope", "centimeter", "celebrities",
-            "excitement", "leak", "suitable", "occupancy", "irrigation", "surfing", "reusable", "nylon", "obligation", "moderate",
-            "excellent", "folded", "situational", "portable", "souvenir", "assessment", "nursery", "responsibility", "jogging", "evaluation",
-            "liquid", "toaster", "cotton", "prevention", "fountain", "vertical", "reproduction", "horror", "intelligence", "barbershop",
-            "prevalent", "torn", "deadline", "vetting", "radar", "cosmetics", "adopt", "motivation", "consumption", "adventure",
-            "maintenance", "rack", "curved", "touching", "rationally", "damp", "random", "hardware", "priority", "tolerance",
-            "facilities", "visa", "intact", "warehouse", "admission", "strap", "medication", "toilet", "uniform", "coconut",
-            "dismiss", "rush", "average", "bakery", "membership", "brilliant", "advisors", "publishing", "disappear", "atlas",
-            "alter", "index", "discipline", "wetsuit", "integrate", "antifreeze", "breathing", "shrimp", "confusion", "agreement",
-            "tuna", "labels", "weeding", "dishwasher", "shoot", "depth", "booths", "opposite", "oral", "polish",
-            "maximum", "sacred", "outstanding", "palace", "digestion", "zoom", "powder", "silence", "herds", "director",
-            "savings", "achievement", "scale", "aspiration", "purple", "battery", "edges", "measurement", "ecology", "ladders",
-            "duration", "sable", "canteen", "trace", "predicting", "Budget", "circulation", "display", "rumor", "broad",
-            "satellite", "vanish", "mould", "stickers", "persuading", "corrupt", "freight", "geographical", "motor", "man-made",
-            "correction", "status", "fence", "useless", "perfumes", "stimulation", "stems", "kindness", "undergraduate", "weed",
-            "stings", "cream", "current", "definition", "bucket", "wires", "brakes", "depression", "catalogue", "sweetener",
-            "tides", "catering", "brushes", "intensive", "recommendation", "obesity", "categories", "mammals", "hostel", "delivery",
-            "straight", "thunderstorm", "apology", "broader", "whistle", "trends", "ingredients", "jazz", "rivals", "boiler",
-            "crocodiles", "fishing net", "crown", "introduction", "explanation", "explode", "junior", "link", "willing", "curtains",
-            "sweaters", "tail", "platforms", "sheet", "movement", "immigration", "explosion", "domestic", "editor", "isolation",
-            "automobile", "orientation", "calculating", "glue", "formats", "compensation", "degrees", "interaction", "manual", "demand",
-            "necklace", "mat", "attack", "Protein", "morality", "origins", "monitor", "outcomes", "participation", "room service",
-            "scent", "kidney", "influence", "informal", "journalism", "bushes", "butterflies", "roots", "bunch", "scenery",
-            "expectations", "shallow", "mud", "character", "steel", "expect", "strain", "faxing", "flashlight", "pockets",
-            "flute", "loans", "lungs", "manufacture", "manufacturers", "count", "audience", "scare", "demonstrations", "reinvest",
-            "generation", "treatment", "pesticides", "copies", "carpenter", "bargain", "spine", "model", "symbol", "destroy",
-            "contaminate", "expert", "flavor", "trash", "context", "translation", "diamond", "efficiency", "elastic", "grant",
-            "humidity", "fluids", "pilots", "luxury", "magic", "draft", "strict", "timber", "cliffs", "progress",
-            "recruit", "roll over", "schedule", "capacities", "hospitality", "classifying", "grandmother", "critical", "immune",
-            "judo", "drawing", "grocery", "matching", "spears", "lawyers", "democratic", "moist", "passages", "passive",
-            "ceremonies", "temple", "frequency", "font", "gloves", "term", "gradual", "convenient", "distribute", "encourage",
-            "enlargement", "complaints", "module", "patterns", "complete", "humor", "reinforce", "lanes", "legroom", "realism",
-            "regular", "bonus", "height", "erosion", "string", "strike", "compulsory", "compounds", "tomatoes", "tone",
-            "independent", "titles", "comprehension", "leisure", "tongue", "confirm", "length", "stopwatch", "impact", "soap",
-            "apron", "pressed", "residents", "laptops", "freezer", "equal", "complex", "distribution", "released", "district",
-            "mixed", "popular", "consistent", "marriage", "E. ticket", "experiment", "external", "fingers", "Europe", "leather",
-            "revenue", "textile", "mask", "mild", "population", "pots", "fair", "savvy", "president", "sort",
-            "source", "resources", "seasoned", "seals", "resistant", "emperor", "accountable", "composers", "retrain", "review",
-            "restroom", "solid", "solution", "socks", "replacement", "request", "repeat", "scarf", "antibiotics", "uncontrolled",
-            "hurricane", "instinctive", "weapon", "odor", "addictive", "magnet", "statue", "pipes", "fabric", "friction",
-            "fur", "shoulder", "virus", "foundation", "menu", "digging", "fat", "extinction", "fossil", "captive",
-            "fog", "poetry", "trays", "promotional", "saliva", "referee", "registration", "slope", "biography", "headlines",
-            "logo", "calculation", "pharmacy", "digestive", "flamingos", "efficient", "claw", "relocation", "instructor", "moisture",
-            "session", "sculptures", "infrastructure", "nitrogen", "trumpet", "receiver", "philosophers", "chalk", "representation", "require",
-            "retained", "sites", "situation", "herbivorous", "guessing", "authority", "motel", "carnival", "monuments", "hook",
-            "predators", "stretching", "kangaroo", "lids", "sociable", "poster", "photocopies", "prepared", "comedy", "comfortable",
-            "reward", "remote", "evolution", "rockets", "pirates", "distortion", "flu", "coastline", "stuck", "strangers",
-            "elevator", "dolphins", "elephants", "journalists", "peak", "route", "smash", "soldiers", "advertisement", "stairlift",
-            "shame", "state park", "procedure", "steam", "helicopter", "application", "density", "hothouse", "scores", "diversity",
-            "comics", "consultant", "exploration", "identification", "vegetarian", "questionnaire", "description", "vegetation", "machinery", "donations",
-            "sustainable", "shortlist", "documentary", "supervision", "decorations", "tribes", "landmarks", "migration", "organizations", "permanent",
-            "mathematics", "germs", "atoms", "craft", "unsocial", "permission", "triangle", "pottery", "supportive", "microbiology",
-            "helmet", "unpredictable", "strength", "unfurnished", "forestry", "navigational", "arrows", "unapproachable", "automatic", "layout",
-            "appearance", "caravan", "theme", "translator", "similar", "insulation", "barrier", "reaction", "signals", "microfilm",
-            "olive oil", "instinct", "myth", "effectiveness", "dome", "logic", "dictation", "poverty", "graphics", "combination",
-            "flies", "retire", "instructions", "stabilize", "embassy", "drought", "repel", "shade"
-        ];
-
-        let selectedWords = [];
-        let currentIndex = 0;
-        let results = [];
+        // Supabase 配置
+        const SUPABASE_URL = 'https://xoyctsbcrfwhhrxkerwr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhveWN0c2JjcmZ3aGhyeGtlcndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTQ1NzIsImV4cCI6MjA5NDkzMDU3Mn0.EZKqTt-w2N4y5BqZNa-QYA9F1mi51yjl8tF6gQ2aYKQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 全局状态
+        let currentStudent = null;
+        let currentTestMode = 'random';
+        let testWords = [];
+        let testResults = [];
+        let currentTestIndex = 0;
         let timerInterval = null;
         let timeLeft = 6;
         let isPlaying = false;
-
-        function shuffleArray(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
+        
+        // 单词列表（2400词）
+        const allWords = ["brain","booklet","bridges","social","national","rats","marketing","snakes","round","agency","insects","children","early","cleaning","cloud","conference","ants","hospital","open","insurance","supermarket","pencil","normal","medal","illness","pillow","Arranging","interviews","pizza","magazines","dinner","clever","bathrooms","tickets","accents","save","club","end","water","fireworks","time","glass","goat","rice","hiking","education","against","engineering","orange","pencils","welcome","rules","knees","sister","toys","wait","fitness","citizen","songs","hat","watch","packing","communication","winds","colds","tourists","break","blood","bookshop","teeth","balcony","block","birth","beaches","dark","cooperation","keyboard","hunting","company","meals","address","spelling","wedding","Northeast","corners","check","cultures","booking","shirt","crying","visitors","grammar","lunch","ocean","male","gold","rocks","season","tiger","store","gender","circles","campus","tower","rubber","stars","discussion","advertising","central","change","oven","international","reading","recorders","kite","plants","advertise","Mold","actors","classification","rivers","day","legal","dance","lions","map","bike","watering","view","sand","chain","swimming","technology","sun hat","protection","sheep","numbers","organize","outdoor","difficult","India","noisy","quiet","summer","confidence","price","chocolate","breakdown","couple","results","special","scientific","course","fires","worker","files","healthcare","guard","selfish","greenfield","lines","planner","chemical","aunt","manager","autumn","chemist","eyesight","farmers","fear","kitchen","management","lights","information","wild","humans","bikes","location","search","relationships","feet","gas","messages","choose","sales","bedroom","pollution","politics","museum","bill","cleaner","choosing","hungry","bicycle","salts","skin","leaders","neck","note","noise","bones","parks","patience","printer","programs","rope","salt","none","backdoor","artists","forests","answer","crops","soft","Internet","mapping","blue","mountains","outside","mining","aging","tests","floodwater","storm","global","healthy","oldest","personal","math","wide","lakes","volcano","grain","harm","driver","pictures","beginning","financial","calls","products","guide","notebook","reporter","salads","pets","engineers","leg","radio","tires","hotels","island","furniture","lighting","market","methods","notes","warm","energy","environmental","factory","small","emails","bears","flowers","medicines","housing","income","airports","flat","production","fruits","eyedrops","unsure","trains","milk","villages","workshop","babies","unhealthy","tears","media","gym","friendship","garage","tutors","feeding","fans","minerals","Thursday","problems","profits","left","band","forecast","weekend","military","shadow","smooth","foot","still","unfair","voices","warning","write","family","shipbuilding","training","unanswered","frame","customers","dangerous","dry","traveling","lost","design","footprints","games","hard","images","improvement","king","lab","monkeys","evenings","samples","workplace","town","drive","foods","gardening","approaches","beer","country","department","exercises","negative","outline","modern","sandwiches","jeans","guest","cycling","danger","beginners","frogs","printed","bright","industry","ink","writing","objects","living","account","items","right","land","memories","mental","prisoners","stage","highway","computer","increase","potatoes","morning","strong","carpets","cable","parents","paining","wrong","arts","exhibitor","factories","nests","quality","rural","structure","green","hardworking","quite","tape","promotion","maps","bricks","traffic","unfriendly","yellow","garden","spring","eyes","Eat","cameraman","poison","flooding","ages","distance","colours","cleanest","driving","plates","roads","technical","timetable","gun","hairs","fieldwork","climbing","creativity","list","machines","control","focus","wallet","geese","pianist","salesman","size","runner","choice","urban","tunnel","fashion","plans","main","waste","codes","tour","silver","sandy","economy","economics","movies","hands","contract","cattle","cave","telephone","drinking","accidents","snowboarding","fields","escape","dried","floors","deserts","films","friends","grasses","natural","printers","sport","experience","key","heat","videos","adults","ships","flight","engine","boots","stomach","entrance","surprise","chicken","farming","stairs","bananas","plan","doctors","waterfall","friendly","glasses","oil","printing","seat","government","stories","painting","castles","remember","arms","coloured","animals","fact","political","airplane","firework","closed","army","groundplan","meetings","raining","half","sunset","advance","package","drinks","horsehair","crime","policies","free pick","export","smart","heart","type","horses","reports","value","undeveloped","surveys","self-drive","recording","references","photographs","computers","common","cafe","fill","bath","Russia","cashier","cameras","airline","groups","fireplaces","rainwear","drying","tourism","science","gaps","cash","free","sugar","waiter","TRUE","rainfall","clothes","double","finance","parking","person","writers","rainwater","fresh","newspapers","station","scientist","back","passport","topics","climate","languages","sailing","postcard","restaurant","postbox","meat","varies","researcher","actions","learner","birds","singing","teams","streets","apartment","colony","words","sleep","Safety","various","jacket","present","shipping","loyalty","wheelchair","vitamin A","shoppers","plastic","politician","sunscreen","nurse","concert","super","taxes","weathers","identity","heater","photos","specialist","headache","society","wheels","workforce","analysis","biology","challenge","nesting","administration","harmful","worksheet","coursework","strategies","overfill","picnic","knowledge","fridge","racecar","essays","downhill","impossible","lounge","objectives","quiz","range","harvest","rubbish","antiseptic","bins","cement","observation","trousers","cabin","performance","nuts","organic","breakfast","metals","migrate","overfishing","painters","hairdresser","rare trees","pennies","swans","breed","commitment","concrete","Confirmation","journals","port","gravity","habitat","transportation","gene","extra","retail","microwave","relatively","literature","license","pioneer","handle","entry","basement","entertainment","clinic","minibus","woodland","polluted","sharing","reliable","primary","network","estimate","data","air pump","tastes","relaxation","laundry","non-native","internal","taxi","vision","cheque","recycling","behaviors","attitude","deposit","dentist","resident","innovation","biological","commercial","comparison","emotions","leaflet","ice pack","videotape","originality","prison","grade","diseases","durable","flexibility","handouts","return","underground","interest","play area","seminars","bronze","painkiller","teamwork","backpacker","religions","employee","employer","refreshments","darkroom","roof","satisfaction","part-time","selection","environment","evaporation","Exhibitions","campsite","relatives","typing","smell","security","riverside","monthly","defense","summarize","garbage","designers","seating","mail","agriculture","daylight","golf","joining","traders","website","minivan","brother-in-law","fruitcake","variety","decline","arrangement","password","traditional","camp","reasonable","stand","long-term","purpose","reasons","tents","seasonal","diary","creature","total","lifestyle","boards","carbon","homework","personality","branches","worms","wool","develop","landlady","secretary","freedom","general","petrol","documentation","economical","tutorials","intermediate","joint","development","gifts","imported","frozen","guidelines","iron","corn","nets","diet","cooperate","diaries","wealthy","speeches","opera","stolen","self-defense","documents","necessary","slide","section","handbook","lower","nursing","online","lateral-line","lecture","liberty","leadership","cookery","clay","shells","shape","headphones","direct","direction","lectures","lecturer","wildlife","towels","flexible","theory","permit","secondary","conversation","diving","long stick","singer","growing","surface","textbooks","drums","lifting","chairman","basic","sharks","apologize","guitar","pest","candles","built","cartoons","heavy","process","services","levels","spiders","concentrate","temperature","Scotland","expensive","hearing","whiteboard","trade","cheese","crowded","shower","tools","aid","square","navigation","pattern","pegs","theatre","whales","example","creation","sun-cream","checklist","pool","ability","collecting","studio","coast","collection","college","shelf","concerts","position","smoking","preserved","weight","card index","sleeping bag","polished","processing","evidence","settle","ban","jewelry","feathers","viewpoint","consumers","contact","benefits","fuel","dirt","cap","blanket","downstairs","mistake","vocabulary","subway","restrictions","agent","subjects","chess","grandfather","drugs","rest area","earning","spoon","explain","semester","credit","bookkeeping","empty","cab","spare","indoor","balloons","goldfish","yoga","stream","charge","honest","donkeys","understand","version","alternative","fell","pure","soup","sky","canal","success","running","individual","builder","female","important","exam","whole","proof","football","hunger","investment","middle","rabbit","kilometers","pass","native","robots","salary","realistic","ropes","order","moods","reduction","starvation","storage","relevant","style","wings","pairs","sign","patients","stress","repair","voice","walking","seeds","jokes","invitations","hero","hire","minutes","rainbow","miss","inside","front","overseas","paragraphs","opinion","stressful","transparent","soccer","sharp","reservation","uncomfortable","calendar","dairy","casual","responsible","decision","calm","boring","stick","upstairs","armchair","reception","cigar","packaging","different","balance","clubhouse","companionship","productivity","waterproof","unnatural","specific","community","causes","honey","accept","prizes","multimedia","conclusions","talent","regulations","accountants","client","emotional","pressure","decrease","professor","lakeside","safeguard","condition","feedback","crisis","conservation","pounds","amount","certificates","carrots","specialized","firewood","unlimited","oxygen","windsurfing","loyal","hive","cover","lockers","genetic","articles","enjoyable","entire","electricity","silk","footbridges","competitive","presentations","seagrass","pleasure","massage","floated","teenagers","receptionist","nutrition","workload","threat","perception","noticeboard","windmills","containers","qualification","issue","abroad","technician","punctual","screen","electronic","wax","statistics","networking","tropical","variable","diploma","call diversion","fertilizers","methodology","maturity","washbasin","lifespan","theoretical","concentration","smoother","preservation","acceptable","flashing","altitude","frustration","ambulance","signature","mushroom","badge","ambition","lizard","bacteria","angle","fluctuate","fluent","psychologist","expansion","funding","accurate","slang","argument","terrace","artificial","archives","territory","shuttle","therapy","slaves","assess","limestone","assignment","expose","liable","reflective","refund","voluntary","subtopics","publication","acknowledgement","welfare","toothache","acid","fringe","microscope","centimeter","celebrities","excitement","leak","suitable","occupancy","irrigation","surfing","reusable","nylon","obligation","moderate","excellent","folded","situational","portable","souvenir","assessment","nursery","responsibility","jogging","evaluation","liquid","toaster","cotton","prevention","fountain","vertical","reproduction","horror","intelligence","barbershop","prevalent","torn","deadline","vetting","radar","cosmetics","adopt","motivation","consumption","adventure","maintenance","rack","curved","touching","rationally","damp","random","hardware","priority","tolerance","facilities","visa","intact","warehouse","admission","strap","medication","toilet","uniform","coconut","dismiss","rush","average","bakery","membership","brilliant","advisors","publishing","disappear","atlas","alter","index","discipline","wetsuit","integrate","antifreeze","breathing","shrimp","confusion","agreement","tuna","labels","weeding","dishwasher","shoot","depth","booths","opposite","oral","polish","maximum","sacred","outstanding","palace","digestion","zoom","powder","silence","herds","director","savings","achievement","scale","aspiration","purple","battery","edges","measurement","ecology","ladders","duration","sable","canteen","trace","predicting","Budget","circulation","display","rumor","broad","satellite","vanish","mould","stickers","persuading","corrupt","freight","geographical","motor","man-made","correction","status","fence","useless","perfumes","stimulation","stems","kindness","undergraduate","weed","stings","cream","current","definition","bucket","wires","brakes","depression","catalogue","sweetener","tides","catering","brushes","intensive","recommendation","obesity","categories","mammals","hostel","delivery","straight","thunderstorm","apology","broader","whistle","trends","ingredients","jazz","rivals","boiler","crocodiles","fishing net","crown","introduction","explanation","explode","junior","link","willing","curtains","sweaters","tail","platforms","sheet","movement","immigration","explosion","domestic","editor","isolation","automobile","orientation","calculating","glue","formats","compensation","degrees","interaction","manual","demand","necklace","mat","attack","Protein","morality","origins","monitor","outcomes","participation","room service","scent","kidney","influence","informal","journalism","bushes","butterflies","roots","bunch","scenery","expectations","shallow","mud","character","steel","expect","strain","faxing","flashlight","pockets","flute","loans","lungs","manufacture","manufacturers","count","audience","scare","demonstrations","reinvest","generation","treatment","pesticides","copies","carpenter","bargain","spine","model","symbol","destroy","contaminate","expert","flavor","trash","context","translation","diamond","efficiency","elastic","grant","humidity","fluids","pilots","luxury","magic","draft","strict","timber","cliffs","progress","recruit","roll over","schedule","capacities","hospitality","classifying","grandmother","critical","immune","judo","drawing","grocery","matching","spears","lawyers","democratic","moist","passages","passive","ceremonies","temple","frequency","font","gloves","term","gradual","convenient","distribute","encourage","enlargement","complaints","module","patterns","complete","humor","reinforce","lanes","legroom","realism","regular","bonus","height","erosion","string","strike","compulsory","compounds","tomatoes","tone","independent","titles","comprehension","leisure","tongue","confirm","length","stopwatch","impact","soap","apron","pressed","residents","laptops","freezer","equal","complex","distribution","released","district","mixed","popular","consistent","marriage","E. ticket","experiment","external","fingers","Europe","leather","revenue","textile","mask","mild","population","pots","fair","savvy","president","sort","source","resources","seasoned","seals","resistant","emperor","accountable","composers","retrain","review","restroom","solid","solution","socks","replacement","request","repeat","scarf","antibiotics","uncontrolled","hurricane","instinctive","weapon","odor","addictive","magnet","statue","pipes","fabric","friction","fur","shoulder","virus","foundation","menu","digging","fat","extinction","fossil","captive","fog","poetry","trays","promotional","saliva","referee","registration","slope","biography","headlines","logo","calculation","pharmacy","digestive","flamingos","efficient","claw","relocation","instructor","moisture","session","sculptures","infrastructure","nitrogen","trumpet","receiver","philosophers","chalk","representation","require","retained","sites","situation","herbivorous","guessing","authority","motel","carnival","monuments","hook","predators","stretching","kangaroo","lids","sociable","poster","photocopies","prepared","comedy","comfortable","reward","remote","evolution","rockets","pirates","distortion","flu","coastline","stuck","strangers","elevator","dolphins","elephants","journalists","peak","route","smash","soldiers","advertisement","stairlift","shame","state park","procedure","steam","helicopter","application","density","hothouse","scores","diversity","comics","consultant","exploration","identification","vegetarian","questionnaire","description","vegetation","machinery","donations","sustainable","shortlist","documentary","supervision","decorations","tribes","landmarks","migration","organizations","permanent","mathematics","germs","atoms","craft","unsocial","permission","triangle","pottery","supportive","microbiology","helmet","unpredictable","strength","unfurnished","forestry","navigational","arrows","unapproachable","automatic","layout","appearance","caravan","theme","translator","similar","insulation","barrier","reaction","signals","microfilm","olive oil","instinct","myth","effectiveness","dome","logic","dictation","poverty","graphics","combination","flies","retire","instructions","stabilize","embassy","drought","repel","shade"];
+        
+        // 工具函数
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
         }
-
-        function startTest() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('testScreen').style.display = 'block';
-
-            // Select 50 random words
-            selectedWords = shuffleArray(allWords).slice(0, 50);
-            currentIndex = 0;
-            results = [];
-
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        function showModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+        
+        // 教师登录验证
+        async function verifyTeacherPassword() {
+            const password = document.getElementById('teacherPassword').value;
+            const { data, error } = await supabase.from('teacher_config').select('access_password').eq('id', 1).single();
+            if (error) { showToast('验证失败', 'error'); return; }
+            if (password === data.access_password) {
+                showScreen('teacherDashboard');
+                loadTeacherData();
+            } else {
+                showToast('密码错误', 'error');
+            }
+        }
+        
+        function teacherLogout() {
+            showScreen('entryScreen');
+            document.getElementById('teacherPassword').value = '';
+        }
+        
+        // 学生登录
+        async function studentLogin() {
+            const studentId = document.getElementById('studentId').value.trim();
+            const password = document.getElementById('studentPassword').value;
+            if (!studentId || !password) { showToast('请输入学号和密码', 'error'); return; }
+            const { data, error } = await supabase.from('students').select('*').eq('student_id', studentId).eq('password', password).single();
+            if (error || !data) { showToast('学号或密码错误', 'error'); return; }
+            if (data.status !== 'active') { showToast('账号已被禁用', 'error'); return; }
+            currentStudent = data;
+            if (!data.is_password_changed) {
+                showChangePasswordModal();
+            } else {
+                showStudentHome();
+            }
+        }
+        
+        function showStudentHome() {
+            showScreen('studentHome');
+            document.getElementById('studentWelcome').textContent = '你好，' + currentStudent.name + '！';
+            document.getElementById('studentTargetScore').textContent = currentStudent.target_score;
+            loadStudentStats();
+            loadStudentHistory();
+        }
+        
+        async function loadStudentStats() {
+            const { data: records } = await supabase.from('test_records').select('*').eq('student_id', currentStudent.student_id);
+            const { data: wrongWords } = await supabase.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+            const totalTests = records?.length || 0;
+            const passCount = records?.filter(r => r.is_passed).length || 0;
+            const bestScore = records?.length ? Math.max(...records.map(r => r.score)) : 0;
+            document.getElementById('statTotalTests').textContent = totalTests;
+            document.getElementById('statPassRate').textContent = totalTests > 0 ? Math.round(passCount / totalTests * 100) + '%' : '0%';
+            document.getElementById('statBestScore').textContent = bestScore + '%';
+            document.getElementById('statWrongWords').textContent = wrongWords?.length || 0;
+            
+            // 加载模块达标标准
+            const { data: standards } = await supabase.from('pass_standards').select('*').eq('module_type', 'dictation').single();
+            if (standards) {
+                let threshold = standards.score_6;
+                if (currentStudent.target_score == 6.5) threshold = standards.score_6_5;
+                else if (currentStudent.target_score == 7) threshold = standards.score_7;
+                document.getElementById('moduleTarget').textContent = currentStudent.target_score + '分';
+                document.getElementById('moduleThreshold').textContent = threshold + '%';
+            }
+        }
+        
+        async function loadStudentHistory() {
+            const { data: records } = await supabase.from('test_records').select('*').eq('student_id', currentStudent.student_id).order('created_at', { ascending: false }).limit(10);
+            const container = document.getElementById('studentHistoryList');
+            if (!records || records.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无历史记录</p>';
+                document.getElementById('historyChart').innerHTML = '';
+                return;
+            }
+            container.innerHTML = records.map(r => `
+                <div style="padding:15px;border-bottom:1px solid #eee;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <span style="font-weight:600;">${r.test_type === 'random' ? '随机测试' : '错题测试'}</span>
+                            <span style="color:#666;font-size:0.85rem;margin-left:10px;">${new Date(r.created_at).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <div>
+                            <span style="font-size:1.2rem;font-weight:bold;${r.is_passed ? 'color:#28a745;' : 'color:#dc3545;'}">${r.score}%</span>
+                            <span class="badge ${r.is_passed ? 'badge-success' : 'badge-danger'}" style="margin-left:10px;">${r.is_passed ? '达标' : '未达标'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            // 简单图表
+            const chartHtml = records.reverse().map((r, i) => {
+                const height = r.score;
+                const color = r.is_passed ? '#28a745' : '#dc3545';
+                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:20px;background:${color};height:${height/100*150}px;min-height:5px;border-radius:5px 5px 0 0;"></div>
+                    <span style="font-size:0.7rem;color:#666;margin-top:5px;">${r.score}%</span>
+                </div>`;
+            }).join('');
+            document.getElementById('historyChart').innerHTML = `<div style="display:flex;align-items:flex-end;height:150px;padding:10px;background:#f8f9fa;border-radius:10px;">${chartHtml}</div>`;
+        }
+        
+        function switchStudentTab(tab) {
+            document.querySelectorAll('#studentHome .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('studentTabTest').style.display = tab === 'test' ? 'block' : 'none';
+            document.getElementById('studentTabHistory').style.display = tab === 'history' ? 'block' : 'none';
+        }
+        
+        function studentLogout() {
+            currentStudent = null;
+            showScreen('entryScreen');
+            document.getElementById('studentId').value = '';
+            document.getElementById('studentPassword').value = '';
+        }
+        
+        // 修改密码
+        function showChangePasswordModal() { showModal('changePasswordModal'); }
+        
+        async function changePassword() {
+            const newPwd = document.getElementById('newPassword').value;
+            const confirmPwd = document.getElementById('confirmPassword').value;
+            if (!newPwd || newPwd.length < 4) { showToast('密码至少4位', 'error'); return; }
+            if (newPwd !== confirmPwd) { showToast('两次密码不一致', 'error'); return; }
+            const { error } = await supabase.from('students').update({ password: newPwd, is_password_changed: true }).eq('student_id', currentStudent.student_id);
+            if (error) { showToast('修改失败', 'error'); return; }
+            currentStudent.password = newPwd;
+            currentStudent.is_password_changed = true;
+            closeModal('changePasswordModal');
+            showToast('密码修改成功', 'success');
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            if (document.getElementById('studentHome').classList.contains('active')) {
+                // 已在主页，无需跳转
+            } else {
+                showStudentHome();
+            }
+        }
+        
+        // 教师端数据加载
+        async function loadTeacherData() {
+            await Promise.all([loadStudents(), loadRecords(), loadStandards()]);
+        }
+        
+        async function loadStudents() {
+            const { data: students } = await supabase.from('students').select('*').order('created_at', { ascending: false });
+            const container = document.getElementById('studentsList');
+            if (!students || students.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无学生</p>';
+                return;
+            }
+            container.innerHTML = `<table><thead><tr><th>学号</th><th>姓名</th><th>目标</th><th>状态</th><th>操作</th></tr></thead><tbody>${students.map(s => `
+                <tr>
+                    <td>${s.student_id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.target_score}分</td>
+                    <td><span class="badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}">${s.status === 'active' ? '正常' : '禁用'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="resetPassword('${s.student_id}')">重置密码</button>
+                        <button class="btn btn-sm ${s.status === 'active' ? 'btn-danger' : 'btn-success'}" onclick="toggleStatus('${s.student_id}', '${s.status}')">${s.status === 'active' ? '禁用' : '启用'}</button>
+                    </td>
+                </tr>
+            `).join('')}</tbody></table>`;
+            // 更新筛选下拉
+            const filterSelect = document.getElementById('filterStudent');
+            filterSelect.innerHTML = '<option value="">全部学生</option>' + students.map(s => `<option value="${s.student_id}">${s.name} (${s.student_id})</option>`).join('');
+        }
+        
+        async function loadRecords() {
+            let query = supabase.from('test_records').select('*, students(name)').order('created_at', { ascending: false }).limit(100);
+            const filterId = document.getElementById('filterStudent')?.value;
+            if (filterId) query = query.eq('student_id', filterId);
+            const { data: records } = await query;
+            const container = document.getElementById('recordsList');
+            if (!records || records.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无测试记录</p>';
+                return;
+            }
+            container.innerHTML = `<table><thead><tr><th>学号</th><th>姓名</th><th>类型</th><th>时间</th><th>正确率</th><th>达标</th></tr></thead><tbody>${records.map(r => `
+                <tr>
+                    <td>${r.student_id}</td>
+                    <td>${r.students?.name || '-'}</td>
+                    <td>${r.test_type === 'random' ? '随机' : '错题'}</td>
+                    <td>${new Date(r.created_at).toLocaleString('zh-CN')}</td>
+                    <td>${r.score}%</td>
+                    <td><span class="badge ${r.is_passed ? 'badge-success' : 'badge-danger'}">${r.is_passed ? '达标' : '未达标'}</span></td>
+                </tr>
+            `).join('')}</tbody></table>`;
+        }
+        
+        async function loadStandards() {
+            const { data: standards } = await supabase.from('pass_standards').select('*').eq('is_active', true);
+            const container = document.getElementById('standardsList');
+            if (!standards || standards.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无模块配置</p>';
+                return;
+            }
+            container.innerHTML = standards.map(s => `
+                <div style="padding:20px;background:#f8f9fa;border-radius:10px;margin-bottom:15px;">
+                    <h4 style="margin-bottom:15px;">${s.module_name}</h4>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
+                        <div class="input-group">
+                            <label>6分达标线</label>
+                            <input type="number" id="std6_${s.module_type}" value="${s.score_6}" onchange="updateStandard('${s.module_type}', 'score_6', this.value)">
+                        </div>
+                        <div class="input-group">
+                            <label>6.5分达标线</label>
+                            <input type="number" id="std65_${s.module_type}" value="${s.score_6_5}" onchange="updateStandard('${s.module_type}', 'score_6_5', this.value)">
+                        </div>
+                        <div class="input-group">
+                            <label>7分达标线</label>
+                            <input type="number" id="std7_${s.module_type}" value="${s.score_7}" onchange="updateStandard('${s.module_type}', 'score_7', this.value)">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function updateStandard(moduleType, field, value) {
+            const update = {};
+            update[field] = parseFloat(value);
+            update.updated_at = new Date().toISOString();
+            await supabase.from('pass_standards').update(update).eq('module_type', moduleType);
+            showToast('已更新', 'success');
+        }
+        
+        function switchTeacherTab(tab) {
+            document.querySelectorAll('#teacherDashboard .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tabStudents').style.display = tab === 'students' ? 'block' : 'none';
+            document.getElementById('tabRecords').style.display = tab === 'records' ? 'block' : 'none';
+            document.getElementById('tabStandards').style.display = tab === 'standards' ? 'block' : 'none';
+        }
+        
+        // 学生管理操作
+        function showAddStudentModal() { showModal('addStudentModal'); }
+        
+        async function addStudent() {
+            const name = document.getElementById('newStudentName').value.trim();
+            const targetScore = parseFloat(document.getElementById('newStudentTarget').value);
+            if (!name) { showToast('请输入姓名', 'error'); return; }
+            // 生成学号
+            const { data: lastStudent } = await supabase.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
+            let newId = '2025001';
+            if (lastStudent) {
+                newId = String(parseInt(lastStudent.student_id) + 1);
+            }
+            const { error } = await supabase.from('students').insert({
+                student_id: newId,
+                name: name,
+                password: '123456',
+                target_score: targetScore,
+                is_password_changed: false
+            });
+            if (error) { showToast('添加失败：' + error.message, 'error'); return; }
+            closeModal('addStudentModal');
+            document.getElementById('newStudentName').value = '';
+            showToast(`添加成功！学号：${newId}，初始密码：123456`, 'success');
+            loadStudents();
+        }
+        
+        function showBatchImportModal() { showModal('batchImportModal'); }
+        
+        async function batchImportStudents() {
+            const text = document.getElementById('batchStudentList').value.trim();
+            if (!text) { showToast('请输入学生列表', 'error'); return; }
+            const lines = text.split('\n').filter(l => l.trim());
+            const { data: lastStudent } = await supabase.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
+            let startId = lastStudent ? parseInt(lastStudent.student_id) + 1 : 2025001;
+            const students = [];
+            lines.forEach((line, i) => {
+                const parts = line.split(',');
+                const name = parts[0].trim();
+                const target = parts[1] ? parseFloat(parts[1].trim()) : 6.5;
+                if (name) students.push({
+                    student_id: String(startId + i),
+                    name: name,
+                    password: '123456',
+                    target_score: target,
+                    is_password_changed: false
+                });
+            });
+            if (students.length === 0) { showToast('没有有效的学生数据', 'error'); return; }
+            const { error } = await supabase.from('students').insert(students);
+            if (error) { showToast('导入失败：' + error.message, 'error'); return; }
+            closeModal('batchImportModal');
+            document.getElementById('batchStudentList').value = '';
+            showToast(`成功导入 ${students.length} 名学生`, 'success');
+            loadStudents();
+        }
+        
+        async function resetPassword(studentId) {
+            if (!confirm('确定重置该学生密码为123456？')) return;
+            await supabase.from('students').update({ password: '123456', is_password_changed: false }).eq('student_id', studentId);
+            showToast('密码已重置', 'success');
+        }
+        
+        async function toggleStatus(studentId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            await supabase.from('students').update({ status: newStatus }).eq('student_id', studentId);
+            loadStudents();
+            showToast(`学生已${newStatus === 'active' ? '启用' : '禁用'}`, 'success');
+        }
+        
+        // 导出Excel
+        async function exportStudentsExcel() {
+            const { data: students } = await supabase.from('students').select('*').order('student_id');
+            if (!students) return;
+            const ws = XLSX.utils.json_to_sheet(students.map(s => ({
+                '学号': s.student_id,
+                '姓名': s.name,
+                '目标分数': s.target_score,
+                '状态': s.status === 'active' ? '正常' : '禁用',
+                '创建时间': new Date(s.created_at).toLocaleString('zh-CN')
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '学生名单');
+            XLSX.writeFile(wb, '学生名单_' + new Date().toISOString().slice(0,10) + '.xlsx');
+            showToast('导出成功', 'success');
+        }
+        
+        async function exportRecordsExcel() {
+            const { data: records } = await supabase.from('test_records').select('*, students(name)').order('created_at', { ascending: false });
+            if (!records) return;
+            const ws = XLSX.utils.json_to_sheet(records.map(r => ({
+                '学号': r.student_id,
+                '姓名': r.students?.name || '-',
+                '测试类型': r.test_type === 'random' ? '随机测试' : '错题测试',
+                '正确率': r.score + '%',
+                '达标': r.is_passed ? '是' : '否',
+                '达标线': r.pass_threshold + '%',
+                '时间': new Date(r.created_at).toLocaleString('zh-CN')
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '测试记录');
+            XLSX.writeFile(wb, '测试记录_' + new Date().toISOString().slice(0,10) + '.xlsx');
+            showToast('导出成功', 'success');
+        }
+        
+        // 测试功能
+        async function startTest(mode) {
+            currentTestMode = mode;
+            document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
+            document.getElementById('testModeLabel').style.background = mode === 'random' ? '#e9ecef' : '#d4edda';
+            // 获取题目
+            if (mode === 'random') {
+                testWords = shuffleArray([...allWords]).slice(0, 50);
+            } else {
+                const { data: wrongWords } = await supabase.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+                if (!wrongWords || wrongWords.length === 0) {
+                    showToast('暂无错题可练习', 'info');
+                    return;
+                }
+                testWords = wrongWords.map(w => w.word);
+                if (testWords.length < 50) {
+                    const more = shuffleArray(allWords.filter(w => !testWords.includes(w))).slice(0, 50 - testWords.length);
+                    testWords = [...testWords, ...more];
+                }
+            }
+            testResults = [];
+            currentTestIndex = 0;
+            showScreen('testScreen');
             showQuestion();
         }
-
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
         function showQuestion() {
-            const word = selectedWords[currentIndex];
-            document.getElementById('questionCounter').textContent = `第 ${currentIndex + 1} / 50 题`;
-            document.getElementById('progressFill').style.width = `${((currentIndex + 1) / 50) * 100}%`;
+            document.getElementById('questionCounter').textContent = `第 ${currentTestIndex + 1} / ${testWords.length} 题`;
+            document.getElementById('progressFill').style.width = `${((currentTestIndex + 1) / testWords.length) * 100}%`;
             document.getElementById('answerInput').value = '';
-            document.getElementById('answerInput').className = '';
             document.getElementById('timerDisplay').textContent = '准备中...';
-            document.getElementById('timerDisplay').className = 'timer-display';
-            document.getElementById('statusIcon').className = 'status-icon';
-
-            // Auto-play the word once
+            document.getElementById('timerDisplay').className = '';
+            document.getElementById('statusIcon').textContent = '🔊';
+            document.getElementById('statusIcon').className = '';
             playWord();
         }
-
+        
         function playWord() {
             if (isPlaying) return;
-
-            const word = selectedWords[currentIndex];
+            const word = testWords[currentTestIndex];
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
-
-            const statusIcon = document.getElementById('statusIcon');
-            statusIcon.className = 'status-icon playing';
+            const icon = document.getElementById('statusIcon');
+            icon.className = 'playing';
             isPlaying = true;
-
             utterance.onend = () => {
-                statusIcon.className = 'status-icon';
+                icon.className = '';
                 isPlaying = false;
                 startTimer();
             };
-
             speechSynthesis.speak(utterance);
         }
-
+        
         function startTimer() {
             timeLeft = 6;
             updateTimerDisplay();
-
             timerInterval = setInterval(() => {
                 timeLeft--;
                 updateTimerDisplay();
-
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     document.getElementById('timerDisplay').textContent = '时间到！';
-                    // 自动跳到下一题，检查答案是否正确
-                    setTimeout(() => {
-                        const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
-                        const correctAnswer = selectedWords[currentIndex].toLowerCase();
-                        const isCorrect = userAnswer === correctAnswer;
-                        
-                        results.push({
-                            word: selectedWords[currentIndex],
-                            userAnswer: userAnswer || '(未作答)',
-                            isCorrect: isCorrect,
-                            skipped: userAnswer === ''
-                        });
-                        nextQuestion();
-                    }, 800);
+                    setTimeout(autoSubmit, 800);
                 }
             }, 1000);
         }
-
+        
         function updateTimerDisplay() {
             const display = document.getElementById('timerDisplay');
             display.textContent = `剩余 ${timeLeft} 秒`;
-            display.className = timeLeft <= 2 ? 'timer-display warning' : 'timer-display';
+            display.className = timeLeft <= 2 ? 'fail' : '';
         }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                submitAnswer();
-            }
-        }
-
-        function submitAnswer() {
+        
+        function autoSubmit() {
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
-            const correctAnswer = selectedWords[currentIndex].toLowerCase();
+            const correctAnswer = testWords[currentTestIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer;
-
-            clearInterval(timerInterval);
-
-            const input = document.getElementById('answerInput');
-            input.classList.add(isCorrect ? 'correct' : 'incorrect');
-
-            results.push({
-                word: selectedWords[currentIndex],
+            testResults.push({
+                word: testWords[currentTestIndex],
                 userAnswer: userAnswer || '(未作答)',
                 isCorrect: isCorrect,
-                skipped: false
+                skipped: userAnswer === ''
             });
-
-            setTimeout(() => {
-                nextQuestion();
-            }, 1000);
+            nextQuestion();
         }
-
+        
+        function submitAnswer() {
+            clearInterval(timerInterval);
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = testWords[currentTestIndex].toLowerCase();
+            const isCorrect = userAnswer === correctAnswer;
+            testResults.push({
+                word: testWords[currentTestIndex],
+                userAnswer: userAnswer || '(未作答)',
+                isCorrect: isCorrect,
+                skipped: userAnswer === ''
+            });
+            nextQuestion();
+        }
+        
         function skipWord() {
             clearInterval(timerInterval);
-
-            results.push({
-                word: selectedWords[currentIndex],
+            testResults.push({
+                word: testWords[currentTestIndex],
                 userAnswer: '(跳过)',
                 isCorrect: false,
                 skipped: true
             });
-
             nextQuestion();
         }
-
+        
         function nextQuestion() {
-            currentIndex++;
-
-            if (currentIndex >= 50) {
-                showResults();
+            currentTestIndex++;
+            if (currentTestIndex >= testWords.length) {
+                finishTest();
             } else {
                 showQuestion();
             }
         }
-
-        function showResults() {
-            document.getElementById('testScreen').style.display = 'none';
-            document.getElementById('resultsScreen').style.display = 'block';
-
-            const correctCount = results.filter(r => r.isCorrect).length;
-            const incorrectCount = results.filter(r => !r.isCorrect && !r.skipped).length;
-            const skippedCount = results.filter(r => r.skipped).length;
-            const score = Math.round((correctCount / 50) * 100);
-
-            document.getElementById('scoreDisplay').textContent = `${score}%`;
-            document.getElementById('correctCount').textContent = correctCount;
-            document.getElementById('incorrectCount').textContent = incorrectCount;
-            document.getElementById('skippedCount').textContent = skippedCount;
-
-            // Show error list
-            const errorItems = document.getElementById('errorItems');
-            const errors = results.filter(r => !r.isCorrect);
-
-            if (errors.length === 0) {
-                errorItems.innerHTML = '<p style="color: #28a745; padding: 20px;">🎉 太棒了！全部正确！</p>';
-            } else {
-                errorItems.innerHTML = errors.map(e => `
-                    <div class="error-item">
-                        <div>
-                            <span class="word">${e.word}</span>
-                            ${e.skipped ? '<span style="color: #ffc107; margin-left: 10px;">(跳过)</span>' : ''}
-                        </div>
-                        <div>
-                            <span class="your-answer">你的答案: ${e.userAnswer}</span>
-                            <span style="margin: 0 10px;">→</span>
-                            <span class="correct-answer">正确答案: ${e.word}</span>
-                        </div>
-                    </div>
-                `).join('');
+        
+        async function finishTest() {
+            const correctCount = testResults.filter(r => r.isCorrect).length;
+            const incorrectCount = testResults.filter(r => !r.isCorrect && !r.skipped).length;
+            const skippedCount = testResults.filter(r => r.skipped).length;
+            const score = Math.round((correctCount / testResults.length) * 100);
+            // 获取达标标准
+            const { data: standards } = await supabase.from('pass_standards').select('*').eq('module_type', 'dictation').single();
+            let threshold = 80;
+            if (standards) {
+                if (currentStudent.target_score == 6.5) threshold = standards.score_6_5;
+                else if (currentStudent.target_score == 7) threshold = standards.score_7;
+                else threshold = standards.score_6;
             }
-        }
-
-        function downloadResults() {
-            const correctCount = results.filter(r => r.isCorrect).length;
-            const skippedCount = results.filter(r => r.skipped).length;
-            const incorrectCount = results.filter(r => !r.isCorrect && !r.skipped).length;
-            const score = Math.round((correctCount / 50) * 100);
-
-            const errors = results.filter(r => !r.isCorrect);
-
-            let content = `英语听写测试结果\n`;
-            content += `========================\n\n`;
-            content += `测试时间: ${new Date().toLocaleString('zh-CN')}\n`;
-            content += `总分: ${score}%\n`;
-            content += `正确: ${correctCount} 题\n`;
-            content += `错误: ${incorrectCount} 题\n`;
-            content += `跳过: ${skippedCount} 题\n\n`;
-
-            if (errors.length > 0) {
-                content += `错误/跳过单词列表:\n`;
-                content += `------------------------\n`;
-                errors.forEach((e, index) => {
-                    content += `${index + 1}. ${e.word} (你的答案: ${e.userAnswer})\n`;
-                });
-            }
-
-            content += `\n\n单词列表:\n`;
-            content += `------------------------\n`;
-            results.forEach((r, index) => {
-                const status = r.isCorrect ? '✓' : (r.skipped ? '跳过' : '✗');
-                content += `${index + 1}. [${status}] ${r.word}\n`;
+            const isPassed = score >= threshold;
+            // 保存测试记录
+            await supabase.from('test_records').insert({
+                student_id: currentStudent.student_id,
+                test_type: currentTestMode,
+                score: score,
+                correct_count: correctCount,
+                total_count: testResults.length,
+                is_passed: isPassed,
+                pass_threshold: threshold,
+                details: JSON.stringify(testResults)
             });
-
+            // 更新错题本
+            let newWrongCount = 0;
+            for (const result of testResults) {
+                if (!result.isCorrect && !result.skipped) {
+                    const { data: existing } = await supabase.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
+                    if (existing) {
+                        if (existing.correct_streak >= 2) {
+                            await supabase.from('wrong_words').update({ is_mastered: true }).eq('id', existing.id);
+                        } else {
+                            await supabase.from('wrong_words').update({ wrong_count: existing.wrong_count + 1, correct_streak: 0, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                        }
+                    } else {
+                        await supabase.from('wrong_words').insert({
+                            student_id: currentStudent.student_id,
+                            word: result.word,
+                            wrong_count: 1,
+                            correct_streak: 0
+                        });
+                        newWrongCount++;
+                    }
+                } else if (result.isCorrect) {
+                    const { data: existing } = await supabase.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
+                    if (existing && !existing.is_mastered) {
+                        const newStreak = existing.correct_streak + 1;
+                        if (newStreak >= 2) {
+                            await supabase.from('wrong_words').update({ correct_streak: newStreak, is_mastered: true, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                        } else {
+                            await supabase.from('wrong_words').update({ correct_streak: newStreak, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                        }
+                    }
+                }
+            }
+            // 显示结果
+            showScreen('resultScreen');
+            document.getElementById('resultStudentInfo').textContent = currentStudent.name + ' - 听力2400词';
+            document.getElementById('resultPassStatus').className = 'pass-status ' + (isPassed ? 'pass' : 'fail');
+            document.getElementById('resultPassStatus').textContent = isPassed ? '🎉 达标！' : '❌ 未达标';
+            document.getElementById('resultScore').textContent = score + '%';
+            document.getElementById('resultThreshold').textContent = threshold + '%';
+            document.getElementById('resultCorrect').textContent = correctCount;
+            document.getElementById('resultIncorrect').textContent = incorrectCount;
+            document.getElementById('resultSkipped').textContent = skippedCount;
+            document.getElementById('resultWrongCount').textContent = newWrongCount;
+            const errors = testResults.filter(r => !r.isCorrect);
+            document.getElementById('resultErrorList').innerHTML = errors.length > 0 
+                ? `<h4 style="margin-top:20px;">错误/跳过单词</h4><div class="error-list">${errors.map(e => `<div class="error-item"><span>${e.word}</span><span style="color:#666;">你的答案: ${e.userAnswer}</span></div>`).join('')}</div>`
+                : '<p style="text-align:center;color:#28a745;padding:20px;">🎉 太棒了！全部正确！</p>';
+        }
+        
+        function downloadResult() {
+            const correctCount = testResults.filter(r => r.isCorrect).length;
+            const score = Math.round((correctCount / testResults.length) * 100);
+            const errors = testResults.filter(r => !r.isCorrect);
+            let content = `英语听写测试结果\n`;
+            content += `学生：${currentStudent.name}\n`;
+            content += `学号：${currentStudent.student_id}\n`;
+            content += `目标分数：${currentStudent.target_score}分\n`;
+            content += `测试类型：${currentTestMode === 'random' ? '随机测试' : '错题测试'}\n`;
+            content += `正确率：${score}%\n`;
+            content += `正确：${correctCount} 错误：${errors.length} 跳过：${testResults.filter(r=>r.skipped).length}\n`;
+            content += `\n错误单词：\n`;
+            errors.forEach((e, i) => content += `${i+1}. ${e.word} (你的答案: ${e.userAnswer})\n`);
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `听写测试结果_${new Date().toISOString().slice(0,10)}.txt`;
-            document.body.appendChild(a);
+            a.download = `听写结果_${currentStudent.name}_${new Date().toISOString().slice(0,10)}.txt`;
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
-
-        function restartTest() {
-            document.getElementById('resultsScreen').style.display = 'none';
-            startTest();
+        
+        function backToStudentHome() {
+            showStudentHome();
         }
     </script>
 </body>
