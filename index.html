@@ -399,9 +399,8 @@
         // 教师登录验证
         async function verifyTeacherPassword() {
             const password = document.getElementById('teacherPassword').value;
-            const result = await db.from('teacher_config').select('access_password').eq('id', 1).single();
-            if (result.error) { showToast('验证失败', 'error'); return; }
-            if (password === result.data.access_password) {
+            const teacherPassword = 'sjdh4405';
+            if (password === teacherPassword) {
                 showScreen('teacherDashboard');
                 loadTeacherData();
             } else {
