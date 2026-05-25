@@ -562,6 +562,11 @@
             const filterId = document.getElementById('filterStudent').value;
             if (filterId) query = query.eq('student_id', filterId);
             const result = await query;
+            
+            if (result.error) {
+                console.error('加载测试记录失败:', result.error);
+            }
+            
             const container = document.getElementById('recordsList');
             const records = result.data;
             if (!records || records.length === 0) {
@@ -864,7 +869,7 @@
             }
             const isPassed = score >= threshold;
             
-            await db.from('test_records').insert({
+            const insertResult = await db.from('test_records').insert({
                 student_id: currentStudent.student_id,
                 test_type: currentTestMode,
                 score: score,
@@ -874,6 +879,11 @@
                 pass_threshold: threshold,
                 details: JSON.stringify(testResults)
             });
+            
+            if (insertResult.error) {
+                console.error('保存测试记录失败:', insertResult.error);
+                showToast('保存测试记录失败: ' + insertResult.error.message, 'error');
+            }
             
             let newWrongCount = 0;
             for (let i = 0; i < testResults.length; i++) {
