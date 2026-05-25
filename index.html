@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>钘曞彾鑻辫 - 瀛︿範杩借釜绯荤粺</title>
+    <title>藕叶英语 - 学习追踪系统</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -64,7 +64,6 @@
         .screen { display: none; }
         .screen.active { display: block; }
         
-        /* 鏁欏笀绔牱寮?*/
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .admin-header h2 { color: #667eea; }
         
@@ -109,10 +108,6 @@
         .toast.error { background: #dc3545; }
         .toast.success { background: #28a745; }
         
-        .loading { text-align: center; padding: 40px; color: #666; }
-        .loading::after { content: '...'; animation: dots 1.5s infinite; }
-        @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
-        
         .history-chart { height: 200px; margin: 20px 0; }
         
         @media (max-width: 768px) {
@@ -125,270 +120,254 @@
 </head>
 <body>
     <div class="container">
-        <!-- Logo -->
-        <div class="logo">伪 钘曞彾鑻辫</div>
+        <div class="logo">藕叶英语</div>
         
-        <!-- 鍏ュ彛閫夋嫨 -->
         <div class="card screen active" id="entryScreen">
-            <h1>娆㈣繋浣跨敤瀛︿範杩借釜绯荤粺</h1>
-            <p class="subtitle">閫夋嫨浣犵殑韬唤杩涘叆</p>
+            <h1>欢迎使用学习追踪系统</h1>
+            <p class="subtitle">选择你的身份进入</p>
             <div class="btn-group">
-                <button class="btn" onclick="showScreen('studentLoginScreen')">馃懆鈥嶐煄?瀛︾敓鍏ュ彛</button>
-                <button class="btn btn-secondary" onclick="showScreen('teacherLoginScreen')">馃懆鈥嶐煆?鏁欏笀鍏ュ彛</button>
+                <button class="btn" onclick="showScreen('studentLoginScreen')">学生入口</button>
+                <button class="btn btn-secondary" onclick="showScreen('teacherLoginScreen')">教师入口</button>
             </div>
         </div>
         
-        <!-- 鏁欏笀瀵嗙爜楠岃瘉 -->
         <div class="card screen" id="teacherLoginScreen">
-            <h1>馃懆鈥嶐煆?鏁欏笀鐧诲綍</h1>
-            <p class="subtitle">璇疯緭鍏ユ暀甯堝瘑鐮?/p>
+            <h1>教师登录</h1>
+            <p class="subtitle">请输入教师密码</p>
             <div class="input-group">
-                <label>鏁欏笀瀵嗙爜</label>
-                <input type="password" id="teacherPassword" placeholder="璇疯緭鍏ュ瘑鐮? onkeypress="if(event.key==='Enter')verifyTeacherPassword()">
+                <label>教师密码</label>
+                <input type="password" id="teacherPassword" placeholder="请输入密码" onkeypress="if(event.key==='Enter')verifyTeacherPassword()">
             </div>
             <div class="btn-group">
-                <button class="btn" onclick="verifyTeacherPassword()">纭</button>
-                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">杩斿洖</button>
+                <button class="btn" onclick="verifyTeacherPassword()">确认</button>
+                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">返回</button>
             </div>
         </div>
         
-        <!-- 瀛︾敓鐧诲綍 -->
         <div class="card screen" id="studentLoginScreen">
-            <h1>馃懆鈥嶐煄?瀛︾敓鐧诲綍</h1>
+            <h1>学生登录</h1>
             <div class="input-group">
-                <label>瀛﹀彿</label>
-                <input type="text" id="studentId" placeholder="璇疯緭鍏ュ鍙? onkeypress="if(event.key==='Enter')studentLogin()">
+                <label>学号</label>
+                <input type="text" id="studentId" placeholder="请输入学号" onkeypress="if(event.key==='Enter')studentLogin()">
             </div>
             <div class="input-group">
-                <label>瀵嗙爜</label>
-                <input type="password" id="studentPassword" placeholder="璇疯緭鍏ュ瘑鐮? onkeypress="if(event.key==='Enter')studentLogin()">
+                <label>密码</label>
+                <input type="password" id="studentPassword" placeholder="请输入密码" onkeypress="if(event.key==='Enter')studentLogin()">
             </div>
             <div class="btn-group">
-                <button class="btn" onclick="studentLogin()">鐧诲綍</button>
-                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">杩斿洖</button>
+                <button class="btn" onclick="studentLogin()">登录</button>
+                <button class="btn btn-secondary" onclick="showScreen('entryScreen')">返回</button>
             </div>
         </div>
         
-        <!-- 鏁欏笀鍚庡彴 -->
         <div class="card screen" id="teacherDashboard">
             <div class="admin-header">
-                <h2>馃懆鈥嶐煆?鏁欏笀鍚庡彴</h2>
-                <button class="btn btn-secondary btn-sm" onclick="teacherLogout()">閫€鍑?/button>
+                <h2>教师后台</h2>
+                <button class="btn btn-secondary btn-sm" onclick="teacherLogout()">退出</button>
             </div>
             
             <div class="tab-bar">
-                <div class="tab active" onclick="switchTeacherTab('students')">瀛︾敓绠＄悊</div>
-                <div class="tab" onclick="switchTeacherTab('records')">娴嬭瘯璁板綍</div>
-                <div class="tab" onclick="switchTeacherTab('standards')">杈炬爣鏍囧噯</div>
+                <div class="tab active" onclick="switchTeacherTab('students')">学生管理</div>
+                <div class="tab" onclick="switchTeacherTab('records')">测试记录</div>
+                <div class="tab" onclick="switchTeacherTab('standards')">达标标准</div>
             </div>
             
-            <!-- 瀛︾敓绠＄悊 -->
             <div id="tabStudents" class="tab-content">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-                    <button class="btn btn-sm" onclick="showAddStudentModal()">+ 娣诲姞瀛︾敓</button>
-                    <button class="btn btn-sm btn-secondary" onclick="showBatchImportModal()">鎵归噺瀵煎叆</button>
-                    <button class="btn btn-sm btn-secondary" onclick="exportStudentsExcel()">瀵煎嚭瀛︾敓鍚嶅崟</button>
-                    <button class="btn btn-sm btn-secondary" onclick="exportRecordsExcel()">瀵煎嚭娴嬭瘯璁板綍</button>
+                    <button class="btn btn-sm" onclick="showAddStudentModal()">添加学生</button>
+                    <button class="btn btn-sm btn-secondary" onclick="showBatchImportModal()">批量导入</button>
+                    <button class="btn btn-sm btn-secondary" onclick="exportStudentsExcel()">导出学生名单</button>
+                    <button class="btn btn-sm btn-secondary" onclick="exportRecordsExcel()">导出测试记录</button>
                 </div>
                 <div id="studentsList"></div>
             </div>
             
-            <!-- 娴嬭瘯璁板綍 -->
             <div id="tabRecords" class="tab-content" style="display:none;">
                 <div class="input-group" style="max-width:300px;">
-                    <label>绛涢€夊鐢?/label>
+                    <label>筛选学生</label>
                     <select id="filterStudent" onchange="loadRecords()">
-                        <option value="">鍏ㄩ儴瀛︾敓</option>
+                        <option value="">全部学生</option>
                     </select>
                 </div>
                 <div id="recordsList"></div>
             </div>
             
-            <!-- 杈炬爣鏍囧噯 -->
             <div id="tabStandards" class="tab-content" style="display:none;">
                 <div id="standardsList"></div>
             </div>
         </div>
         
-        <!-- 瀛︾敓涓婚〉 -->
         <div class="card screen" id="studentHome">
             <div class="admin-header">
                 <div>
-                    <h2 id="studentWelcome">浣犲ソ锛?/h2>
-                    <p style="color:#666; font-size:0.9rem;">鐩爣鍒嗘暟锛?span id="studentTargetScore">6.5</span> 鍒?/p>
+                    <h2 id="studentWelcome">你好！</h2>
+                    <p style="color:#666; font-size:0.9rem;">目标分数：<span id="studentTargetScore">6.5</span> 分</p>
                 </div>
                 <div>
-                    <button class="btn btn-secondary btn-sm" onclick="showChangePasswordModal()">鏀瑰瘑鐮?/button>
-                    <button class="btn btn-secondary btn-sm" onclick="studentLogout()">閫€鍑?/button>
+                    <button class="btn btn-secondary btn-sm" onclick="showChangePasswordModal()">改密码</button>
+                    <button class="btn btn-secondary btn-sm" onclick="studentLogout()">退出</button>
                 </div>
             </div>
             
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-value" id="statTotalTests">0</div>
-                    <div class="stat-label">鎬绘祴璇曟鏁?/div>
+                    <div class="stat-label">总测试次数</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="statPassRate">0%</div>
-                    <div class="stat-label">鍘嗗彶杈炬爣鐜?/div>
+                    <div class="stat-label">历史达标率</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="statBestScore">0%</div>
-                    <div class="stat-label">鏈€楂樻纭巼</div>
+                    <div class="stat-label">最高正确率</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="statWrongWords">0</div>
-                    <div class="stat-label">寰呭涔犻敊棰?/div>
+                    <div class="stat-label">待复习错题</div>
                 </div>
             </div>
             
             <div class="tab-bar">
-                <div class="tab active" onclick="switchStudentTab('test')">寮€濮嬫祴璇?/div>
-                <div class="tab" onclick="switchStudentTab('history')">鍘嗗彶璁板綍</div>
+                <div class="tab active" onclick="switchStudentTab('test')">开始测试</div>
+                <div class="tab" onclick="switchStudentTab('history')">历史记录</div>
             </div>
             
-            <!-- 娴嬭瘯閫夋嫨 -->
             <div id="studentTabTest">
                 <div style="text-align:center; padding:30px 0;">
-                    <h3 style="margin-bottom:20px;">馃帶 鍚姏2400璇?/h3>
+                    <h3 style="margin-bottom:20px;">听力2400词</h3>
                     <div class="btn-group">
-                        <button class="btn" onclick="startTest('random')">馃搵 闅忔満娴嬭瘯</button>
-                        <button class="btn btn-success" onclick="startTest('wrong_words')">馃摑 閿欓娴嬭瘯</button>
+                        <button class="btn" onclick="startTest('random')">随机测试</button>
+                        <button class="btn btn-success" onclick="startTest('wrong_words')">错题测试</button>
                     </div>
-                    <p style="color:#666; margin-top:15px; font-size:0.9rem;">鐩爣鍒嗘暟 <span id="moduleTarget">6.5鍒?/span>锛氳揪鏍囩嚎 <span id="moduleThreshold">80%</span></p>
+                    <p style="color:#666; margin-top:15px; font-size:0.9rem;">目标分数 <span id="moduleTarget">6.5分</span>：达标线 <span id="moduleThreshold">80%</span></p>
                 </div>
             </div>
             
-            <!-- 鍘嗗彶璁板綍 -->
             <div id="studentTabHistory" style="display:none;">
                 <div class="history-chart" id="historyChart"></div>
                 <div id="studentHistoryList"></div>
             </div>
         </div>
         
-        <!-- 娴嬭瘯椤甸潰 -->
         <div class="card screen" id="testScreen">
             <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-            <div class="question-counter" id="questionCounter">绗?1 / 50 棰?/div>
+            <div class="question-counter" id="questionCounter">第 1 / 50 题</div>
             <div style="text-align:center;">
-                <span id="testModeLabel" style="background:#e9ecef; padding:5px 15px; border-radius:20px; font-size:0.9rem;">闅忔満娴嬭瘯</span>
+                <span id="testModeLabel" style="background:#e9ecef; padding:5px 15px; border-radius:20px; font-size:0.9rem;">随机测试</span>
             </div>
             <div style="text-align:center; margin:20px 0;">
-                <div id="statusIcon" style="font-size:3rem;">馃攰</div>
-                <div id="timerDisplay" style="font-size:1.5rem; color:#667eea;">鍑嗗涓?..</div>
+                <div id="statusIcon" style="font-size:3rem;">🔊</div>
+                <div id="timerDisplay" style="font-size:1.5rem; color:#667eea;">准备中...</div>
             </div>
             <div class="input-group">
-                <label>璇疯緭鍏ヤ綘鍚埌鐨勫崟璇嶏細</label>
-                <input type="text" id="answerInput" placeholder="杈撳叆鍗曡瘝..." autocomplete="off" onkeypress="if(event.key==='Enter')submitAnswer()">
+                <label>请输入你听到的单词：</label>
+                <input type="text" id="answerInput" placeholder="输入单词..." autocomplete="off" onkeypress="if(event.key==='Enter')submitAnswer()">
             </div>
             <div class="btn-group">
-                <button class="btn btn-secondary" onclick="skipWord()">璺宠繃</button>
-                <button class="btn" onclick="submitAnswer()">鎻愪氦</button>
+                <button class="btn btn-secondary" onclick="skipWord()">跳过</button>
+                <button class="btn" onclick="submitAnswer()">提交</button>
             </div>
         </div>
         
-        <!-- 缁撴灉椤甸潰 -->
         <div class="card screen" id="resultScreen">
-            <h1>馃搳 娴嬭瘯瀹屾垚锛?/h1>
+            <h1>测试完成！</h1>
             <div id="resultStudentInfo" style="text-align:center; color:#667eea; margin:10px 0;"></div>
             <div id="resultPassStatus" class="pass-status"></div>
             <div style="text-align:center;">
                 <div id="resultScore" style="font-size:4rem; font-weight:bold; background:linear-gradient(135deg,#667eea,#764ba2); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">0%</div>
-                <p style="color:#666;">姝ｇ‘鐜囷紙杈炬爣绾匡細<span id="resultThreshold">80%</span>锛?/p>
+                <p style="color:#666;">正确率（达标线：<span id="resultThreshold">80%</span>）</p>
             </div>
             <div class="stats-grid">
-                <div class="stat-box"><div class="stat-value" id="resultCorrect">0</div><div class="stat-label">姝ｇ‘</div></div>
-                <div class="stat-box"><div class="stat-value" id="resultIncorrect">0</div><div class="stat-label">閿欒</div></div>
-                <div class="stat-box"><div class="stat-value" id="resultSkipped">0</div><div class="stat-label">璺宠繃</div></div>
-                <div class="stat-box"><div class="stat-value" id="resultWrongCount">0</div><div class="stat-label">鏂板閿欓</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultCorrect">0</div><div class="stat-label">正确</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultIncorrect">0</div><div class="stat-label">错误</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultSkipped">0</div><div class="stat-label">跳过</div></div>
+                <div class="stat-box"><div class="stat-value" id="resultWrongCount">0</div><div class="stat-label">新增错题</div></div>
             </div>
             <div id="resultErrorList"></div>
             <div class="btn-group">
-                <button class="btn" onclick="downloadResult()">馃摜 涓嬭浇缁撴灉</button>
-                <button class="btn btn-secondary" onclick="backToStudentHome()">杩斿洖涓婚〉</button>
+                <button class="btn" onclick="downloadResult()">下载结果</button>
+                <button class="btn btn-secondary" onclick="backToStudentHome()">返回主页</button>
             </div>
         </div>
     </div>
     
-    <!-- 娣诲姞瀛︾敓寮圭獥 -->
     <div class="modal" id="addStudentModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>娣诲姞瀛︾敓</h3>
-                <button class="modal-close" onclick="closeModal('addStudentModal')">脳</button>
+                <h3>添加学生</h3>
+                <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
             </div>
             <div class="input-group">
-                <label>濮撳悕 *</label>
-                <input type="text" id="newStudentName" placeholder="璇疯緭鍏ュ鍚?>
+                <label>姓名 *</label>
+                <input type="text" id="newStudentName" placeholder="请输入姓名">
             </div>
             <div class="input-group">
-                <label>鐩爣鍒嗘暟 *</label>
+                <label>目标分数 *</label>
                 <select id="newStudentTarget">
-                    <option value="6">6 鍒?/option>
-                    <option value="6.5" selected>6.5 鍒?/option>
-                    <option value="7">7 鍒?/option>
+                    <option value="6">6 分</option>
+                    <option value="6.5" selected>6.5 分</option>
+                    <option value="7">7 分</option>
                 </select>
             </div>
-            <p style="color:#666; font-size:0.85rem; margin-bottom:15px;">瀛﹀彿灏嗚嚜鍔ㄧ敓鎴愶紝鍒濆瀵嗙爜涓?123456</p>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:15px;">学号将自动生成，初始密码为 123456</p>
             <div class="btn-group">
-                <button class="btn" onclick="addStudent()">娣诲姞</button>
-                <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">鍙栨秷</button>
+                <button class="btn" onclick="addStudent()">添加</button>
+                <button class="btn btn-secondary" onclick="closeModal('addStudentModal')">取消</button>
             </div>
         </div>
     </div>
     
-    <!-- 鎵归噺瀵煎叆寮圭獥 -->
     <div class="modal" id="batchImportModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>鎵归噺瀵煎叆瀛︾敓</h3>
-                <button class="modal-close" onclick="closeModal('batchImportModal')">脳</button>
+                <h3>批量导入学生</h3>
+                <button class="modal-close" onclick="closeModal('batchImportModal')">×</button>
             </div>
-            <p style="margin-bottom:15px;">姣忚涓€涓鐢燂紝鏍煎紡锛氬鍚?鐩爣鍒嗘暟锛堝彲閫夛紝榛樿6.5锛?/p>
-            <p style="color:#666; font-size:0.85rem; margin-bottom:10px;">绀轰緥锛?br>寮犱笁<br>鏉庡洓,6<br>鐜嬩簲,7</p>
+            <p style="margin-bottom:15px;">每行一个学生，格式：姓名,目标分数（可选，默认6.5）</p>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:10px;">示例：<br>张三<br>李四,6<br>王五,7</p>
             <div class="input-group">
-                <label>瀛︾敓鍒楄〃</label>
-                <textarea id="batchStudentList" rows="10" placeholder="姣忚涓€涓鐢?></textarea>
+                <label>学生列表</label>
+                <textarea id="batchStudentList" rows="10" placeholder="每行一个学生"></textarea>
             </div>
             <div class="btn-group">
-                <button class="btn" onclick="batchImportStudents()">瀵煎叆</button>
-                <button class="btn btn-secondary" onclick="closeModal('batchImportModal')">鍙栨秷</button>
+                <button class="btn" onclick="batchImportStudents()">导入</button>
+                <button class="btn btn-secondary" onclick="closeModal('batchImportModal')">取消</button>
             </div>
         </div>
     </div>
     
-    <!-- 淇敼瀵嗙爜寮圭獥 -->
     <div class="modal" id="changePasswordModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>淇敼瀵嗙爜</h3>
-                <button class="modal-close" onclick="closeModal('changePasswordModal')">脳</button>
+                <h3>修改密码</h3>
+                <button class="modal-close" onclick="closeModal('changePasswordModal')">×</button>
             </div>
             <div class="input-group">
-                <label>鏂板瘑鐮?/label>
-                <input type="password" id="newPassword" placeholder="璇疯緭鍏ユ柊瀵嗙爜">
+                <label>新密码</label>
+                <input type="password" id="newPassword" placeholder="请输入新密码">
             </div>
             <div class="input-group">
-                <label>纭瀵嗙爜</label>
-                <input type="password" id="confirmPassword" placeholder="璇峰啀娆¤緭鍏ユ柊瀵嗙爜">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" placeholder="请再次输入新密码">
             </div>
             <div class="btn-group">
-                <button class="btn" onclick="changePassword()">纭淇敼</button>
-                <button class="btn btn-secondary" onclick="closeModal('changePasswordModal')">鍙栨秷</button>
+                <button class="btn" onclick="changePassword()">确认修改</button>
+                <button class="btn btn-secondary" onclick="closeModal('changePasswordModal')">取消</button>
             </div>
         </div>
     </div>
     
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
-        // Supabase 閰嶇疆
+        // Supabase 配置
         const SUPABASE_URL = 'https://xoyctsbcrfwhhrxkerwr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhveWN0c2JjcmZ3aGhyeGtlcndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTQ1NzIsImV4cCI6MjA5NDkzMDU3Mn0.EZKqTt-w2N4y5BqZNa-QYA9F1mi51yjl8tF6gQ2aYKQ';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // 鍏ㄥ眬鐘舵€?        let currentStudent = null;
+        // 全局状态
+        let currentStudent = null;
         let currentTestMode = 'random';
         let testWords = [];
         let testResults = [];
@@ -397,35 +376,36 @@
         let timeLeft = 6;
         let isPlaying = false;
         
-        // 鍗曡瘝鍒楄〃锛?400璇嶏級
+        // 单词列表
         const allWords = ["brain","booklet","bridges","social","national","rats","marketing","snakes","round","agency","insects","children","early","cleaning","cloud","conference","ants","hospital","open","insurance","supermarket","pencil","normal","medal","illness","pillow","Arranging","interviews","pizza","magazines","dinner","clever","bathrooms","tickets","accents","save","club","end","water","fireworks","time","glass","goat","rice","hiking","education","against","engineering","orange","pencils","welcome","rules","knees","sister","toys","wait","fitness","citizen","songs","hat","watch","packing","communication","winds","colds","tourists","break","blood","bookshop","teeth","balcony","block","birth","beaches","dark","cooperation","keyboard","hunting","company","meals","address","spelling","wedding","Northeast","corners","check","cultures","booking","shirt","crying","visitors","grammar","lunch","ocean","male","gold","rocks","season","tiger","store","gender","circles","campus","tower","rubber","stars","discussion","advertising","central","change","oven","international","reading","recorders","kite","plants","advertise","Mold","actors","classification","rivers","day","legal","dance","lions","map","bike","watering","view","sand","chain","swimming","technology","sun hat","protection","sheep","numbers","organize","outdoor","difficult","India","noisy","quiet","summer","confidence","price","chocolate","breakdown","couple","results","special","scientific","course","fires","worker","files","healthcare","guard","selfish","greenfield","lines","planner","chemical","aunt","manager","autumn","chemist","eyesight","farmers","fear","kitchen","management","lights","information","wild","humans","bikes","location","search","relationships","feet","gas","messages","choose","sales","bedroom","pollution","politics","museum","bill","cleaner","choosing","hungry","bicycle","salts","skin","leaders","neck","note","noise","bones","parks","patience","printer","programs","rope","salt","none","backdoor","artists","forests","answer","crops","soft","Internet","mapping","blue","mountains","outside","mining","aging","tests","floodwater","storm","global","healthy","oldest","personal","math","wide","lakes","volcano","grain","harm","driver","pictures","beginning","financial","calls","products","guide","notebook","reporter","salads","pets","engineers","leg","radio","tires","hotels","island","furniture","lighting","market","methods","notes","warm","energy","environmental","factory","small","emails","bears","flowers","medicines","housing","income","airports","flat","production","fruits","eyedrops","unsure","trains","milk","villages","workshop","babies","unhealthy","tears","media","gym","friendship","garage","tutors","feeding","fans","minerals","Thursday","problems","profits","left","band","forecast","weekend","military","shadow","smooth","foot","still","unfair","voices","warning","write","family","shipbuilding","training","unanswered","frame","customers","dangerous","dry","traveling","lost","design","footprints","games","hard","images","improvement","king","lab","monkeys","evenings","samples","workplace","town","drive","foods","gardening","approaches","beer","country","department","exercises","negative","outline","modern","sandwiches","jeans","guest","cycling","danger","beginners","frogs","printed","bright","industry","ink","writing","objects","living","account","items","right","land","memories","mental","prisoners","stage","highway","computer","increase","potatoes","morning","strong","carpets","cable","parents","paining","wrong","arts","exhibitor","factories","nests","quality","rural","structure","green","hardworking","quite","tape","promotion","maps","bricks","traffic","unfriendly","yellow","garden","spring","eyes","Eat","cameraman","poison","flooding","ages","distance","colours","cleanest","driving","plates","roads","technical","timetable","gun","hairs","fieldwork","climbing","creativity","list","machines","control","focus","wallet","geese","pianist","salesman","size","runner","choice","urban","tunnel","fashion","plans","main","waste","codes","tour","silver","sandy","economy","economics","movies","hands","contract","cattle","cave","telephone","drinking","accidents","snowboarding","fields","escape","dried","floors","deserts","films","friends","grasses","natural","printers","sport","experience","key","heat","videos","adults","ships","flight","engine","boots","stomach","entrance","surprise","chicken","farming","stairs","bananas","plan","doctors","waterfall","friendly","glasses","oil","printing","seat","government","stories","painting","castles","remember","arms","coloured","animals","fact","political","airplane","firework","closed","army","groundplan","meetings","raining","half","sunset","advance","package","drinks","horsehair","crime","policies","free pick","export","smart","heart","type","horses","reports","value","undeveloped","surveys","self-drive","recording","references","photographs","computers","common","cafe","fill","bath","Russia","cashier","cameras","airline","groups","fireplaces","rainwear","drying","tourism","science","gaps","cash","free","sugar","waiter","TRUE","rainfall","clothes","double","finance","parking","person","writers","rainwater","fresh","newspapers","station","scientist","back","passport","topics","climate","languages","sailing","postcard","restaurant","postbox","meat","varies","researcher","actions","learner","birds","singing","teams","streets","apartment","colony","words","sleep","Safety","various","jacket","present","shipping","loyalty","wheelchair","vitamin A","shoppers","plastic","politician","sunscreen","nurse","concert","super","taxes","weathers","identity","heater","photos","specialist","headache","society","wheels","workforce","analysis","biology","challenge","nesting","administration","harmful","worksheet","coursework","strategies","overfill","picnic","knowledge","fridge","racecar","essays","downhill","impossible","lounge","objectives","quiz","range","harvest","rubbish","antiseptic","bins","cement","observation","trousers","cabin","performance","nuts","organic","breakfast","metals","migrate","overfishing","painters","hairdresser","rare trees","pennies","swans","breed","commitment","concrete","Confirmation","journals","port","gravity","habitat","transportation","gene","extra","retail","microwave","relatively","literature","license","pioneer","handle","entry","basement","entertainment","clinic","minibus","woodland","polluted","sharing","reliable","primary","network","estimate","data","air pump","tastes","relaxation","laundry","non-native","internal","taxi","vision","cheque","recycling","behaviors","attitude","deposit","dentist","resident","innovation","biological","commercial","comparison","emotions","leaflet","ice pack","videotape","originality","prison","grade","diseases","durable","flexibility","handouts","return","underground","interest","play area","seminars","bronze","painkiller","teamwork","backpacker","religions","employee","employer","refreshments","darkroom","roof","satisfaction","part-time","selection","environment","evaporation","Exhibitions","campsite","relatives","typing","smell","security","riverside","monthly","defense","summarize","garbage","designers","seating","mail","agriculture","daylight","golf","joining","traders","website","minivan","brother-in-law","fruitcake","variety","decline","arrangement","password","traditional","camp","reasonable","stand","long-term","purpose","reasons","tents","seasonal","diary","creature","total","lifestyle","boards","carbon","homework","personality","branches","worms","wool","develop","landlady","secretary","freedom","general","petrol","documentation","economical","tutorials","intermediate","joint","development","gifts","imported","frozen","guidelines","iron","corn","nets","diet","cooperate","diaries","wealthy","speeches","opera","stolen","self-defense","documents","necessary","slide","section","handbook","lower","nursing","online","lateral-line","lecture","liberty","leadership","cookery","clay","shells","shape","headphones","direct","direction","lectures","lecturer","wildlife","towels","flexible","theory","permit","secondary","conversation","diving","long stick","singer","growing","surface","textbooks","drums","lifting","chairman","basic","sharks","apologize","guitar","pest","candles","built","cartoons","heavy","process","services","levels","spiders","concentrate","temperature","Scotland","expensive","hearing","whiteboard","trade","cheese","crowded","shower","tools","aid","square","navigation","pattern","pegs","theatre","whales","example","creation","sun-cream","checklist","pool","ability","collecting","studio","coast","collection","college","shelf","concerts","position","smoking","preserved","weight","card index","sleeping bag","polished","processing","evidence","settle","ban","jewelry","feathers","viewpoint","consumers","contact","benefits","fuel","dirt","cap","blanket","downstairs","mistake","vocabulary","subway","restrictions","agent","subjects","chess","grandfather","drugs","rest area","earning","spoon","explain","semester","credit","bookkeeping","empty","cab","spare","indoor","balloons","goldfish","yoga","stream","charge","honest","donkeys","understand","version","alternative","fell","pure","soup","sky","canal","success","running","individual","builder","female","important","exam","whole","proof","football","hunger","investment","middle","rabbit","kilometers","pass","native","robots","salary","realistic","ropes","order","moods","reduction","starvation","storage","relevant","style","wings","pairs","sign","patients","stress","repair","voice","walking","seeds","jokes","invitations","hero","hire","minutes","rainbow","miss","inside","front","overseas","paragraphs","opinion","stressful","transparent","soccer","sharp","reservation","uncomfortable","calendar","dairy","casual","responsible","decision","calm","boring","stick","upstairs","armchair","reception","cigar","packaging","different","balance","clubhouse","companionship","productivity","waterproof","unnatural","specific","community","causes","honey","accept","prizes","multimedia","conclusions","talent","regulations","accountants","client","emotional","pressure","decrease","professor","lakeside","safeguard","condition","feedback","crisis","conservation","pounds","amount","certificates","carrots","specialized","firewood","unlimited","oxygen","windsurfing","loyal","hive","cover","lockers","genetic","articles","enjoyable","entire","electricity","silk","footbridges","competitive","presentations","seagrass","pleasure","massage","floated","teenagers","receptionist","nutrition","workload","threat","perception","noticeboard","windmills","containers","qualification","issue","abroad","technician","punctual","screen","electronic","wax","statistics","networking","tropical","variable","diploma","call diversion","fertilizers","methodology","maturity","washbasin","lifespan","theoretical","concentration","smoother","preservation","acceptable","flashing","altitude","frustration","ambulance","signature","mushroom","badge","ambition","lizard","bacteria","angle","fluctuate","fluent","psychologist","expansion","funding","accurate","slang","argument","terrace","artificial","archives","territory","shuttle","therapy","slaves","assess","limestone","assignment","expose","liable","reflective","refund","voluntary","subtopics","publication","acknowledgement","welfare","toothache","acid","fringe","microscope","centimeter","celebrities","excitement","leak","suitable","occupancy","irrigation","surfing","reusable","nylon","obligation","moderate","excellent","folded","situational","portable","souvenir","assessment","nursery","responsibility","jogging","evaluation","liquid","toaster","cotton","prevention","fountain","vertical","reproduction","horror","intelligence","barbershop","prevalent","torn","deadline","vetting","radar","cosmetics","adopt","motivation","consumption","adventure","maintenance","rack","curved","touching","rationally","damp","random","hardware","priority","tolerance","facilities","visa","intact","warehouse","admission","strap","medication","toilet","uniform","coconut","dismiss","rush","average","bakery","membership","brilliant","advisors","publishing","disappear","atlas","alter","index","discipline","wetsuit","integrate","antifreeze","breathing","shrimp","confusion","agreement","tuna","labels","weeding","dishwasher","shoot","depth","booths","opposite","oral","polish","maximum","sacred","outstanding","palace","digestion","zoom","powder","silence","herds","director","savings","achievement","scale","aspiration","purple","battery","edges","measurement","ecology","ladders","duration","sable","canteen","trace","predicting","Budget","circulation","display","rumor","broad","satellite","vanish","mould","stickers","persuading","corrupt","freight","geographical","motor","man-made","correction","status","fence","useless","perfumes","stimulation","stems","kindness","undergraduate","weed","stings","cream","current","definition","bucket","wires","brakes","depression","catalogue","sweetener","tides","catering","brushes","intensive","recommendation","obesity","categories","mammals","hostel","delivery","straight","thunderstorm","apology","broader","whistle","trends","ingredients","jazz","rivals","boiler","crocodiles","fishing net","crown","introduction","explanation","explode","junior","link","willing","curtains","sweaters","tail","platforms","sheet","movement","immigration","explosion","domestic","editor","isolation","automobile","orientation","calculating","glue","formats","compensation","degrees","interaction","manual","demand","necklace","mat","attack","Protein","morality","origins","monitor","outcomes","participation","room service","scent","kidney","influence","informal","journalism","bushes","butterflies","roots","bunch","scenery","expectations","shallow","mud","character","steel","expect","strain","faxing","flashlight","pockets","flute","loans","lungs","manufacture","manufacturers","count","audience","scare","demonstrations","reinvest","generation","treatment","pesticides","copies","carpenter","bargain","spine","model","symbol","destroy","contaminate","expert","flavor","trash","context","translation","diamond","efficiency","elastic","grant","humidity","fluids","pilots","luxury","magic","draft","strict","timber","cliffs","progress","recruit","roll over","schedule","capacities","hospitality","classifying","grandmother","critical","immune","judo","drawing","grocery","matching","spears","lawyers","democratic","moist","passages","passive","ceremonies","temple","frequency","font","gloves","term","gradual","convenient","distribute","encourage","enlargement","complaints","module","patterns","complete","humor","reinforce","lanes","legroom","realism","regular","bonus","height","erosion","string","strike","compulsory","compounds","tomatoes","tone","independent","titles","comprehension","leisure","tongue","confirm","length","stopwatch","impact","soap","apron","pressed","residents","laptops","freezer","equal","complex","distribution","released","district","mixed","popular","consistent","marriage","E. ticket","experiment","external","fingers","Europe","leather","revenue","textile","mask","mild","population","pots","fair","savvy","president","sort","source","resources","seasoned","seals","resistant","emperor","accountable","composers","retrain","review","restroom","solid","solution","socks","replacement","request","repeat","scarf","antibiotics","uncontrolled","hurricane","instinctive","weapon","odor","addictive","magnet","statue","pipes","fabric","friction","fur","shoulder","virus","foundation","menu","digging","fat","extinction","fossil","captive","fog","poetry","trays","promotional","saliva","referee","registration","slope","biography","headlines","logo","calculation","pharmacy","digestive","flamingos","efficient","claw","relocation","instructor","moisture","session","sculptures","infrastructure","nitrogen","trumpet","receiver","philosophers","chalk","representation","require","retained","sites","situation","herbivorous","guessing","authority","motel","carnival","monuments","hook","predators","stretching","kangaroo","lids","sociable","poster","photocopies","prepared","comedy","comfortable","reward","remote","evolution","rockets","pirates","distortion","flu","coastline","stuck","strangers","elevator","dolphins","elephants","journalists","peak","route","smash","soldiers","advertisement","stairlift","shame","state park","procedure","steam","helicopter","application","density","hothouse","scores","diversity","comics","consultant","exploration","identification","vegetarian","questionnaire","description","vegetation","machinery","donations","sustainable","shortlist","documentary","supervision","decorations","tribes","landmarks","migration","organizations","permanent","mathematics","germs","atoms","craft","unsocial","permission","triangle","pottery","supportive","microbiology","helmet","unpredictable","strength","unfurnished","forestry","navigational","arrows","unapproachable","automatic","layout","appearance","caravan","theme","translator","similar","insulation","barrier","reaction","signals","microfilm","olive oil","instinct","myth","effectiveness","dome","logic","dictation","poverty","graphics","combination","flies","retire","instructions","stabilize","embassy","drought","repel","shade"];
         
-        // 宸ュ叿鍑芥暟
+        // 工具函数
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
         
-        function showToast(message, type = 'info') {
+        function showToast(message, type) {
+            type = type || 'info';
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = 'toast show ' + type;
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(function() { toast.classList.remove('show'); }, 3000);
         }
         
         function showModal(modalId) { document.getElementById(modalId).classList.add('active'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
         
-        // 鏁欏笀鐧诲綍楠岃瘉
+        // 教师登录验证
         async function verifyTeacherPassword() {
             const password = document.getElementById('teacherPassword').value;
-            const { data, error } = await supabaseClient.from('teacher_config').select('access_password').eq('id', 1).single();
-            if (error) { showToast('楠岃瘉澶辫触', 'error'); return; }
-            if (password === data.access_password) {
+            const result = await db.from('teacher_config').select('access_password').eq('id', 1).single();
+            if (result.error) { showToast('验证失败', 'error'); return; }
+            if (password === result.data.access_password) {
                 showScreen('teacherDashboard');
                 loadTeacherData();
             } else {
-                showToast('瀵嗙爜閿欒', 'error');
+                showToast('密码错误', 'error');
             }
         }
         
@@ -434,16 +414,16 @@
             document.getElementById('teacherPassword').value = '';
         }
         
-        // 瀛︾敓鐧诲綍
+        // 学生登录
         async function studentLogin() {
             const studentId = document.getElementById('studentId').value.trim();
             const password = document.getElementById('studentPassword').value;
-            if (!studentId || !password) { showToast('璇疯緭鍏ュ鍙峰拰瀵嗙爜', 'error'); return; }
-            const { data, error } = await supabaseClient.from('students').select('*').eq('student_id', studentId).eq('password', password).single();
-            if (error || !data) { showToast('瀛﹀彿鎴栧瘑鐮侀敊璇?, 'error'); return; }
-            if (data.status !== 'active') { showToast('璐﹀彿宸茶绂佺敤', 'error'); return; }
-            currentStudent = data;
-            if (!data.is_password_changed) {
+            if (!studentId || !password) { showToast('请输入学号和密码', 'error'); return; }
+            const result = await db.from('students').select('*').eq('student_id', studentId).eq('password', password).single();
+            if (result.error || !result.data) { showToast('学号或密码错误', 'error'); return; }
+            if (result.data.status !== 'active') { showToast('账号已被禁用', 'error'); return; }
+            currentStudent = result.data;
+            if (!result.data.is_password_changed) {
                 showChangePasswordModal();
             } else {
                 showStudentHome();
@@ -452,69 +432,70 @@
         
         function showStudentHome() {
             showScreen('studentHome');
-            document.getElementById('studentWelcome').textContent = '浣犲ソ锛? + currentStudent.name + '锛?;
+            document.getElementById('studentWelcome').textContent = '你好，' + currentStudent.name + '！';
             document.getElementById('studentTargetScore').textContent = currentStudent.target_score;
             loadStudentStats();
             loadStudentHistory();
         }
         
         async function loadStudentStats() {
-            const { data: records } = await supabaseClient.from('test_records').select('*').eq('student_id', currentStudent.student_id);
-            const { data: wrongWords } = await supabaseClient.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
-            const totalTests = records?.length || 0;
-            const passCount = records?.filter(r => r.is_passed).length || 0;
-            const bestScore = records?.length ? Math.max(...records.map(r => r.score)) : 0;
+            const recordsResult = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id);
+            const wrongResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+            const records = recordsResult.data || [];
+            const wrongWords = wrongResult.data || [];
+            const totalTests = records.length;
+            const passCount = records.filter(function(r) { return r.is_passed; }).length;
+            const bestScore = records.length ? Math.max.apply(null, records.map(function(r) { return r.score; })) : 0;
             document.getElementById('statTotalTests').textContent = totalTests;
             document.getElementById('statPassRate').textContent = totalTests > 0 ? Math.round(passCount / totalTests * 100) + '%' : '0%';
             document.getElementById('statBestScore').textContent = bestScore + '%';
-            document.getElementById('statWrongWords').textContent = wrongWords?.length || 0;
+            document.getElementById('statWrongWords').textContent = wrongWords.length;
             
-            // 鍔犺浇妯″潡杈炬爣鏍囧噯
-            const { data: standards } = await supabaseClient.from('pass_standards').select('*').eq('module_type', 'dictation').single();
-            if (standards) {
-                let threshold = standards.score_6;
-                if (currentStudent.target_score == 6.5) threshold = standards.score_6_5;
-                else if (currentStudent.target_score == 7) threshold = standards.score_7;
-                document.getElementById('moduleTarget').textContent = currentStudent.target_score + '鍒?;
+            const standardsResult = await db.from('pass_standards').select('*').eq('module_type', 'dictation').single();
+            if (standardsResult.data) {
+                let threshold = standardsResult.data.score_6;
+                if (currentStudent.target_score == 6.5) threshold = standardsResult.data.score_6_5;
+                else if (currentStudent.target_score == 7) threshold = standardsResult.data.score_7;
+                document.getElementById('moduleTarget').textContent = currentStudent.target_score + '分';
                 document.getElementById('moduleThreshold').textContent = threshold + '%';
             }
         }
         
         async function loadStudentHistory() {
-            const { data: records } = await supabaseClient.from('test_records').select('*').eq('student_id', currentStudent.student_id).order('created_at', { ascending: false }).limit(10);
+            const result = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id).order('created_at', { ascending: false }).limit(10);
             const container = document.getElementById('studentHistoryList');
+            const records = result.data;
             if (!records || records.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">鏆傛棤鍘嗗彶璁板綍</p>';
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无历史记录</p>';
                 document.getElementById('historyChart').innerHTML = '';
                 return;
             }
-            container.innerHTML = records.map(r => `
-                <div style="padding:15px;border-bottom:1px solid #eee;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div>
-                            <span style="font-weight:600;">${r.test_type === 'random' ? '闅忔満娴嬭瘯' : '閿欓娴嬭瘯'}</span>
-                            <span style="color:#666;font-size:0.85rem;margin-left:10px;">${new Date(r.created_at).toLocaleString('zh-CN')}</span>
-                        </div>
-                        <div>
-                            <span style="font-size:1.2rem;font-weight:bold;${r.is_passed ? 'color:#28a745;' : 'color:#dc3545;'}">${r.score}%</span>
-                            <span class="badge ${r.is_passed ? 'badge-success' : 'badge-danger'}" style="margin-left:10px;">${r.is_passed ? '杈炬爣' : '鏈揪鏍?}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            // 绠€鍗曞浘琛?            const chartHtml = records.reverse().map((r, i) => {
-                const height = r.score;
+            let html = '';
+            for (let i = 0; i < records.length; i++) {
+                const r = records[i];
+                const typeText = r.test_type === 'random' ? '随机测试' : '错题测试';
+                const dateStr = new Date(r.created_at).toLocaleString('zh-CN');
+                const color = r.is_passed ? 'color:#28a745;' : 'color:#dc3545;';
+                const badgeClass = r.is_passed ? 'badge-success' : 'badge-danger';
+                const statusText = r.is_passed ? '达标' : '未达标';
+                html += '<div style="padding:15px;border-bottom:1px solid #eee;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><span style="font-weight:600;">' + typeText + '</span><span style="color:#666;font-size:0.85rem;margin-left:10px;">' + dateStr + '</span></div><div><span style="font-size:1.2rem;font-weight:bold;' + color + '">' + r.score + '%</span><span class="badge ' + badgeClass + '" style="margin-left:10px;">' + statusText + '</span></div></div></div>';
+            }
+            container.innerHTML = html;
+            
+            const reversed = records.slice().reverse();
+            let chartHtml = '<div style="display:flex;align-items:flex-end;height:150px;padding:10px;background:#f8f9fa;border-radius:10px;">';
+            for (let i = 0; i < reversed.length; i++) {
+                const r = reversed[i];
+                const height = r.score / 100 * 150;
                 const color = r.is_passed ? '#28a745' : '#dc3545';
-                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                    <div style="width:20px;background:${color};height:${height/100*150}px;min-height:5px;border-radius:5px 5px 0 0;"></div>
-                    <span style="font-size:0.7rem;color:#666;margin-top:5px;">${r.score}%</span>
-                </div>`;
-            }).join('');
-            document.getElementById('historyChart').innerHTML = `<div style="display:flex;align-items:flex-end;height:150px;padding:10px;background:#f8f9fa;border-radius:10px;">${chartHtml}</div>`;
+                chartHtml += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;"><div style="width:20px;background:' + color + ';height:' + height + 'px;min-height:5px;border-radius:5px 5px 0 0;"></div><span style="font-size:0.7rem;color:#666;margin-top:5px;">' + r.score + '%</span></div>';
+            }
+            chartHtml += '</div>';
+            document.getElementById('historyChart').innerHTML = chartHtml;
         }
         
         function switchStudentTab(tab) {
-            document.querySelectorAll('#studentHome .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#studentHome .tab').forEach(function(t) { t.classList.remove('active'); });
             event.target.classList.add('active');
             document.getElementById('studentTabTest').style.display = tab === 'test' ? 'block' : 'none';
             document.getElementById('studentTabHistory').style.display = tab === 'history' ? 'block' : 'none';
@@ -527,146 +508,134 @@
             document.getElementById('studentPassword').value = '';
         }
         
-        // 淇敼瀵嗙爜
         function showChangePasswordModal() { showModal('changePasswordModal'); }
         
         async function changePassword() {
             const newPwd = document.getElementById('newPassword').value;
             const confirmPwd = document.getElementById('confirmPassword').value;
-            if (!newPwd || newPwd.length < 4) { showToast('瀵嗙爜鑷冲皯4浣?, 'error'); return; }
-            if (newPwd !== confirmPwd) { showToast('涓ゆ瀵嗙爜涓嶄竴鑷?, 'error'); return; }
-            const { error } = await supabaseClient.from('students').update({ password: newPwd, is_password_changed: true }).eq('student_id', currentStudent.student_id);
-            if (error) { showToast('淇敼澶辫触', 'error'); return; }
+            if (!newPwd || newPwd.length < 4) { showToast('密码至少4位', 'error'); return; }
+            if (newPwd !== confirmPwd) { showToast('两次密码不一致', 'error'); return; }
+            const result = await db.from('students').update({ password: newPwd, is_password_changed: true }).eq('student_id', currentStudent.student_id);
+            if (result.error) { showToast('修改失败', 'error'); return; }
             currentStudent.password = newPwd;
             currentStudent.is_password_changed = true;
             closeModal('changePasswordModal');
-            showToast('瀵嗙爜淇敼鎴愬姛', 'success');
+            showToast('密码修改成功', 'success');
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
-            if (document.getElementById('studentHome').classList.contains('active')) {
-                // 宸插湪涓婚〉锛屾棤闇€璺宠浆
-            } else {
+            if (!document.getElementById('studentHome').classList.contains('active')) {
                 showStudentHome();
             }
         }
         
-        // 鏁欏笀绔暟鎹姞杞?        async function loadTeacherData() {
+        async function loadTeacherData() {
             await Promise.all([loadStudents(), loadRecords(), loadStandards()]);
         }
         
         async function loadStudents() {
-            const { data: students } = await supabaseClient.from('students').select('*').order('created_at', { ascending: false });
+            const result = await db.from('students').select('*').order('created_at', { ascending: false });
             const container = document.getElementById('studentsList');
+            const students = result.data;
             if (!students || students.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">鏆傛棤瀛︾敓</p>';
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无学生</p>';
                 return;
             }
-            container.innerHTML = `<table><thead><tr><th>瀛﹀彿</th><th>濮撳悕</th><th>鐩爣</th><th>鐘舵€?/th><th>鎿嶄綔</th></tr></thead><tbody>${students.map(s => `
-                <tr>
-                    <td>${s.student_id}</td>
-                    <td>${s.name}</td>
-                    <td>${s.target_score}鍒?/td>
-                    <td><span class="badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}">${s.status === 'active' ? '姝ｅ父' : '绂佺敤'}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary" onclick="resetPassword('${s.student_id}')">閲嶇疆瀵嗙爜</button>
-                        <button class="btn btn-sm ${s.status === 'active' ? 'btn-danger' : 'btn-success'}" onclick="toggleStatus('${s.student_id}', '${s.status}')">${s.status === 'active' ? '绂佺敤' : '鍚敤'}</button>
-                    </td>
-                </tr>
-            `).join('')}</tbody></table>`;
-            // 鏇存柊绛涢€変笅鎷?            const filterSelect = document.getElementById('filterStudent');
-            filterSelect.innerHTML = '<option value="">鍏ㄩ儴瀛︾敓</option>' + students.map(s => `<option value="${s.student_id}">${s.name} (${s.student_id})</option>`).join('');
+            let html = '<table><thead><tr><th>学号</th><th>姓名</th><th>目标</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+            for (let i = 0; i < students.length; i++) {
+                const s = students[i];
+                const statusBadge = s.status === 'active' ? 'badge-success">正常' : 'badge-danger">禁用';
+                const toggleBtn = s.status === 'active' ? 'btn-danger">禁用' : 'btn-success">启用';
+                html += '<tr><td>' + s.student_id + '</td><td>' + s.name + '</td><td>' + s.target_score + '分</td><td><span class="badge ' + statusBadge + '</span></td><td><button class="btn btn-sm btn-secondary" onclick="resetPassword(\'' + s.student_id + '\')">重置密码</button> <button class="btn btn-sm ' + toggleBtn + '</button></td></tr>';
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+            const filterSelect = document.getElementById('filterStudent');
+            let filterHtml = '<option value="">全部学生</option>';
+            for (let i = 0; i < students.length; i++) {
+                filterHtml += '<option value="' + students[i].student_id + '">' + students[i].name + ' (' + students[i].student_id + ')</option>';
+            }
+            filterSelect.innerHTML = filterHtml;
         }
         
         async function loadRecords() {
-            let query = supabaseClient.from('test_records').select('*, students(name)').order('created_at', { ascending: false }).limit(100);
-            const filterId = document.getElementById('filterStudent')?.value;
+            let query = db.from('test_records').select('*, students(name)').order('created_at', { ascending: false }).limit(100);
+            const filterId = document.getElementById('filterStudent').value;
             if (filterId) query = query.eq('student_id', filterId);
-            const { data: records } = await query;
+            const result = await query;
             const container = document.getElementById('recordsList');
+            const records = result.data;
             if (!records || records.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">鏆傛棤娴嬭瘯璁板綍</p>';
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无测试记录</p>';
                 return;
             }
-            container.innerHTML = `<table><thead><tr><th>瀛﹀彿</th><th>濮撳悕</th><th>绫诲瀷</th><th>鏃堕棿</th><th>姝ｇ‘鐜?/th><th>杈炬爣</th></tr></thead><tbody>${records.map(r => `
-                <tr>
-                    <td>${r.student_id}</td>
-                    <td>${r.students?.name || '-'}</td>
-                    <td>${r.test_type === 'random' ? '闅忔満' : '閿欓'}</td>
-                    <td>${new Date(r.created_at).toLocaleString('zh-CN')}</td>
-                    <td>${r.score}%</td>
-                    <td><span class="badge ${r.is_passed ? 'badge-success' : 'badge-danger'}">${r.is_passed ? '杈炬爣' : '鏈揪鏍?}</span></td>
-                </tr>
-            `).join('')}</tbody></table>`;
+            let html = '<table><thead><tr><th>学号</th><th>姓名</th><th>类型</th><th>时间</th><th>正确率</th><th>达标</th></tr></thead><tbody>';
+            for (let i = 0; i < records.length; i++) {
+                const r = records[i];
+                const typeText = r.test_type === 'random' ? '随机' : '错题';
+                const dateStr = new Date(r.created_at).toLocaleString('zh-CN');
+                const badgeClass = r.is_passed ? 'badge-success">达标' : 'badge-danger">未达标';
+                const name = r.students ? r.students.name : '-';
+                html += '<tr><td>' + r.student_id + '</td><td>' + name + '</td><td>' + typeText + '</td><td>' + dateStr + '</td><td>' + r.score + '%</td><td><span class="badge ' + badgeClass + '</span></td></tr>';
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
         
         async function loadStandards() {
-            const { data: standards } = await supabaseClient.from('pass_standards').select('*').eq('is_active', true);
+            const result = await db.from('pass_standards').select('*').eq('is_active', true);
             const container = document.getElementById('standardsList');
+            const standards = result.data;
             if (!standards || standards.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">鏆傛棤妯″潡閰嶇疆</p>';
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无模块配置</p>';
                 return;
             }
-            container.innerHTML = standards.map(s => `
-                <div style="padding:20px;background:#f8f9fa;border-radius:10px;margin-bottom:15px;">
-                    <h4 style="margin-bottom:15px;">${s.module_name}</h4>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;">
-                        <div class="input-group">
-                            <label>6鍒嗚揪鏍囩嚎</label>
-                            <input type="number" id="std6_${s.module_type}" value="${s.score_6}" onchange="updateStandard('${s.module_type}', 'score_6', this.value)">
-                        </div>
-                        <div class="input-group">
-                            <label>6.5鍒嗚揪鏍囩嚎</label>
-                            <input type="number" id="std65_${s.module_type}" value="${s.score_6_5}" onchange="updateStandard('${s.module_type}', 'score_6_5', this.value)">
-                        </div>
-                        <div class="input-group">
-                            <label>7鍒嗚揪鏍囩嚎</label>
-                            <input type="number" id="std7_${s.module_type}" value="${s.score_7}" onchange="updateStandard('${s.module_type}', 'score_7', this.value)">
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+            let html = '';
+            for (let i = 0; i < standards.length; i++) {
+                const s = standards[i];
+                html += '<div style="padding:20px;background:#f8f9fa;border-radius:10px;margin-bottom:15px;"><h4 style="margin-bottom:15px;">' + s.module_name + '</h4><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;"><div class="input-group"><label>6分达标线</label><input type="number" id="std6_' + s.module_type + '" value="' + s.score_6 + '" onchange="updateStandard(\'' + s.module_type + '\', \'score_6\', this.value)"></div><div class="input-group"><label>6.5分达标线</label><input type="number" id="std65_' + s.module_type + '" value="' + s.score_6_5 + '" onchange="updateStandard(\'' + s.module_type + '\', \'score_6_5\', this.value)"></div><div class="input-group"><label>7分达标线</label><input type="number" id="std7_' + s.module_type + '" value="' + s.score_7 + '" onchange="updateStandard(\'' + s.module_type + '\', \'score_7\', this.value)"></div></div></div>';
+            }
+            container.innerHTML = html;
         }
         
         async function updateStandard(moduleType, field, value) {
             const update = {};
             update[field] = parseFloat(value);
             update.updated_at = new Date().toISOString();
-            await supabaseClient.from('pass_standards').update(update).eq('module_type', moduleType);
-            showToast('宸叉洿鏂?, 'success');
+            await db.from('pass_standards').update(update).eq('module_type', moduleType);
+            showToast('已更新', 'success');
         }
         
         function switchTeacherTab(tab) {
-            document.querySelectorAll('#teacherDashboard .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#teacherDashboard .tab').forEach(function(t) { t.classList.remove('active'); });
             event.target.classList.add('active');
             document.getElementById('tabStudents').style.display = tab === 'students' ? 'block' : 'none';
             document.getElementById('tabRecords').style.display = tab === 'records' ? 'block' : 'none';
             document.getElementById('tabStandards').style.display = tab === 'standards' ? 'block' : 'none';
         }
         
-        // 瀛︾敓绠＄悊鎿嶄綔
         function showAddStudentModal() { showModal('addStudentModal'); }
         
         async function addStudent() {
             const name = document.getElementById('newStudentName').value.trim();
             const targetScore = parseFloat(document.getElementById('newStudentTarget').value);
-            if (!name) { showToast('璇疯緭鍏ュ鍚?, 'error'); return; }
-            // 鐢熸垚瀛﹀彿
-            const { data: lastStudent } = await supabaseClient.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
+            if (!name) { showToast('请输入姓名', 'error'); return; }
+            const lastResult = await db.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
             let newId = '2025001';
-            if (lastStudent) {
-                newId = String(parseInt(lastStudent.student_id) + 1);
+            if (lastResult.data) {
+                newId = String(parseInt(lastResult.data.student_id) + 1);
             }
-            const { error } = await supabaseClient.from('students').insert({
+            const insertResult = await db.from('students').insert({
                 student_id: newId,
                 name: name,
                 password: '123456',
                 target_score: targetScore,
                 is_password_changed: false
             });
-            if (error) { showToast('娣诲姞澶辫触锛? + error.message, 'error'); return; }
+            if (insertResult.error) { showToast('添加失败：' + insertResult.error.message, 'error'); return; }
             closeModal('addStudentModal');
             document.getElementById('newStudentName').value = '';
-            showToast(`娣诲姞鎴愬姛锛佸鍙凤細${newId}锛屽垵濮嬪瘑鐮侊細123456`, 'success');
+            showToast('添加成功！学号：' + newId + '，初始密码：123456', 'success');
             loadStudents();
         }
         
@@ -674,98 +643,103 @@
         
         async function batchImportStudents() {
             const text = document.getElementById('batchStudentList').value.trim();
-            if (!text) { showToast('璇疯緭鍏ュ鐢熷垪琛?, 'error'); return; }
-            const lines = text.split('\n').filter(l => l.trim());
-            const { data: lastStudent } = await supabaseClient.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
-            let startId = lastStudent ? parseInt(lastStudent.student_id) + 1 : 2025001;
+            if (!text) { showToast('请输入学生列表', 'error'); return; }
+            const lines = text.split('\n').filter(function(l) { return l.trim(); });
+            const lastResult = await db.from('students').select('student_id').order('created_at', { ascending: false }).limit(1).single();
+            let startId = lastResult.data ? parseInt(lastResult.data.student_id) + 1 : 2025001;
             const students = [];
-            lines.forEach((line, i) => {
-                const parts = line.split(',');
+            for (let i = 0; i < lines.length; i++) {
+                const parts = lines[i].split(',');
                 const name = parts[0].trim();
                 const target = parts[1] ? parseFloat(parts[1].trim()) : 6.5;
-                if (name) students.push({
-                    student_id: String(startId + i),
-                    name: name,
-                    password: '123456',
-                    target_score: target,
-                    is_password_changed: false
-                });
-            });
-            if (students.length === 0) { showToast('娌℃湁鏈夋晥鐨勫鐢熸暟鎹?, 'error'); return; }
-            const { error } = await supabaseClient.from('students').insert(students);
-            if (error) { showToast('瀵煎叆澶辫触锛? + error.message, 'error'); return; }
+                if (name) {
+                    students.push({
+                        student_id: String(startId + i),
+                        name: name,
+                        password: '123456',
+                        target_score: target,
+                        is_password_changed: false
+                    });
+                }
+            }
+            if (students.length === 0) { showToast('没有有效的学生数据', 'error'); return; }
+            const insertResult = await db.from('students').insert(students);
+            if (insertResult.error) { showToast('导入失败：' + insertResult.error.message, 'error'); return; }
             closeModal('batchImportModal');
             document.getElementById('batchStudentList').value = '';
-            showToast(`鎴愬姛瀵煎叆 ${students.length} 鍚嶅鐢焋, 'success');
+            showToast('成功导入 ' + students.length + ' 名学生', 'success');
             loadStudents();
         }
         
         async function resetPassword(studentId) {
-            if (!confirm('纭畾閲嶇疆璇ュ鐢熷瘑鐮佷负123456锛?)) return;
-            await supabaseClient.from('students').update({ password: '123456', is_password_changed: false }).eq('student_id', studentId);
-            showToast('瀵嗙爜宸查噸缃?, 'success');
+            if (!confirm('确定重置该学生密码为123456？')) return;
+            await db.from('students').update({ password: '123456', is_password_changed: false }).eq('student_id', studentId);
+            showToast('密码已重置', 'success');
         }
         
         async function toggleStatus(studentId, currentStatus) {
             const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-            await supabaseClient.from('students').update({ status: newStatus }).eq('student_id', studentId);
+            await db.from('students').update({ status: newStatus }).eq('student_id', studentId);
             loadStudents();
-            showToast(`瀛︾敓宸?{newStatus === 'active' ? '鍚敤' : '绂佺敤'}`, 'success');
+            showToast('学生已' + (newStatus === 'active' ? '启用' : '禁用'), 'success');
         }
         
-        // 瀵煎嚭Excel
         async function exportStudentsExcel() {
-            const { data: students } = await supabaseClient.from('students').select('*').order('student_id');
-            if (!students) return;
-            const ws = XLSX.utils.json_to_sheet(students.map(s => ({
-                '瀛﹀彿': s.student_id,
-                '濮撳悕': s.name,
-                '鐩爣鍒嗘暟': s.target_score,
-                '鐘舵€?: s.status === 'active' ? '姝ｅ父' : '绂佺敤',
-                '鍒涘缓鏃堕棿': new Date(s.created_at).toLocaleString('zh-CN')
-            })));
+            const result = await db.from('students').select('*').order('student_id');
+            if (!result.data) return;
+            const data = result.data.map(function(s) {
+                return {
+                    '学号': s.student_id,
+                    '姓名': s.name,
+                    '目标分数': s.target_score,
+                    '状态': s.status === 'active' ? '正常' : '禁用',
+                    '创建时间': new Date(s.created_at).toLocaleString('zh-CN')
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '瀛︾敓鍚嶅崟');
-            XLSX.writeFile(wb, '瀛︾敓鍚嶅崟_' + new Date().toISOString().slice(0,10) + '.xlsx');
-            showToast('瀵煎嚭鎴愬姛', 'success');
+            XLSX.utils.book_append_sheet(wb, ws, '学生名单');
+            XLSX.writeFile(wb, '学生名单_' + new Date().toISOString().slice(0,10) + '.xlsx');
+            showToast('导出成功', 'success');
         }
         
         async function exportRecordsExcel() {
-            const { data: records } = await supabaseClient.from('test_records').select('*, students(name)').order('created_at', { ascending: false });
-            if (!records) return;
-            const ws = XLSX.utils.json_to_sheet(records.map(r => ({
-                '瀛﹀彿': r.student_id,
-                '濮撳悕': r.students?.name || '-',
-                '娴嬭瘯绫诲瀷': r.test_type === 'random' ? '闅忔満娴嬭瘯' : '閿欓娴嬭瘯',
-                '姝ｇ‘鐜?: r.score + '%',
-                '杈炬爣': r.is_passed ? '鏄? : '鍚?,
-                '杈炬爣绾?: r.pass_threshold + '%',
-                '鏃堕棿': new Date(r.created_at).toLocaleString('zh-CN')
-            })));
+            const result = await db.from('test_records').select('*, students(name)').order('created_at', { ascending: false });
+            if (!result.data) return;
+            const data = result.data.map(function(r) {
+                return {
+                    '学号': r.student_id,
+                    '姓名': r.students ? r.students.name : '-',
+                    '测试类型': r.test_type === 'random' ? '随机测试' : '错题测试',
+                    '正确率': r.score + '%',
+                    '达标': r.is_passed ? '是' : '否',
+                    '达标线': r.pass_threshold + '%',
+                    '时间': new Date(r.created_at).toLocaleString('zh-CN')
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '娴嬭瘯璁板綍');
-            XLSX.writeFile(wb, '娴嬭瘯璁板綍_' + new Date().toISOString().slice(0,10) + '.xlsx');
-            showToast('瀵煎嚭鎴愬姛', 'success');
+            XLSX.utils.book_append_sheet(wb, ws, '测试记录');
+            XLSX.writeFile(wb, '测试记录_' + new Date().toISOString().slice(0,10) + '.xlsx');
+            showToast('导出成功', 'success');
         }
         
-        // 娴嬭瘯鍔熻兘
         async function startTest(mode) {
             currentTestMode = mode;
-            document.getElementById('testModeLabel').textContent = mode === 'random' ? '闅忔満娴嬭瘯' : '閿欓娴嬭瘯';
+            document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
             document.getElementById('testModeLabel').style.background = mode === 'random' ? '#e9ecef' : '#d4edda';
-            // 鑾峰彇棰樼洰
             if (mode === 'random') {
-                testWords = shuffleArray([...allWords]).slice(0, 50);
+                testWords = shuffleArray(allWords.slice()).slice(0, 50);
             } else {
-                const { data: wrongWords } = await supabaseClient.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
-                if (!wrongWords || wrongWords.length === 0) {
-                    showToast('鏆傛棤閿欓鍙粌涔?, 'info');
+                const result = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+                if (!result.data || result.data.length === 0) {
+                    showToast('暂无错题可练习', 'info');
                     return;
                 }
-                testWords = wrongWords.map(w => w.word);
+                testWords = result.data.map(function(w) { return w.word; });
                 if (testWords.length < 50) {
-                    const more = shuffleArray(allWords.filter(w => !testWords.includes(w))).slice(0, 50 - testWords.length);
-                    testWords = [...testWords, ...more];
+                    const more = shuffleArray(allWords.filter(function(w) { return testWords.indexOf(w) === -1; })).slice(0, 50 - testWords.length);
+                    testWords = testWords.concat(more);
                 }
             }
             testResults = [];
@@ -777,18 +751,20 @@
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                const temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
             }
             return array;
         }
         
         function showQuestion() {
-            document.getElementById('questionCounter').textContent = `绗?${currentTestIndex + 1} / ${testWords.length} 棰榒;
-            document.getElementById('progressFill').style.width = `${((currentTestIndex + 1) / testWords.length) * 100}%`;
+            document.getElementById('questionCounter').textContent = '第 ' + (currentTestIndex + 1) + ' / ' + testWords.length + ' 题';
+            document.getElementById('progressFill').style.width = ((currentTestIndex + 1) / testWords.length * 100) + '%';
             document.getElementById('answerInput').value = '';
-            document.getElementById('timerDisplay').textContent = '鍑嗗涓?..';
+            document.getElementById('timerDisplay').textContent = '准备中...';
             document.getElementById('timerDisplay').className = '';
-            document.getElementById('statusIcon').textContent = '馃攰';
+            document.getElementById('statusIcon').textContent = '🔊';
             document.getElementById('statusIcon').className = '';
             playWord();
         }
@@ -799,11 +775,8 @@
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
-            const icon = document.getElementById('statusIcon');
-            icon.className = 'playing';
             isPlaying = true;
-            utterance.onend = () => {
-                icon.className = '';
+            utterance.onend = function() {
                 isPlaying = false;
                 startTimer();
             };
@@ -813,12 +786,12 @@
         function startTimer() {
             timeLeft = 6;
             updateTimerDisplay();
-            timerInterval = setInterval(() => {
+            timerInterval = setInterval(function() {
                 timeLeft--;
                 updateTimerDisplay();
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    document.getElementById('timerDisplay').textContent = '鏃堕棿鍒帮紒';
+                    document.getElementById('timerDisplay').textContent = '时间到！';
                     setTimeout(autoSubmit, 800);
                 }
             }, 1000);
@@ -826,7 +799,7 @@
         
         function updateTimerDisplay() {
             const display = document.getElementById('timerDisplay');
-            display.textContent = `鍓╀綑 ${timeLeft} 绉抈;
+            display.textContent = '剩余 ' + timeLeft + ' 秒';
             display.className = timeLeft <= 2 ? 'fail' : '';
         }
         
@@ -836,7 +809,7 @@
             const isCorrect = userAnswer === correctAnswer;
             testResults.push({
                 word: testWords[currentTestIndex],
-                userAnswer: userAnswer || '(鏈綔绛?',
+                userAnswer: userAnswer || '(未作答)',
                 isCorrect: isCorrect,
                 skipped: userAnswer === ''
             });
@@ -850,7 +823,7 @@
             const isCorrect = userAnswer === correctAnswer;
             testResults.push({
                 word: testWords[currentTestIndex],
-                userAnswer: userAnswer || '(鏈綔绛?',
+                userAnswer: userAnswer || '(未作答)',
                 isCorrect: isCorrect,
                 skipped: userAnswer === ''
             });
@@ -861,7 +834,7 @@
             clearInterval(timerInterval);
             testResults.push({
                 word: testWords[currentTestIndex],
-                userAnswer: '(璺宠繃)',
+                userAnswer: '(跳过)',
                 isCorrect: false,
                 skipped: true
             });
@@ -878,21 +851,21 @@
         }
         
         async function finishTest() {
-            const correctCount = testResults.filter(r => r.isCorrect).length;
-            const incorrectCount = testResults.filter(r => !r.isCorrect && !r.skipped).length;
-            const skippedCount = testResults.filter(r => r.skipped).length;
+            const correctCount = testResults.filter(function(r) { return r.isCorrect; }).length;
+            const incorrectCount = testResults.filter(function(r) { return !r.isCorrect && !r.skipped; }).length;
+            const skippedCount = testResults.filter(function(r) { return r.skipped; }).length;
             const score = Math.round((correctCount / testResults.length) * 100);
-            // 鑾峰彇杈炬爣鏍囧噯
-            const { data: standards } = await supabaseClient.from('pass_standards').select('*').eq('module_type', 'dictation').single();
+            
+            const standardsResult = await db.from('pass_standards').select('*').eq('module_type', 'dictation').single();
             let threshold = 80;
-            if (standards) {
-                if (currentStudent.target_score == 6.5) threshold = standards.score_6_5;
-                else if (currentStudent.target_score == 7) threshold = standards.score_7;
-                else threshold = standards.score_6;
+            if (standardsResult.data) {
+                if (currentStudent.target_score == 6.5) threshold = standardsResult.data.score_6_5;
+                else if (currentStudent.target_score == 7) threshold = standardsResult.data.score_7;
+                else threshold = standardsResult.data.score_6;
             }
             const isPassed = score >= threshold;
-            // 淇濆瓨娴嬭瘯璁板綍
-            await supabaseClient.from('test_records').insert({
+            
+            await db.from('test_records').insert({
                 student_id: currentStudent.student_id,
                 test_type: currentTestMode,
                 score: score,
@@ -902,18 +875,20 @@
                 pass_threshold: threshold,
                 details: JSON.stringify(testResults)
             });
-            // 鏇存柊閿欓鏈?            let newWrongCount = 0;
-            for (const result of testResults) {
+            
+            let newWrongCount = 0;
+            for (let i = 0; i < testResults.length; i++) {
+                const result = testResults[i];
                 if (!result.isCorrect && !result.skipped) {
-                    const { data: existing } = await supabaseClient.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
-                    if (existing) {
-                        if (existing.correct_streak >= 2) {
-                            await supabaseClient.from('wrong_words').update({ is_mastered: true }).eq('id', existing.id);
+                    const existingResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
+                    if (existingResult.data) {
+                        if (existingResult.data.correct_streak >= 2) {
+                            await db.from('wrong_words').update({ is_mastered: true }).eq('id', existingResult.data.id);
                         } else {
-                            await supabaseClient.from('wrong_words').update({ wrong_count: existing.wrong_count + 1, correct_streak: 0, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                            await db.from('wrong_words').update({ wrong_count: existingResult.data.wrong_count + 1, correct_streak: 0, last_tested: new Date().toISOString() }).eq('id', existingResult.data.id);
                         }
                     } else {
-                        await supabaseClient.from('wrong_words').insert({
+                        await db.from('wrong_words').insert({
                             student_id: currentStudent.student_id,
                             word: result.word,
                             wrong_count: 1,
@@ -922,52 +897,63 @@
                         newWrongCount++;
                     }
                 } else if (result.isCorrect) {
-                    const { data: existing } = await supabaseClient.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
-                    if (existing && !existing.is_mastered) {
-                        const newStreak = existing.correct_streak + 1;
+                    const existingResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('word', result.word).single();
+                    if (existingResult.data && !existingResult.data.is_mastered) {
+                        const newStreak = existingResult.data.correct_streak + 1;
                         if (newStreak >= 2) {
-                            await supabaseClient.from('wrong_words').update({ correct_streak: newStreak, is_mastered: true, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                            await db.from('wrong_words').update({ correct_streak: newStreak, is_mastered: true, last_tested: new Date().toISOString() }).eq('id', existingResult.data.id);
                         } else {
-                            await supabaseClient.from('wrong_words').update({ correct_streak: newStreak, last_tested: new Date().toISOString() }).eq('id', existing.id);
+                            await db.from('wrong_words').update({ correct_streak: newStreak, last_tested: new Date().toISOString() }).eq('id', existingResult.data.id);
                         }
                     }
                 }
             }
-            // 鏄剧ず缁撴灉
+            
             showScreen('resultScreen');
-            document.getElementById('resultStudentInfo').textContent = currentStudent.name + ' - 鍚姏2400璇?;
+            document.getElementById('resultStudentInfo').textContent = currentStudent.name + ' - 听力2400词';
             document.getElementById('resultPassStatus').className = 'pass-status ' + (isPassed ? 'pass' : 'fail');
-            document.getElementById('resultPassStatus').textContent = isPassed ? '馃帀 杈炬爣锛? : '鉂?鏈揪鏍?;
+            document.getElementById('resultPassStatus').textContent = isPassed ? '达标！' : '未达标';
             document.getElementById('resultScore').textContent = score + '%';
             document.getElementById('resultThreshold').textContent = threshold + '%';
             document.getElementById('resultCorrect').textContent = correctCount;
             document.getElementById('resultIncorrect').textContent = incorrectCount;
             document.getElementById('resultSkipped').textContent = skippedCount;
             document.getElementById('resultWrongCount').textContent = newWrongCount;
-            const errors = testResults.filter(r => !r.isCorrect);
-            document.getElementById('resultErrorList').innerHTML = errors.length > 0 
-                ? `<h4 style="margin-top:20px;">閿欒/璺宠繃鍗曡瘝</h4><div class="error-list">${errors.map(e => `<div class="error-item"><span>${e.word}</span><span style="color:#666;">浣犵殑绛旀: ${e.userAnswer}</span></div>`).join('')}</div>`
-                : '<p style="text-align:center;color:#28a745;padding:20px;">馃帀 澶浜嗭紒鍏ㄩ儴姝ｇ‘锛?/p>';
+            
+            const errors = testResults.filter(function(r) { return !r.isCorrect; });
+            let errorHtml = '';
+            if (errors.length > 0) {
+                errorHtml = '<h4 style="margin-top:20px;">错误/跳过单词</h4><div class="error-list">';
+                for (let i = 0; i < errors.length; i++) {
+                    errorHtml += '<div class="error-item"><span>' + errors[i].word + '</span><span style="color:#666;">你的答案: ' + errors[i].userAnswer + '</span></div>';
+                }
+                errorHtml += '</div>';
+            } else {
+                errorHtml = '<p style="text-align:center;color:#28a745;padding:20px;">太棒了！全部正确！</p>';
+            }
+            document.getElementById('resultErrorList').innerHTML = errorHtml;
         }
         
         function downloadResult() {
-            const correctCount = testResults.filter(r => r.isCorrect).length;
+            const correctCount = testResults.filter(function(r) { return r.isCorrect; }).length;
             const score = Math.round((correctCount / testResults.length) * 100);
-            const errors = testResults.filter(r => !r.isCorrect);
-            let content = `鑻辫鍚啓娴嬭瘯缁撴灉\n`;
-            content += `瀛︾敓锛?{currentStudent.name}\n`;
-            content += `瀛﹀彿锛?{currentStudent.student_id}\n`;
-            content += `鐩爣鍒嗘暟锛?{currentStudent.target_score}鍒哱n`;
-            content += `娴嬭瘯绫诲瀷锛?{currentTestMode === 'random' ? '闅忔満娴嬭瘯' : '閿欓娴嬭瘯'}\n`;
-            content += `姝ｇ‘鐜囷細${score}%\n`;
-            content += `姝ｇ‘锛?{correctCount} 閿欒锛?{errors.length} 璺宠繃锛?{testResults.filter(r=>r.skipped).length}\n`;
-            content += `\n閿欒鍗曡瘝锛歕n`;
-            errors.forEach((e, i) => content += `${i+1}. ${e.word} (浣犵殑绛旀: ${e.userAnswer})\n`);
+            const errors = testResults.filter(function(r) { return !r.isCorrect; });
+            let content = '英语听写测试结果\n';
+            content += '学生：' + currentStudent.name + '\n';
+            content += '学号：' + currentStudent.student_id + '\n';
+            content += '目标分数：' + currentStudent.target_score + '分\n';
+            content += '测试类型：' + (currentTestMode === 'random' ? '随机测试' : '错题测试') + '\n';
+            content += '正确率：' + score + '%\n';
+            content += '正确：' + correctCount + ' 错误：' + errors.length + ' 跳过：' + testResults.filter(function(r) { return r.skipped; }).length + '\n';
+            content += '\n错误单词：\n';
+            for (let i = 0; i < errors.length; i++) {
+                content += (i + 1) + '. ' + errors[i].word + ' (你的答案: ' + errors[i].userAnswer + ')\n';
+            }
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `鍚啓缁撴灉_${currentStudent.name}_${new Date().toISOString().slice(0,10)}.txt`;
+            a.download = '听写结果_' + currentStudent.name + '_' + new Date().toISOString().slice(0,10) + '.txt';
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -978,4 +964,3 @@
     </script>
 </body>
 </html>
-
