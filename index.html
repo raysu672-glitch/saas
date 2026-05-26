@@ -201,7 +201,6 @@
             <div class="admin-header">
                 <div>
                     <h2 id="studentWelcome">你好！</h2>
-                    <p style="color:#666; font-size:0.9rem;">目标分数：<span id="studentTargetScore">6.5</span> 分</p>
                 </div>
                 <div>
                     <button class="btn btn-secondary btn-sm" onclick="showChangePasswordModal()">改密码</button>
@@ -209,45 +208,9 @@
                 </div>
             </div>
             
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-value" id="statTotalTests">0</div>
-                    <div class="stat-label">总测试次数</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statPassRate">0%</div>
-                    <div class="stat-label">历史达标率</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statBestScore">0%</div>
-                    <div class="stat-label">最高正确率</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="statWrongWords">0</div>
-                    <div class="stat-label">待复习错题</div>
-                </div>
-            </div>
+            <h3 style="text-align:center; color:#667eea; margin-bottom:20px;">学习进度表</h3>
             
-            <div class="tab-bar">
-                <div class="tab active" onclick="switchStudentTab('test')">开始测试</div>
-                <div class="tab" onclick="switchStudentTab('history')">历史记录</div>
-            </div>
-            
-            <div id="studentTabTest">
-                <div style="text-align:center; padding:30px 0;">
-                    <h3 style="margin-bottom:20px;">听力2400词</h3>
-                    <div class="btn-group">
-                        <button class="btn" onclick="startTest('random')">随机测试</button>
-                        <button class="btn btn-success" onclick="startTest('wrong_words')">错题测试</button>
-                    </div>
-                    <p style="color:#666; margin-top:15px; font-size:0.9rem;">目标分数 <span id="moduleTarget">6.5分</span>：达标线 <span id="moduleThreshold">80%</span></p>
-                </div>
-            </div>
-            
-            <div id="studentTabHistory" style="display:none;">
-                <div class="history-chart" id="historyChart"></div>
-                <div id="studentHistoryList"></div>
-            </div>
+            <div id="progressTable"></div>
         </div>
         
         <div class="card screen" id="testScreen">
@@ -429,75 +392,126 @@
             }
         }
         
+        // 学习进度模块配置
+        const MODULES = [
+            { id: 'dictation', name: '听力2400词', target: 80, unit: '%', hasTest: true, hasLearn: false, icon: 'headphones' },
+            { id: 'writing_words', name: '小作文单词', target: 6, unit: '分', hasTest: false, hasLearn: false, icon: 'pencil' },
+            { id: 'highschool_words', name: '高中单词', target: 100, unit: '%', hasTest: false, hasLearn: false, icon: 'book' },
+            { id: 'ielts_core', name: '雅思核心800词', target: 85, unit: '%', hasTest: false, hasLearn: false, icon: 'star' },
+            { id: 'grammar', name: '基础语法', target: 65, unit: '%', hasTest: false, hasLearn: false, icon: 'academic' },
+            { id: 'sentence', name: '长难句分析', target: 75, unit: '%', hasTest: false, hasLearn: false, icon: 'analysis' },
+            { id: 'listening_p4', name: '听力P4跟读', target: 70, unit: '%', hasTest: false, hasLearn: false, icon: 'mic' },
+            { id: 'writing_phrase', name: '写作词伙', target: 50, unit: '%', hasTest: false, hasLearn: false, icon: 'writing' },
+            { id: 'writing_translate', name: '写作句子翻译', target: 50, unit: '%', hasTest: false, hasLearn: false, icon: 'translate' },
+            { id: 'reading_p1', name: '阅读P1', target: 9, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
+            { id: 'reading_p2', name: '阅读P2', target: 8, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
+            { id: 'reading_p3', name: '阅读P3', target: 6, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
+            { id: 'listening_p1', name: '听力P1', target: 7, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
+            { id: 'listening_p2', name: '听力P2', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
+            { id: 'listening_p3', name: '听力P3', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
+            { id: 'listening_p4', name: '听力P4', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
+            { id: 'speaking_p1', name: '口语P1', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
+            { id: 'speaking_p2', name: '口语P2', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
+            { id: 'speaking_p3', name: '口语P3', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
+            { id: 'writing_essay', name: '写作大作文', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'edit' },
+            { id: 'writing_small', name: '写作小作文', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'edit' }
+        ];
+        
         function showStudentHome() {
             showScreen('studentHome');
             document.getElementById('studentWelcome').textContent = '你好，' + currentStudent.name + '！';
-            document.getElementById('studentTargetScore').textContent = currentStudent.target_score;
-            loadStudentStats();
-            loadStudentHistory();
+            loadProgressTable();
         }
         
-        async function loadStudentStats() {
-            const recordsResult = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id);
-            const wrongResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+        async function loadProgressTable() {
+            // 获取听力2400词的测试记录
+            const recordsResult = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id).eq('test_type', 'dictation');
             const records = recordsResult.data || [];
-            const wrongWords = wrongResult.data || [];
-            const totalTests = records.length;
-            const passCount = records.filter(function(r) { return r.is_passed; }).length;
-            const bestScore = records.length ? Math.max.apply(null, records.map(function(r) { return r.score; })) : 0;
-            document.getElementById('statTotalTests').textContent = totalTests;
-            document.getElementById('statPassRate').textContent = totalTests > 0 ? Math.round(passCount / totalTests * 100) + '%' : '0%';
-            document.getElementById('statBestScore').textContent = bestScore + '%';
-            document.getElementById('statWrongWords').textContent = wrongWords.length;
             
-            const standardsResult = await db.from('pass_standards').select('*').eq('module_type', 'dictation').single();
-            if (standardsResult.data) {
-                let threshold = standardsResult.data.score_6;
-                if (currentStudent.target_score == 6.5) threshold = standardsResult.data.score_6_5;
-                else if (currentStudent.target_score == 7) threshold = standardsResult.data.score_7;
-                document.getElementById('moduleTarget').textContent = currentStudent.target_score + '分';
-                document.getElementById('moduleThreshold').textContent = threshold + '%';
+            // 获取错题数量
+            const wrongResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
+            const wrongCount = wrongResult.data ? wrongResult.data.length : 0;
+            
+            // 计算最高正确率
+            let bestScore = 0;
+            let passCount = 0;
+            if (records.length > 0) {
+                bestScore = Math.max(...records.map(r => r.score));
+                passCount = records.filter(r => r.is_passed).length;
             }
-        }
-        
-        async function loadStudentHistory() {
-            const result = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id).order('created_at', { ascending: false }).limit(10);
-            const container = document.getElementById('studentHistoryList');
-            const records = result.data;
-            if (!records || records.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">暂无历史记录</p>';
-                document.getElementById('historyChart').innerHTML = '';
-                return;
+            
+            // 渲染进度表
+            const container = document.getElementById('progressTable');
+            let html = '<table style="width:100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background:#f8f9fa;">';
+            html += '<th style="padding:12px; text-align:left; border-bottom:2px solid #dee2e6;">科目</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">目标</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">当前进度</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">操作</th>';
+            html += '</tr></thead><tbody>';
+            
+            for (let i = 0; i < MODULES.length; i++) {
+                const m = MODULES[i];
+                let currentValue = 0;
+                let progressPercent = 0;
+                let statusClass = '';
+                let statusText = '';
+                
+                if (m.id === 'dictation') {
+                    currentValue = bestScore;
+                    progressPercent = Math.min(100, Math.round((bestScore / m.target) * 100));
+                    if (bestScore >= m.target) {
+                        statusClass = 'badge-success';
+                        statusText = '达标';
+                    } else if (bestScore > 0) {
+                        statusClass = 'badge-warning';
+                        statusText = '进行中';
+                    } else {
+                        statusClass = 'badge-info';
+                        statusText = '未开始';
+                    }
+                }
+                
+                const progressColor = progressPercent >= 100 ? '#28a745' : '#667eea';
+                
+                html += '<tr style="border-bottom:1px solid #dee2e6;">';
+                html += '<td style="padding:15px 12px;"><strong>' + m.name + '</strong></td>';
+                html += '<td style="padding:15px 12px; text-align:center;">' + m.target + m.unit + '</td>';
+                html += '<td style="padding:15px 12px; min-width:150px;">';
+                html += '<div style="display:flex; align-items:center; gap:10px;">';
+                html += '<div style="flex:1; background:#e9ecef; border-radius:10px; height:8px; overflow:hidden;">';
+                html += '<div style="width:' + progressPercent + '%; background:' + progressColor + '; height:100%; transition:width 0.3s;"></div>';
+                html += '</div>';
+                html += '<span style="min-width:50px; text-align:right;">' + currentValue + m.unit + '</span>';
+                html += '<span class="badge ' + statusClass + '" style="font-size:0.75rem;">' + statusText + '</span>';
+                html += '</div>';
+                html += '</td>';
+                html += '<td style="padding:15px 12px; text-align:center;">';
+                
+                if (m.hasTest) {
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
+                }
+                if (m.hasLearn) {
+                    html += '<button class="btn btn-sm btn-secondary" onclick="alert(\'学习功能开发中...\')">学习</button>';
+                }
+                if (!m.hasTest && !m.hasLearn) {
+                    html += '<span style="color:#999;">开发中</span>';
+                }
+                html += '</td></tr>';
             }
-            let html = '';
-            for (let i = 0; i < records.length; i++) {
-                const r = records[i];
-                const typeText = r.test_type === 'random' ? '随机测试' : '错题测试';
-                const dateStr = new Date(r.created_at).toLocaleString('zh-CN');
-                const color = r.is_passed ? 'color:#28a745;' : 'color:#dc3545;';
-                const badgeClass = r.is_passed ? 'badge-success' : 'badge-danger';
-                const statusText = r.is_passed ? '达标' : '未达标';
-                html += '<div style="padding:15px;border-bottom:1px solid #eee;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><span style="font-weight:600;">' + typeText + '</span><span style="color:#666;font-size:0.85rem;margin-left:10px;">' + dateStr + '</span></div><div><span style="font-size:1.2rem;font-weight:bold;' + color + '">' + r.score + '%</span><span class="badge ' + badgeClass + '" style="margin-left:10px;">' + statusText + '</span></div></div></div>';
-            }
+            
+            html += '</tbody></table>';
+            
+            // 添加统计信息
+            html += '<div style="margin-top:30px; padding:20px; background:#f8f9fa; border-radius:10px;">';
+            html += '<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; text-align:center;">';
+            html += '<div><div style="font-size:1.5rem; font-weight:bold; color:#667eea;">' + records.length + '</div><div style="color:#666; font-size:0.9rem;">总测试次数</div></div>';
+            html += '<div><div style="font-size:1.5rem; font-weight:bold; color:#28a745;">' + bestScore + '%</div><div style="color:#666; font-size:0.9rem;">听力最高分</div></div>';
+            html += '<div><div style="font-size:1.5rem; font-weight:bold; color:#11998e;">' + (records.length > 0 ? Math.round(passCount / records.length * 100) : 0) + '%</div><div style="color:#666; font-size:0.9rem;">达标率</div></div>';
+            html += '<div><div style="font-size:1.5rem; font-weight:bold; color:#dc3545;">' + wrongCount + '</div><div style="color:#666; font-size:0.9rem;">待复习错题</div></div>';
+            html += '</div></div>';
+            
             container.innerHTML = html;
-            
-            const reversed = records.slice().reverse();
-            let chartHtml = '<div style="display:flex;align-items:flex-end;height:150px;padding:10px;background:#f8f9fa;border-radius:10px;">';
-            for (let i = 0; i < reversed.length; i++) {
-                const r = reversed[i];
-                const height = r.score / 100 * 150;
-                const color = r.is_passed ? '#28a745' : '#dc3545';
-                chartHtml += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;"><div style="width:20px;background:' + color + ';height:' + height + 'px;min-height:5px;border-radius:5px 5px 0 0;"></div><span style="font-size:0.7rem;color:#666;margin-top:5px;">' + r.score + '%</span></div>';
-            }
-            chartHtml += '</div>';
-            document.getElementById('historyChart').innerHTML = chartHtml;
-        }
-        
-        function switchStudentTab(tab) {
-            document.querySelectorAll('#studentHome .tab').forEach(function(t) { t.classList.remove('active'); });
-            event.target.classList.add('active');
-            document.getElementById('studentTabTest').style.display = tab === 'test' ? 'block' : 'none';
-            document.getElementById('studentTabHistory').style.display = tab === 'history' ? 'block' : 'none';
         }
         
         function studentLogout() {
