@@ -574,14 +574,49 @@
                 const color = r.is_passed ? 'color:#28a745;' : 'color:#dc3545;';
                 const badgeClass = r.is_passed ? 'badge-success' : 'badge-danger';
                 const statusText = r.is_passed ? '达标' : '未达标';
-                html += '<div style="padding:15px;border-bottom:1px solid #eee;">';
+                
+                // 解析错题详情
+                let wrongWords = [];
+                if (r.details) {
+                    try {
+                        const details = JSON.parse(r.details);
+                        wrongWords = details.filter(function(d) { return !d.isCorrect && !d.skipped; });
+                    } catch (e) {
+                        wrongWords = [];
+                    }
+                }
+                
+                html += '<div style="padding:15px;border-bottom:1px solid #eee; cursor:pointer;" onclick="toggleHistoryDetail(' + i + ')">';
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
                 html += '<div><span style="font-weight:600;">' + typeText + '</span>';
                 html += '<span style="color:#666;font-size:0.85rem;margin-left:10px;">' + dateStr + '</span></div>';
                 html += '<div><span style="font-size:1.2rem;font-weight:bold;' + color + '">' + r.score + '%</span>';
                 html += '<span class="badge ' + badgeClass + '" style="margin-left:10px;">' + statusText + '</span></div>';
                 html += '</div>';
-                html += '<div style="margin-top:8px;font-size:0.85rem;color:#666;">正确: ' + r.correct_count + '/' + r.total_count + '  达标线: ' + r.pass_threshold + '%</div>';
+                html += '<div style="margin-top:8px;font-size:0.85rem;color:#666;">正确: ' + r.correct_count + '/' + r.total_count + '  达标线: ' + r.pass_threshold + '%';
+                if (wrongWords.length > 0) {
+                    html += '  <span style="color:#dc3545;">错题: ' + wrongWords.length + '个</span> <span style="color:#667eea;">(点击查看)</span>';
+                }
+                html += '</div>';
+                
+                // 错题详情区域
+                if (wrongWords.length > 0) {
+                    html += '<div id="historyDetail_' + i + '" style="display:none;margin-top:12px;padding:12px;background:#fff3cd;border-radius:8px;">';
+                    html += '<div style="font-weight:600;margin-bottom:8px;color:#856404;">错题详情:</div>';
+                    for (let j = 0; j < wrongWords.length; j++) {
+                        const w = wrongWords[j];
+                        html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #e0d6b8;">';
+                        html += '<div><span style="font-weight:600;color:#333;">' + w.word + '</span>';
+                        if (w.phonetic) {
+                            html += ' <span style="color:#666;font-size:0.85rem;">' + w.phonetic + '</span>';
+                        }
+                        html += '</div>';
+                        html += '<div style="color:#dc3545;font-size:0.9rem;">你的答案: ' + (w.userAnswer || '未作答') + '</div>';
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                }
+                
                 html += '</div>';
             }
             container.innerHTML = html;
@@ -599,6 +634,13 @@
             }
             chartHtml += '</div>';
             document.getElementById('historyChart').innerHTML = chartHtml;
+        }
+        
+        function toggleHistoryDetail(index) {
+            const detailDiv = document.getElementById('historyDetail_' + index);
+            if (detailDiv) {
+                detailDiv.style.display = detailDiv.style.display === 'none' ? 'block' : 'none';
+            }
         }
         
         function studentLogout() {
