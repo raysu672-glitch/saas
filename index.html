@@ -744,9 +744,9 @@
                     statusText = '进行中';
                 }
                 
-                html += '<tr style="border-bottom:1px solid #dee2e6;">';
+                html += '<tr style="border-bottom:1px solid #dee2e6; cursor:pointer;" onclick="showStudentDetailProgress(\'' + s.student_id + '\', \'' + s.name + '\')">';
                 html += '<td style="padding:12px;">' + s.student_id + '</td>';
-                html += '<td style="padding:12px;"><strong>' + s.name + '</strong></td>';
+                html += '<td style="padding:12px;"><strong style="color:#667eea; text-decoration:underline;">' + s.name + '</strong></td>';
                 html += '<td style="padding:12px; text-align:center;">' + (bestScore > 0 ? bestScore + '%' : '-') + '</td>';
                 html += '<td style="padding:12px; text-align:center;">' + studentRecords.length + '</td>';
                 html += '<td style="padding:12px; text-align:center;">' + passCount + '</td>';
