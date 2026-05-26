@@ -1096,6 +1096,27 @@
             showToast('导出成功', 'success');
         }
         
+        // iOS/Safari 语音引擎预热标记
+        let speechEngineWarmedUp = false;
+        
+        // 预热语音引擎（iOS Safari 需要用户交互后才能播放语音）
+        function warmUpSpeechEngine() {
+            if (speechEngineWarmedUp || !window.speechSynthesis) return;
+            
+            // 播放一个无声的 utterance 来"解锁"语音引擎
+            const utterance = new SpeechSynthesisUtterance('');
+            utterance.volume = 0;
+            utterance.rate = 10;
+            
+            try {
+                speechSynthesis.speak(utterance);
+                speechEngineWarmedUp = true;
+                console.log('语音引擎已预热');
+            } catch (e) {
+                console.warn('语音引擎预热失败:', e);
+            }
+        }
+        
         async function startTest(mode) {
             currentTestMode = mode;
             document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
@@ -1116,6 +1137,10 @@
             }
             testResults = [];
             currentTestIndex = 0;
+            
+            // 预热语音引擎（关键：必须在用户点击的同步上下文中调用）
+            warmUpSpeechEngine();
+            
             showScreen('testScreen');
             showQuestion();
         }
