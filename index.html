@@ -575,13 +575,14 @@
                 const badgeClass = r.is_passed ? 'badge-success' : 'badge-danger';
                 const statusText = r.is_passed ? '达标' : '未达标';
                 
-                // 解析错题详情
+                // 解析错题详情（包括跳过和答错的）
                 let wrongWords = [];
                 let hasDetails = false;
                 if (r.details) {
                     try {
                         const details = JSON.parse(r.details);
-                        wrongWords = details.filter(function(d) { return !d.isCorrect && !d.skipped; });
+                        // 所有不正确的都算作错题（包括跳过和拼写错误）
+                        wrongWords = details.filter(function(d) { return !d.isCorrect; });
                         hasDetails = true;
                     } catch (e) {
                         wrongWords = [];
