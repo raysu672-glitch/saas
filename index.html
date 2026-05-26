@@ -1103,22 +1103,25 @@
         // 预创建 audio 元素复用
         const audioEl = new Audio();
         audioEl.preload = 'auto';
+        // 防止 startTimer 重复调用
+        let timerStarted = false;
         
         // 预热语音引擎（iOS Safari 需要用户交互后才能播放语音）
         function warmUpSpeechEngine() {
             if (speechEngineWarmedUp) return;
+            speechEngineWarmedUp = true;
             
             // 尝试 speechSynthesis
             if (window.speechSynthesis) {
                 try {
-                    const u = new SpeechSynthesisUtterance('');
+                    const u = new SpeechSynthesisUtterance('test');
                     u.volume = 0;
                     u.rate = 10;
                     speechSynthesis.speak(u);
-                    speechEngineWarmedUp = true;
-                    console.log('speechSynthesis 预热成功');
+                    setTimeout(function(){ speechSynthesis.cancel(); }, 100);
+                    console.log('speechSynthesis 预热完成');
                 } catch (e) {
-                    console.warn('speechSynthesis 预热失败，将使用备用音频引擎');
+                    console.warn('speechSynthesis 不可用');
                 }
             }
             
@@ -1128,9 +1131,7 @@
                 audioEl.volume = 0;
                 audioEl.play().catch(function(){});
                 console.log('audio 元素预热完成');
-            } catch (e) {
-                console.warn('audio 预热失败:', e);
-            }
+            } catch (e) {}
         }
         
         async function startTest(mode) {
@@ -1179,7 +1180,18 @@
             document.getElementById('timerDisplay').className = '';
             document.getElementById('statusIcon').textContent = '🔊';
             document.getElementById('statusIcon').className = '';
+            // 重置计时器锁
+            timerStarted = false;
             playWord();
+        }
+        
+        // 安全启动计时器（防止重复调用）
+        function safeStartTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+            isPlaying = false;
+            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+            startTimer();
         }
         
         function playWord() {
@@ -1198,16 +1210,15 @@
                 playTimeout = null;
             }
 
-            // 超时保护：5秒内没完成播放，强制开始计时
+            // 超时保护：8秒内没完成播放，强制开始计时
             playTimeout = setTimeout(function() {
                 if (isPlaying) {
                     console.warn('播放超时，强制开始计时');
                     try { speechSynthesis.cancel(); } catch(e) {}
                     try { audioEl.pause(); audioEl.currentTime = 0; } catch(e) {}
-                    isPlaying = false;
-                    startTimer();
+                    safeStartTimer();
                 }
-            }, 5000);
+            }, 8000);
 
             // 如果已确认需要使用备用音频引擎，直接走备用
             if (useAudioFallback) {
@@ -1219,7 +1230,6 @@
             if (window.speechSynthesis) {
                 playWithSpeechSynthesis(word);
             } else {
-                // 浏览器不支持 speechSynthesis，直接用备用
                 useAudioFallback = true;
                 playWithAudio(word);
             }
@@ -1233,14 +1243,11 @@
             utterance.volume = 1;
 
             utterance.onend = function() {
-                isPlaying = false;
-                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-                startTimer();
+                safeStartTimer();
             };
 
             utterance.onerror = function(e) {
-                console.warn('speechSynthesis 播放失败，切换到备用音频引擎:', e);
-                // 切换到备用引擎
+                console.warn('speechSynthesis 失败，切换备用引擎');
                 useAudioFallback = true;
                 playWithAudio(word);
             };
@@ -1249,10 +1256,10 @@
             setTimeout(function() {
                 speechSynthesis.speak(utterance);
                 
-                // 检测是否真的在播放（微信浏览器可能静默失败）
+                // 500ms 后检测是否真的在播放
                 setTimeout(function() {
                     if (isPlaying && !speechSynthesis.speaking) {
-                        console.warn('speechSynthesis 未开始播放，切换到备用音频引擎');
+                        console.warn('speechSynthesis 未播放，切换备用引擎');
                         useAudioFallback = true;
                         playWithAudio(word);
                     }
@@ -1260,58 +1267,65 @@
             }, 50);
         }
         
-        // 引擎2：备用音频播放（兼容微信浏览器等）
+        // 引擎2：通过 dictionary API 获取音频 URL 并播放（兼容微信浏览器）
         function playWithAudio(word) {
             try { speechSynthesis.cancel(); } catch(e) {}
             
-            // 使用 Google Translate TTS（免费、无需 key、全球可用）
-            const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
+            // 先尝试直接拼 URL（大多数单词有 -au.mp3 发音）
+            var audioUrl = 'https://api.dictionaryapi.dev/media/pronunciations/en/' + encodeURIComponent(word) + '-au.mp3';
             
             audioEl.onended = function() {
-                isPlaying = false;
-                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-                startTimer();
+                safeStartTimer();
             };
             
             audioEl.onerror = function() {
-                console.warn('Google TTS 失败，尝试备用源');
-                // 备用：使用 ResponsiveVoice 或直接开始计时
-                playWithAudioBackup(word);
-            };
-            
-            audioEl.src = audioUrl;
-            audioEl.volume = 1;
-            audioEl.play().catch(function(e) {
-                console.warn('audio.play 失败，尝试备用源:', e);
-                playWithAudioBackup(word);
-            });
-        }
-        
-        // 引擎3：最终备用（使用 dict.cn 在线发音）
-        function playWithAudioBackup(word) {
-            const audioUrl = 'https://dict.cn/audio?w=' + encodeURIComponent(word);
-            
-            audioEl.onended = function() {
-                isPlaying = false;
-                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-                startTimer();
-            };
-            
-            audioEl.onerror = function() {
-                console.warn('dict.cn TTS 也失败，直接开始计时');
-                isPlaying = false;
-                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-                startTimer();
+                // 直接拼的 URL 不存在，通过 API 查询
+                playWithAudioFallback(word);
             };
             
             audioEl.src = audioUrl;
             audioEl.volume = 1;
             audioEl.play().catch(function() {
-                // 所有引擎都失败，直接开始计时
-                isPlaying = false;
-                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-                startTimer();
+                playWithAudioFallback(word);
             });
+        }
+        
+        // 引擎3：通过 fetch dictionary API 获取正确的音频 URL
+        function playWithAudioFallback(word) {
+            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var phonetics = data[0].phonetics;
+                    var audioUrl = '';
+                    for (var i = 0; i < phonetics.length; i++) {
+                        if (phonetics[i].audio) {
+                            audioUrl = phonetics[i].audio;
+                            break;
+                        }
+                    }
+                    if (!audioUrl) {
+                        console.warn('未找到音频 URL');
+                        safeStartTimer();
+                        return;
+                    }
+                    
+                    audioEl.onended = function() {
+                        safeStartTimer();
+                    };
+                    audioEl.onerror = function() {
+                        console.warn('音频播放失败');
+                        safeStartTimer();
+                    };
+                    audioEl.src = audioUrl;
+                    audioEl.volume = 1;
+                    audioEl.play().catch(function() {
+                        safeStartTimer();
+                    });
+                })
+                .catch(function() {
+                    console.warn('dictionary API 请求失败');
+                    safeStartTimer();
+                });
         }
         
         function startTimer() {
