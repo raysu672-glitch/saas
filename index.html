@@ -577,14 +577,18 @@
                 
                 // 解析错题详情
                 let wrongWords = [];
+                let hasDetails = false;
                 if (r.details) {
                     try {
                         const details = JSON.parse(r.details);
                         wrongWords = details.filter(function(d) { return !d.isCorrect && !d.skipped; });
+                        hasDetails = true;
                     } catch (e) {
                         wrongWords = [];
                     }
                 }
+                // 如果没有details，从正确数计算错题数
+                const wrongCount = hasDetails ? wrongWords.length : (r.total_count - r.correct_count);
                 
                 html += '<div style="padding:15px;border-bottom:1px solid #eee; cursor:pointer;" onclick="toggleHistoryDetail(' + i + ')">';
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
@@ -593,9 +597,12 @@
                 html += '<div><span style="font-size:1.2rem;font-weight:bold;' + color + '">' + r.score + '%</span>';
                 html += '<span class="badge ' + badgeClass + '" style="margin-left:10px;">' + statusText + '</span></div>';
                 html += '</div>';
-                html += '<div style="margin-top:8px;font-size:0.85rem;color:#666;">正确: ' + r.correct_count + '/' + r.total_count + '  达标线: ' + r.pass_threshold + '%';
-                if (wrongWords.length > 0) {
-                    html += '  <span style="color:#dc3545;">错题: ' + wrongWords.length + '个</span> <span style="color:#667eea;">(点击查看)</span>';
+                html += '<div style="margin-top:8px;font-size:0.85rem;color:#666;">';
+                html += '<span style="color:#28a745;">正确: ' + r.correct_count + '/' + r.total_count + '</span>';
+                html += ' <span style="color:#dc3545;margin-left:10px;">错题: ' + wrongCount + '个</span>';
+                html += ' <span style="color:#666;margin-left:10px;">达标线: ' + r.pass_threshold + '%</span>';
+                if (hasDetails && wrongWords.length > 0) {
+                    html += ' <span style="color:#667eea;margin-left:10px;">(点击查看详情)</span>';
                 }
                 html += '</div>';
                 
