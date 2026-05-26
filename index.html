@@ -1098,22 +1098,38 @@
         
         // iOS/Safari 语音引擎预热标记
         let speechEngineWarmedUp = false;
+        // 备用音频引擎标记
+        let useAudioFallback = false;
+        // 预创建 audio 元素复用
+        const audioEl = new Audio();
+        audioEl.preload = 'auto';
         
         // 预热语音引擎（iOS Safari 需要用户交互后才能播放语音）
         function warmUpSpeechEngine() {
-            if (speechEngineWarmedUp || !window.speechSynthesis) return;
+            if (speechEngineWarmedUp) return;
             
-            // 播放一个无声的 utterance 来"解锁"语音引擎
-            const utterance = new SpeechSynthesisUtterance('');
-            utterance.volume = 0;
-            utterance.rate = 10;
+            // 尝试 speechSynthesis
+            if (window.speechSynthesis) {
+                try {
+                    const u = new SpeechSynthesisUtterance('');
+                    u.volume = 0;
+                    u.rate = 10;
+                    speechSynthesis.speak(u);
+                    speechEngineWarmedUp = true;
+                    console.log('speechSynthesis 预热成功');
+                } catch (e) {
+                    console.warn('speechSynthesis 预热失败，将使用备用音频引擎');
+                }
+            }
             
+            // 同时预热 audio 元素（微信浏览器需要）
             try {
-                speechSynthesis.speak(utterance);
-                speechEngineWarmedUp = true;
-                console.log('语音引擎已预热');
+                audioEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+                audioEl.volume = 0;
+                audioEl.play().catch(function(){});
+                console.log('audio 元素预热完成');
             } catch (e) {
-                console.warn('语音引擎预热失败:', e);
+                console.warn('audio 预热失败:', e);
             }
         }
         
@@ -1169,18 +1185,7 @@
         function playWord() {
             if (isPlaying) return;
             
-            // 检查浏览器是否支持语音合成
-            if (!window.speechSynthesis) {
-                document.getElementById('timerDisplay').textContent = '浏览器不支持语音播放';
-                setTimeout(startTimer, 1000);
-                return;
-            }
-            
             const word = testWords[currentTestIndex];
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            utterance.volume = 1;
             isPlaying = true;
             
             // 更新显示为播放中
@@ -1193,46 +1198,120 @@
                 playTimeout = null;
             }
 
+            // 超时保护：5秒内没完成播放，强制开始计时
+            playTimeout = setTimeout(function() {
+                if (isPlaying) {
+                    console.warn('播放超时，强制开始计时');
+                    try { speechSynthesis.cancel(); } catch(e) {}
+                    try { audioEl.pause(); audioEl.currentTime = 0; } catch(e) {}
+                    isPlaying = false;
+                    startTimer();
+                }
+            }, 5000);
+
+            // 如果已确认需要使用备用音频引擎，直接走备用
+            if (useAudioFallback) {
+                playWithAudio(word);
+                return;
+            }
+
+            // 尝试 speechSynthesis 播放
+            if (window.speechSynthesis) {
+                playWithSpeechSynthesis(word);
+            } else {
+                // 浏览器不支持 speechSynthesis，直接用备用
+                useAudioFallback = true;
+                playWithAudio(word);
+            }
+        }
+        
+        // 引擎1：speechSynthesis 播放
+        function playWithSpeechSynthesis(word) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            utterance.volume = 1;
+
             utterance.onend = function() {
                 isPlaying = false;
                 if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
                 startTimer();
             };
 
-            // 【修复1】添加 onerror 回调：播放失败时不再卡死，直接开始计时
             utterance.onerror = function(e) {
-                console.warn('语音播放错误:', e);
+                console.warn('speechSynthesis 播放失败，切换到备用音频引擎:', e);
+                // 切换到备用引擎
+                useAudioFallback = true;
+                playWithAudio(word);
+            };
+
+            speechSynthesis.cancel();
+            setTimeout(function() {
+                speechSynthesis.speak(utterance);
+                
+                // 检测是否真的在播放（微信浏览器可能静默失败）
+                setTimeout(function() {
+                    if (isPlaying && !speechSynthesis.speaking) {
+                        console.warn('speechSynthesis 未开始播放，切换到备用音频引擎');
+                        useAudioFallback = true;
+                        playWithAudio(word);
+                    }
+                }, 500);
+            }, 50);
+        }
+        
+        // 引擎2：备用音频播放（兼容微信浏览器等）
+        function playWithAudio(word) {
+            try { speechSynthesis.cancel(); } catch(e) {}
+            
+            // 使用 Google Translate TTS（免费、无需 key、全球可用）
+            const audioUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
+            
+            audioEl.onended = function() {
                 isPlaying = false;
                 if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
                 startTimer();
             };
-
-            // 【修复2】超时保护：3秒内没触发 onend/onerror，强制开始计时
-            playTimeout = setTimeout(function() {
-                if (isPlaying) {
-                    console.warn('语音播放超时，强制开始计时');
-                    speechSynthesis.cancel();
-                    isPlaying = false;
-                    startTimer();
-                }
-            }, 3000);
-
-            // 【修复3】播放前 cancel 清除队列，解决 Chrome 长暂停后语音卡住的 bug
-            speechSynthesis.cancel();
             
-            // 【修复4】iOS/Safari 需要用户交互后才能播放，尝试播放并处理静默失败
-            setTimeout(function() {
-                speechSynthesis.speak(utterance);
-                
-                // 检查语音是否真的开始播放（某些浏览器会静默失败）
-                setTimeout(function() {
-                    if (isPlaying && !speechSynthesis.speaking) {
-                        console.warn('语音未开始播放，可能已被浏览器阻止');
-                        // 不自动开始计时，让用户看到"播放中..."提示
-                        // 如果用户点击页面任意位置，可能会触发播放
-                    }
-                }, 100);
-            }, 50);
+            audioEl.onerror = function() {
+                console.warn('Google TTS 失败，尝试备用源');
+                // 备用：使用 ResponsiveVoice 或直接开始计时
+                playWithAudioBackup(word);
+            };
+            
+            audioEl.src = audioUrl;
+            audioEl.volume = 1;
+            audioEl.play().catch(function(e) {
+                console.warn('audio.play 失败，尝试备用源:', e);
+                playWithAudioBackup(word);
+            });
+        }
+        
+        // 引擎3：最终备用（使用 dict.cn 在线发音）
+        function playWithAudioBackup(word) {
+            const audioUrl = 'https://dict.cn/audio?w=' + encodeURIComponent(word);
+            
+            audioEl.onended = function() {
+                isPlaying = false;
+                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+                startTimer();
+            };
+            
+            audioEl.onerror = function() {
+                console.warn('dict.cn TTS 也失败，直接开始计时');
+                isPlaying = false;
+                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+                startTimer();
+            };
+            
+            audioEl.src = audioUrl;
+            audioEl.volume = 1;
+            audioEl.play().catch(function() {
+                // 所有引擎都失败，直接开始计时
+                isPlaying = false;
+                if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+                startTimer();
+            });
         }
         
         function startTimer() {
