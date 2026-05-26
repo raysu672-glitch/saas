@@ -169,6 +169,7 @@
             <div class="tab-bar">
                 <div class="tab active" onclick="switchTeacherTab('students')">学生管理</div>
                 <div class="tab" onclick="switchTeacherTab('records')">测试记录</div>
+                <div class="tab" onclick="switchTeacherTab('progress')">学习进度</div>
                 <div class="tab" onclick="switchTeacherTab('standards')">达标标准</div>
             </div>
             
@@ -192,6 +193,16 @@
                 <div id="recordsList"></div>
             </div>
             
+            <div id="tabProgress" class="tab-content" style="display:none;">
+                <div class="input-group" style="max-width:300px; margin-bottom:20px;">
+                    <label>选择学生查看进度</label>
+                    <select id="teacherFilterStudent" onchange="loadTeacherStudentProgress()">
+                        <option value="">全部学生</option>
+                    </select>
+                </div>
+                <div id="teacherStudentProgress"></div>
+            </div>
+            
             <div id="tabStandards" class="tab-content" style="display:none;">
                 <div id="standardsList"></div>
             </div>
@@ -210,7 +221,19 @@
             
             <h3 style="text-align:center; color:#667eea; margin-bottom:20px;">学习进度表</h3>
             
-            <div id="progressTable"></div>
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchStudentTab('progress')">学习进度</div>
+                <div class="tab" onclick="switchStudentTab('history')">历史记录</div>
+            </div>
+            
+            <div id="studentTabProgress">
+                <div id="progressTable"></div>
+            </div>
+            
+            <div id="studentTabHistory" style="display:none;">
+                <div class="history-chart" id="historyChart"></div>
+                <div id="studentHistoryList"></div>
+            </div>
         </div>
         
         <div class="card screen" id="testScreen">
@@ -393,28 +416,28 @@
         }
         
         // 学习进度模块配置
+        // url: 外部页面链接（为空表示本页面内功能）
         const MODULES = [
-            { id: 'dictation', name: '听力2400词', target: 80, unit: '%', hasTest: true, hasLearn: false, icon: 'headphones' },
-            { id: 'writing_words', name: '小作文单词', target: 6, unit: '分', hasTest: false, hasLearn: false, icon: 'pencil' },
-            { id: 'highschool_words', name: '高中单词', target: 100, unit: '%', hasTest: false, hasLearn: false, icon: 'book' },
-            { id: 'ielts_core', name: '雅思核心800词', target: 85, unit: '%', hasTest: false, hasLearn: false, icon: 'star' },
-            { id: 'grammar', name: '基础语法', target: 65, unit: '%', hasTest: false, hasLearn: false, icon: 'academic' },
-            { id: 'sentence', name: '长难句分析', target: 75, unit: '%', hasTest: false, hasLearn: false, icon: 'analysis' },
-            { id: 'listening_p4', name: '听力P4跟读', target: 70, unit: '%', hasTest: false, hasLearn: false, icon: 'mic' },
-            { id: 'writing_phrase', name: '写作词伙', target: 50, unit: '%', hasTest: false, hasLearn: false, icon: 'writing' },
-            { id: 'writing_translate', name: '写作句子翻译', target: 50, unit: '%', hasTest: false, hasLearn: false, icon: 'translate' },
-            { id: 'reading_p1', name: '阅读P1', target: 9, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
-            { id: 'reading_p2', name: '阅读P2', target: 8, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
-            { id: 'reading_p3', name: '阅读P3', target: 6, unit: '分', hasTest: false, hasLearn: false, icon: 'eye' },
-            { id: 'listening_p1', name: '听力P1', target: 7, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
-            { id: 'listening_p2', name: '听力P2', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
-            { id: 'listening_p3', name: '听力P3', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
-            { id: 'listening_p4', name: '听力P4', target: 4, unit: '分', hasTest: false, hasLearn: false, icon: 'headphones' },
-            { id: 'speaking_p1', name: '口语P1', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
-            { id: 'speaking_p2', name: '口语P2', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
-            { id: 'speaking_p3', name: '口语P3', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'message' },
-            { id: 'writing_essay', name: '写作大作文', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'edit' },
-            { id: 'writing_small', name: '写作小作文', target: 5.5, unit: '分', hasTest: false, hasLearn: false, icon: 'edit' }
+            { id: 'dictation', name: '听力2400词', target: 80, unit: '%', url: '', icon: 'headphones' },
+            { id: 'writing_words', name: '小作文单词', target: 6, unit: '分', url: '', icon: 'pencil' },
+            { id: 'highschool_words', name: '高中单词', target: 100, unit: '%', url: '', icon: 'book' },
+            { id: 'ielts_core', name: '雅思核心800词', target: 85, unit: '%', url: '', icon: 'star' },
+            { id: 'grammar', name: '基础语法', target: 65, unit: '%', url: '', icon: 'academic' },
+            { id: 'sentence', name: '长难句分析', target: 75, unit: '%', url: '', icon: 'analysis' },
+            { id: 'listening_p4', name: '听力P4跟读', target: 70, unit: '%', url: '', icon: 'mic' },
+            { id: 'writing_phrase', name: '写作词伙', target: 50, unit: '%', url: '', icon: 'writing' },
+            { id: 'writing_translate', name: '写作句子翻译', target: 50, unit: '%', url: '', icon: 'translate' },
+            { id: 'reading_p1', name: '阅读P1', target: 9, unit: '分', url: '', icon: 'eye' },
+            { id: 'reading_p2', name: '阅读P2', target: 8, unit: '分', url: '', icon: 'eye' },
+            { id: 'reading_p3', name: '阅读P3', target: 6, unit: '分', url: '', icon: 'eye' },
+            { id: 'listening_p1', name: '听力P1', target: 7, unit: '分', url: '', icon: 'headphones' },
+            { id: 'listening_p2', name: '听力P2', target: 4, unit: '分', url: '', icon: 'headphones' },
+            { id: 'listening_p3', name: '听力P3', target: 4, unit: '分', url: '', icon: 'headphones' },
+            { id: 'speaking_p1', name: '口语P1', target: 5.5, unit: '分', url: '', icon: 'message' },
+            { id: 'speaking_p2', name: '口语P2', target: 5.5, unit: '分', url: '', icon: 'message' },
+            { id: 'speaking_p3', name: '口语P3', target: 5.5, unit: '分', url: '', icon: 'message' },
+            { id: 'writing_essay', name: '写作大作文', target: 5.5, unit: '分', url: '', icon: 'edit' },
+            { id: 'writing_small', name: '写作小作文', target: 5.5, unit: '分', url: '', icon: 'edit' }
         ];
         
         function showStudentHome() {
@@ -488,13 +511,16 @@
                 html += '</td>';
                 html += '<td style="padding:15px 12px; text-align:center;">';
                 
-                if (m.hasTest) {
+                // 根据模块类型显示不同按钮
+                if (m.id === 'dictation') {
+                    // 听力2400词 - 本页面内测试
                     html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
-                }
-                if (m.hasLearn) {
-                    html += '<button class="btn btn-sm btn-secondary" onclick="alert(\'学习功能开发中...\')">学习</button>';
-                }
-                if (!m.hasTest && !m.hasLearn) {
+                    html += '<button class="btn btn-sm btn-success" onclick="startTest(\'wrong_words\')">错题</button>';
+                } else if (m.url) {
+                    // 有外部链接 - 跳转到外部页面
+                    html += '<a href="' + m.url + '" target="_blank"><button class="btn btn-sm">进入</button></a>';
+                } else {
+                    // 无链接 - 显示开发中
                     html += '<span style="color:#999;">开发中</span>';
                 }
                 html += '</td></tr>';
@@ -512,6 +538,13 @@
             html += '</div></div>';
             
             container.innerHTML = html;
+        }
+        
+        function switchStudentTab(tab) {
+            document.querySelectorAll('#studentHome .tab').forEach(function(t) { t.classList.remove('active'); });
+            event.target.classList.add('active');
+            document.getElementById('studentTabProgress').style.display = tab === 'progress' ? 'block' : 'none';
+            document.getElementById('studentTabHistory').style.display = tab === 'history' ? 'block' : 'none';
         }
         
         function studentLogout() {
@@ -600,6 +633,104 @@
             container.innerHTML = html;
         }
         
+        async function loadTeacherProgressData() {
+            // 加载学生列表到下拉框
+            const studentsResult = await db.from('students').select('*').order('name');
+            const students = studentsResult.data || [];
+            
+            const select = document.getElementById('teacherFilterStudent');
+            let optionsHtml = '<option value="">全部学生</option>';
+            for (let i = 0; i < students.length; i++) {
+                optionsHtml += '<option value="' + students[i].student_id + '">' + students[i].name + ' (' + students[i].student_id + ')</option>';
+            }
+            select.innerHTML = optionsHtml;
+            
+            // 默认显示全部学生汇总
+            renderTeacherProgressSummary(students);
+        }
+        
+        async function renderTeacherProgressSummary(students) {
+            const container = document.getElementById('teacherStudentProgress');
+            
+            // 获取所有学生的测试记录
+            const recordsResult = await db.from('test_records').select('*').eq('test_type', 'dictation');
+            const allRecords = recordsResult.data || [];
+            
+            let html = '<h4 style="margin-bottom:15px;">全体学生听力2400词进度</h4>';
+            html += '<table style="width:100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background:#f8f9fa;">';
+            html += '<th style="padding:12px; text-align:left; border-bottom:2px solid #dee2e6;">学号</th>';
+            html += '<th style="padding:12px; text-align:left; border-bottom:2px solid #dee2e6;">姓名</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">最高分</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">测试次数</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">达标次数</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">达标率</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">状态</th>';
+            html += '</tr></thead><tbody>';
+            
+            for (let i = 0; i < students.length; i++) {
+                const s = students[i];
+                const studentRecords = allRecords.filter(function(r) { return r.student_id === s.student_id; });
+                
+                let bestScore = 0;
+                let passCount = 0;
+                if (studentRecords.length > 0) {
+                    bestScore = Math.max(...studentRecords.map(function(r) { return r.score; }));
+                    passCount = studentRecords.filter(function(r) { return r.is_passed; }).length;
+                }
+                
+                const passRate = studentRecords.length > 0 ? Math.round(passCount / studentRecords.length * 100) : 0;
+                let statusClass = 'badge-info';
+                let statusText = '未开始';
+                if (bestScore >= 80) {
+                    statusClass = 'badge-success';
+                    statusText = '已达标';
+                } else if (bestScore > 0) {
+                    statusClass = 'badge-warning';
+                    statusText = '进行中';
+                }
+                
+                html += '<tr style="border-bottom:1px solid #dee2e6;">';
+                html += '<td style="padding:12px;">' + s.student_id + '</td>';
+                html += '<td style="padding:12px;"><strong>' + s.name + '</strong></td>';
+                html += '<td style="padding:12px; text-align:center;">' + (bestScore > 0 ? bestScore + '%' : '-') + '</td>';
+                html += '<td style="padding:12px; text-align:center;">' + studentRecords.length + '</td>';
+                html += '<td style="padding:12px; text-align:center;">' + passCount + '</td>';
+                html += '<td style="padding:12px; text-align:center;">' + (studentRecords.length > 0 ? passRate + '%' : '-') + '</td>';
+                html += '<td style="padding:12px; text-align:center;"><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            
+            // 统计概览
+            const passStudents = students.filter(function(s) {
+                const records = allRecords.filter(function(r) { return r.student_id === s.student_id; });
+                return records.some(function(r) { return r.is_passed; });
+            }).length;
+            
+            html += '<div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">';
+            html += '<strong>统计概览：</strong> 总学生 ' + students.length + ' 人 | ';
+            html += '已完成测试 ' + allRecords.length + ' 次 | ';
+            html += '达标学生 ' + passStudents + ' 人 | ';
+            html += '班级达标率 ' + (students.length > 0 ? Math.round(passStudents / students.length * 100) : 0) + '%';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+        
+        async function loadTeacherStudentProgress() {
+            const selectedId = document.getElementById('teacherFilterStudent').value;
+            const studentsResult = await db.from('students').select('*').order('name');
+            let students = studentsResult.data || [];
+            
+            if (selectedId) {
+                students = students.filter(function(s) { return s.student_id === selectedId; });
+            }
+            
+            renderTeacherProgressSummary(students);
+        }
+        
         async function loadStandards() {
             const result = await db.from('pass_standards').select('*').eq('is_active', true);
             const container = document.getElementById('standardsList');
@@ -629,7 +760,11 @@
             event.target.classList.add('active');
             document.getElementById('tabStudents').style.display = tab === 'students' ? 'block' : 'none';
             document.getElementById('tabRecords').style.display = tab === 'records' ? 'block' : 'none';
+            document.getElementById('tabProgress').style.display = tab === 'progress' ? 'block' : 'none';
             document.getElementById('tabStandards').style.display = tab === 'standards' ? 'block' : 'none';
+            if (tab === 'progress') {
+                loadTeacherProgressData();
+            }
         }
         
         function showAddStudentModal() { showModal('addStudentModal'); }
