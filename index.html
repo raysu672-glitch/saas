@@ -1143,11 +1143,24 @@
         
         function playWord() {
             if (isPlaying) return;
+            
+            // 检查浏览器是否支持语音合成
+            if (!window.speechSynthesis) {
+                document.getElementById('timerDisplay').textContent = '浏览器不支持语音播放';
+                setTimeout(startTimer, 1000);
+                return;
+            }
+            
             const word = testWords[currentTestIndex];
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
+            utterance.volume = 1;
             isPlaying = true;
+            
+            // 更新显示为播放中
+            document.getElementById('timerDisplay').textContent = '播放中...';
+            document.getElementById('statusIcon').className = 'playing';
 
             // 清除上一题的超时保护
             if (playTimeout) {
@@ -1162,7 +1175,8 @@
             };
 
             // 【修复1】添加 onerror 回调：播放失败时不再卡死，直接开始计时
-            utterance.onerror = function() {
+            utterance.onerror = function(e) {
+                console.warn('语音播放错误:', e);
                 isPlaying = false;
                 if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
                 startTimer();
@@ -1180,8 +1194,19 @@
 
             // 【修复3】播放前 cancel 清除队列，解决 Chrome 长暂停后语音卡住的 bug
             speechSynthesis.cancel();
+            
+            // 【修复4】iOS/Safari 需要用户交互后才能播放，尝试播放并处理静默失败
             setTimeout(function() {
                 speechSynthesis.speak(utterance);
+                
+                // 检查语音是否真的开始播放（某些浏览器会静默失败）
+                setTimeout(function() {
+                    if (isPlaying && !speechSynthesis.speaking) {
+                        console.warn('语音未开始播放，可能已被浏览器阻止');
+                        // 不自动开始计时，让用户看到"播放中..."提示
+                        // 如果用户点击页面任意位置，可能会触发播放
+                    }
+                }, 100);
             }, 50);
         }
         
