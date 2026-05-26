@@ -1094,7 +1094,16 @@
             }
         }
         
+        let isSaving = false;
+        
         async function finishTest() {
+            // 防止重复提交
+            if (isSaving) {
+                console.log('正在保存中，请勿重复提交');
+                return;
+            }
+            isSaving = true;
+            
             const correctCount = testResults.filter(function(r) { return r.isCorrect; }).length;
             const incorrectCount = testResults.filter(function(r) { return !r.isCorrect && !r.skipped; }).length;
             const skippedCount = testResults.filter(function(r) { return r.skipped; }).length;
@@ -1181,6 +1190,9 @@
                 errorHtml = '<p style="text-align:center;color:#28a745;padding:20px;">太棒了！全部正确！</p>';
             }
             document.getElementById('resultErrorList').innerHTML = errorHtml;
+            
+            // 重置保存标志，允许下次测试
+            isSaving = false;
         }
         
         function downloadResult() {
