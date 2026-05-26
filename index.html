@@ -511,17 +511,22 @@
                 html += '</td>';
                 html += '<td style="padding:15px 12px; text-align:center;">';
                 
-                // 根据模块类型显示不同按钮
+                // 三个按钮：测试、学习、历史
                 if (m.id === 'dictation') {
-                    // 听力2400词 - 本页面内测试
+                    // 听力2400词 - 本页面内功能
                     html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
-                    html += '<button class="btn btn-sm btn-success" onclick="startTest(\'wrong_words\')">错题</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showToast(\'学习功能开发中...\', \'info\')">学习</button>';
+                    html += '<button class="btn btn-sm btn-success" onclick="switchStudentTab(\'history\')">历史</button>';
                 } else if (m.url) {
-                    // 有外部链接 - 跳转到外部页面
-                    html += '<a href="' + m.url + '" target="_blank"><button class="btn btn-sm">进入</button></a>';
+                    // 有外部链接
+                    html += '<a href="' + m.url + '" target="_blank" style="margin-right:5px;"><button class="btn btn-sm">测试</button></a>';
+                    html += '<a href="' + m.url + '" target="_blank" style="margin-right:5px;"><button class="btn btn-sm btn-secondary">学习</button></a>';
+                    html += '<button class="btn btn-sm btn-success" onclick="alert(\'该模块历史记录功能开发中...\')">历史</button>';
                 } else {
                     // 无链接 - 显示开发中
-                    html += '<span style="color:#999;">开发中</span>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" disabled>测试</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" disabled>学习</button>';
+                    html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 }
                 html += '</td></tr>';
             }
