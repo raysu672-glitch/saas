@@ -1238,8 +1238,9 @@
         
         // 尝试使用在线音频API播放
         function tryPlayOnlineAudio(word) {
-            // 使用有道词典发音API（清晰、稳定）
-            const audioUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
+            // 使用 dictionaryapi.dev（支持CORS，可在所有浏览器播放）
+            // 先尝试直接拼URL，失败则通过API查询
+            const directUrl = 'https://api.dictionaryapi.dev/media/pronunciations/en/' + encodeURIComponent(word) + '-au.mp3';
             
             audioPlayer.onended = function() {
                 isPlaying = false;
@@ -1247,9 +1248,8 @@
             };
             
             audioPlayer.onerror = function() {
-                // 在线音频失败，回退到浏览器语音合成
-                console.warn('在线音频失败，使用语音合成');
-                trySpeechSynthesis(word);
+                // 直接URL不存在，通过API查询正确的音频URL
+                fetchAudioFromApi(word);
             };
             
             audioPlayer.oncanplay = function() {
@@ -1261,11 +1261,42 @@
             // 3秒超时
             setTimeout(function() {
                 if (isPlaying && audioPlayer.paused) {
-                    trySpeechSynthesis(word);
+                    fetchAudioFromApi(word);
                 }
             }, 3000);
             
-            audioPlayer.src = audioUrl;
+            audioPlayer.src = directUrl;
+        }
+        
+        // 通过API获取正确的音频URL
+        function fetchAudioFromApi(word) {
+            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data || !data[0]) {
+                        trySpeechSynthesis(word);
+                        return;
+                    }
+                    const phonetics = data[0].phonetics || [];
+                    let audioUrl = '';
+                    for (let i = 0; i < phonetics.length; i++) {
+                        if (phonetics[i].audio) {
+                            audioUrl = phonetics[i].audio;
+                            break;
+                        }
+                    }
+                    if (audioUrl) {
+                        audioPlayer.src = audioUrl;
+                        audioPlayer.play().catch(function() {
+                            trySpeechSynthesis(word);
+                        });
+                    } else {
+                        trySpeechSynthesis(word);
+                    }
+                })
+                .catch(function() {
+                    trySpeechSynthesis(word);
+                });
         }
         
         // 备用：浏览器语音合成
