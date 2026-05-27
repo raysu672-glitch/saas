@@ -1203,62 +1203,20 @@
             document.getElementById('timerDisplay').textContent = '播放中...';
             document.getElementById('statusIcon').className = 'playing';
 
-            // 超时保护：10秒
+            // 超时保护：12秒
             if (playTimeout) clearTimeout(playTimeout);
             playTimeout = setTimeout(function() {
                 console.warn('播放超时');
                 try { speechSynthesis.cancel(); } catch(e) {}
                 try { audioEl.pause(); } catch(e) {}
                 safeStartTimer();
-            }, 10000);
+            }, 12000);
 
-            // 先尝试 speechSynthesis
-            if (window.speechSynthesis) {
-                trySpeech(word);
-            } else {
-                tryAudio(word);
-            }
+            // 优先使用 mp3 音频（音量稳定、清晰），备用 speechSynthesis
+            tryAudio(word);
         }
         
-        // 尝试 speechSynthesis
-        function trySpeech(word) {
-            var utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            utterance.volume = 1;
-            
-            var started = false;
-            
-            utterance.onstart = function() {
-                started = true;
-            };
-            
-            utterance.onend = function() {
-                if (started) {
-                    safeStartTimer();
-                } else {
-                    // 没真正开始播放
-                    tryAudio(word);
-                }
-            };
-            
-            utterance.onerror = function() {
-                tryAudio(word);
-            };
-            
-            speechSynthesis.cancel();
-            speechSynthesis.speak(utterance);
-            
-            // 800ms 后检测是否开始播放
-            setTimeout(function() {
-                if (!started && !timerStarted) {
-                    speechSynthesis.cancel();
-                    tryAudio(word);
-                }
-            }, 800);
-        }
-        
-        // 尝试 audio（直接 fetch 获取正确 URL）
+        // 尝试 mp3 音频（优先）
         function tryAudio(word) {
             try { speechSynthesis.cancel(); } catch(e) {}
             
@@ -1266,7 +1224,8 @@
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (!data || !data[0]) {
-                        safeStartTimer();
+                        // 没数据，用 speechSynthesis
+                        trySpeech(word);
                         return;
                     }
                     var phonetics = data[0].phonetics || [];
@@ -1278,34 +1237,80 @@
                         }
                     }
                     if (audioUrl) {
-                        playAudio(audioUrl);
+                        playAudio(audioUrl, word);
                     } else {
-                        // 没找到音频，再尝试 speechSynthesis（某些单词可能没有 mp3）
-                        if (window.speechSynthesis && !useAudioFallback) {
-                            trySpeech(word);
-                        } else {
-                            safeStartTimer();
-                        }
+                        // 没找到 mp3，用 speechSynthesis
+                        trySpeech(word);
                     }
                 })
                 .catch(function() {
-                    safeStartTimer();
+                    // fetch 失败，用 speechSynthesis
+                    trySpeech(word);
                 });
         }
         
         // 播放音频 URL
-        function playAudio(url) {
+        function playAudio(url, word) {
             audioEl.src = url;
             audioEl.volume = 1;
+            
+            var played = false;
+            
+            audioEl.oncanplay = function() {
+                if (!played) {
+                    played = true;
+                    audioEl.play().catch(function() {
+                        // 播放失败，用 speechSynthesis
+                        trySpeech(word);
+                    });
+                }
+            };
+            
             audioEl.onended = function() {
                 safeStartTimer();
             };
+            
             audioEl.onerror = function() {
+                // 音频错误，用 speechSynthesis
+                trySpeech(word);
+            };
+            
+            // 3秒内没触发 canplay，用 speechSynthesis
+            setTimeout(function() {
+                if (!played && !timerStarted) {
+                    trySpeech(word);
+                }
+            }, 3000);
+        }
+        
+        // 备用：speechSynthesis
+        function trySpeech(word) {
+            if (!window.speechSynthesis) {
+                safeStartTimer();
+                return;
+            }
+            
+            var utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.7;
+            utterance.volume = 1;
+            utterance.pitch = 1;
+            
+            // 尝试获取更好的语音
+            var voices = speechSynthesis.getVoices();
+            var enVoice = voices.find(function(v) { return v.lang.indexOf('en') === 0; });
+            if (enVoice) utterance.voice = enVoice;
+            
+            utterance.onend = function() {
                 safeStartTimer();
             };
-            audioEl.play().catch(function() {
+            
+            utterance.onerror = function() {
                 safeStartTimer();
-            });
+            };
+            
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
         }
         
         function startTimer() {
