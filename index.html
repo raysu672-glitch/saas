@@ -256,6 +256,89 @@
             </div>
         </div>
         
+        <!-- 学习功能主界面 -->
+        <div class="card screen" id="learnScreen">
+            <div class="admin-header">
+                <h2>🎓 单词学习</h2>
+                <button class="btn btn-secondary btn-sm" onclick="exitLearn()">返回</button>
+            </div>
+            <div id="learnStats" style="margin-bottom:20px; padding:15px; background:#f8f9fa; border-radius:10px;">
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:15px; text-align:center;">
+                    <div><div class="stat-value" id="learnMastered">0</div><div class="stat-label">已掌握</div></div>
+                    <div><div class="stat-value" id="learnLearning">0</div><div class="stat-label">学习中</div></div>
+                    <div><div class="stat-value" id="learnNew">0</div><div class="stat-label">未接触</div></div>
+                    <div><div class="stat-value" id="learnTime">0:00</div><div class="stat-label">本次时长</div></div>
+                </div>
+            </div>
+            <div id="learnContent">
+                <div style="text-align:center; padding:40px;">
+                    <h3 style="margin-bottom:20px;">开始学习</h3>
+                    <p style="color:#666; margin-bottom:30px;">每次学习50个单词，系统会根据你的掌握情况智能安排</p>
+                    <button class="btn" onclick="startLearnSession()">开始学习</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 学习测试界面 -->
+        <div class="card screen" id="learnTestScreen">
+            <div class="progress-bar"><div class="progress-fill" id="learnProgressFill"></div></div>
+            <div class="question-counter" id="learnQuestionCounter">第 1 / 50 题</div>
+            <div style="text-align:center;">
+                <span id="learnModeLabel" style="background:#e9ecef; padding:5px 15px; border-radius:20px; font-size:0.9rem;">初始测试</span>
+            </div>
+            <div style="text-align:center; margin:20px 0;">
+                <div id="learnStatusIcon" style="font-size:3rem;">🔊</div>
+                <div id="learnTimerDisplay" style="font-size:1.5rem; color:#667eea;">准备中...</div>
+            </div>
+            <div class="input-group">
+                <label>请输入你听到的单词：</label>
+                <input type="text" id="learnAnswerInput" placeholder="输入单词..." autocomplete="off" onkeypress="if(event.key==='Enter')learnSubmitAnswer()">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="learnSkipWord()">跳过</button>
+                <button class="btn" onclick="learnSubmitAnswer()">提交</button>
+            </div>
+        </div>
+        
+        <!-- 三次拼写练习界面 -->
+        <div class="card screen" id="practiceScreen">
+            <div class="admin-header">
+                <h3>✏️ 拼写练习 <span id="practiceProgress">(1/3)</span></h3>
+                <div>第 <span id="practiceGroupNum">1</span> 组 - 剩余 <span id="practiceRemaining">10</span> 词</div>
+            </div>
+            <div style="text-align:center; margin:30px 0;">
+                <div id="practiceWord" style="font-size:2rem; font-weight:bold; color:#667eea; margin-bottom:10px;"></div>
+                <button class="btn btn-sm btn-secondary" onclick="playPracticeWord()">🔊 播放发音</button>
+            </div>
+            <div class="input-group">
+                <label>请拼写上面的单词：</label>
+                <input type="text" id="practiceInput" placeholder="输入单词..." autocomplete="off" onkeypress="if(event.key==='Enter')submitPractice()">
+            </div>
+            <div id="practiceFeedback" style="margin:15px 0; padding:10px; border-radius:8px; display:none;"></div>
+            <div class="btn-group">
+                <button class="btn" onclick="submitPractice()">提交</button>
+            </div>
+        </div>
+        
+        <!-- 学习结果界面 -->
+        <div class="card screen" id="learnResultScreen">
+            <h1>学习完成！</h1>
+            <div style="text-align:center; margin:20px 0;">
+                <div style="font-size:1.2rem; color:#667eea; margin-bottom:10px;">本次学习时长</div>
+                <div id="learnResultTime" style="font-size:3rem; font-weight:bold;">0:00</div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-value" id="learnResultInitial">0</div><div class="stat-label">初始正确</div></div>
+                <div class="stat-box"><div class="stat-value" id="learnResultWrong">0</div><div class="stat-label">需练习</div></div>
+                <div class="stat-box"><div class="stat-value" id="learnResultMastered">0</div><div class="stat-label">已掌握</div></div>
+                <div class="stat-box"><div class="stat-value" id="learnResultGroups">0</div><div class="stat-label">完成组数</div></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="showLearnScreen()">继续学习</button>
+                <button class="btn btn-secondary" onclick="exitLearn()">返回主页</button>
+            </div>
+        </div>
+        
         <div class="card screen" id="resultScreen">
             <h1>测试完成！</h1>
             <div id="resultStudentInfo" style="text-align:center; color:#667eea; margin:10px 0;"></div>
@@ -361,7 +444,6 @@
         let timerInterval = null;
         let timeLeft = 6;
         let isPlaying = false;
-        let playTimeout = null; // 超时保护定时器
         
         // 单词列表
         const allWords = ["brain","booklet","bridges","social","national","rats","marketing","snakes","round","agency","insects","children","early","cleaning","cloud","conference","ants","hospital","open","insurance","supermarket","pencil","normal","medal","illness","pillow","Arranging","interviews","pizza","magazines","dinner","clever","bathrooms","tickets","accents","save","club","end","water","fireworks","time","glass","goat","rice","hiking","education","against","engineering","orange","pencils","welcome","rules","knees","sister","toys","wait","fitness","citizen","songs","hat","watch","packing","communication","winds","colds","tourists","break","blood","bookshop","teeth","balcony","block","birth","beaches","dark","cooperation","keyboard","hunting","company","meals","address","spelling","wedding","Northeast","corners","check","cultures","booking","shirt","crying","visitors","grammar","lunch","ocean","male","gold","rocks","season","tiger","store","gender","circles","campus","tower","rubber","stars","discussion","advertising","central","change","oven","international","reading","recorders","kite","plants","advertise","Mold","actors","classification","rivers","day","legal","dance","lions","map","bike","watering","view","sand","chain","swimming","technology","sun hat","protection","sheep","numbers","organize","outdoor","difficult","India","noisy","quiet","summer","confidence","price","chocolate","breakdown","couple","results","special","scientific","course","fires","worker","files","healthcare","guard","selfish","greenfield","lines","planner","chemical","aunt","manager","autumn","chemist","eyesight","farmers","fear","kitchen","management","lights","information","wild","humans","bikes","location","search","relationships","feet","gas","messages","choose","sales","bedroom","pollution","politics","museum","bill","cleaner","choosing","hungry","bicycle","salts","skin","leaders","neck","note","noise","bones","parks","patience","printer","programs","rope","salt","none","backdoor","artists","forests","answer","crops","soft","Internet","mapping","blue","mountains","outside","mining","aging","tests","floodwater","storm","global","healthy","oldest","personal","math","wide","lakes","volcano","grain","harm","driver","pictures","beginning","financial","calls","products","guide","notebook","reporter","salads","pets","engineers","leg","radio","tires","hotels","island","furniture","lighting","market","methods","notes","warm","energy","environmental","factory","small","emails","bears","flowers","medicines","housing","income","airports","flat","production","fruits","eyedrops","unsure","trains","milk","villages","workshop","babies","unhealthy","tears","media","gym","friendship","garage","tutors","feeding","fans","minerals","Thursday","problems","profits","left","band","forecast","weekend","military","shadow","smooth","foot","still","unfair","voices","warning","write","family","shipbuilding","training","unanswered","frame","customers","dangerous","dry","traveling","lost","design","footprints","games","hard","images","improvement","king","lab","monkeys","evenings","samples","workplace","town","drive","foods","gardening","approaches","beer","country","department","exercises","negative","outline","modern","sandwiches","jeans","guest","cycling","danger","beginners","frogs","printed","bright","industry","ink","writing","objects","living","account","items","right","land","memories","mental","prisoners","stage","highway","computer","increase","potatoes","morning","strong","carpets","cable","parents","paining","wrong","arts","exhibitor","factories","nests","quality","rural","structure","green","hardworking","quite","tape","promotion","maps","bricks","traffic","unfriendly","yellow","garden","spring","eyes","Eat","cameraman","poison","flooding","ages","distance","colours","cleanest","driving","plates","roads","technical","timetable","gun","hairs","fieldwork","climbing","creativity","list","machines","control","focus","wallet","geese","pianist","salesman","size","runner","choice","urban","tunnel","fashion","plans","main","waste","codes","tour","silver","sandy","economy","economics","movies","hands","contract","cattle","cave","telephone","drinking","accidents","snowboarding","fields","escape","dried","floors","deserts","films","friends","grasses","natural","printers","sport","experience","key","heat","videos","adults","ships","flight","engine","boots","stomach","entrance","surprise","chicken","farming","stairs","bananas","plan","doctors","waterfall","friendly","glasses","oil","printing","seat","government","stories","painting","castles","remember","arms","coloured","animals","fact","political","airplane","firework","closed","army","groundplan","meetings","raining","half","sunset","advance","package","drinks","horsehair","crime","policies","free pick","export","smart","heart","type","horses","reports","value","undeveloped","surveys","self-drive","recording","references","photographs","computers","common","cafe","fill","bath","Russia","cashier","cameras","airline","groups","fireplaces","rainwear","drying","tourism","science","gaps","cash","free","sugar","waiter","TRUE","rainfall","clothes","double","finance","parking","person","writers","rainwater","fresh","newspapers","station","scientist","back","passport","topics","climate","languages","sailing","postcard","restaurant","postbox","meat","varies","researcher","actions","learner","birds","singing","teams","streets","apartment","colony","words","sleep","Safety","various","jacket","present","shipping","loyalty","wheelchair","vitamin A","shoppers","plastic","politician","sunscreen","nurse","concert","super","taxes","weathers","identity","heater","photos","specialist","headache","society","wheels","workforce","analysis","biology","challenge","nesting","administration","harmful","worksheet","coursework","strategies","overfill","picnic","knowledge","fridge","racecar","essays","downhill","impossible","lounge","objectives","quiz","range","harvest","rubbish","antiseptic","bins","cement","observation","trousers","cabin","performance","nuts","organic","breakfast","metals","migrate","overfishing","painters","hairdresser","rare trees","pennies","swans","breed","commitment","concrete","Confirmation","journals","port","gravity","habitat","transportation","gene","extra","retail","microwave","relatively","literature","license","pioneer","handle","entry","basement","entertainment","clinic","minibus","woodland","polluted","sharing","reliable","primary","network","estimate","data","air pump","tastes","relaxation","laundry","non-native","internal","taxi","vision","cheque","recycling","behaviors","attitude","deposit","dentist","resident","innovation","biological","commercial","comparison","emotions","leaflet","ice pack","videotape","originality","prison","grade","diseases","durable","flexibility","handouts","return","underground","interest","play area","seminars","bronze","painkiller","teamwork","backpacker","religions","employee","employer","refreshments","darkroom","roof","satisfaction","part-time","selection","environment","evaporation","Exhibitions","campsite","relatives","typing","smell","security","riverside","monthly","defense","summarize","garbage","designers","seating","mail","agriculture","daylight","golf","joining","traders","website","minivan","brother-in-law","fruitcake","variety","decline","arrangement","password","traditional","camp","reasonable","stand","long-term","purpose","reasons","tents","seasonal","diary","creature","total","lifestyle","boards","carbon","homework","personality","branches","worms","wool","develop","landlady","secretary","freedom","general","petrol","documentation","economical","tutorials","intermediate","joint","development","gifts","imported","frozen","guidelines","iron","corn","nets","diet","cooperate","diaries","wealthy","speeches","opera","stolen","self-defense","documents","necessary","slide","section","handbook","lower","nursing","online","lateral-line","lecture","liberty","leadership","cookery","clay","shells","shape","headphones","direct","direction","lectures","lecturer","wildlife","towels","flexible","theory","permit","secondary","conversation","diving","long stick","singer","growing","surface","textbooks","drums","lifting","chairman","basic","sharks","apologize","guitar","pest","candles","built","cartoons","heavy","process","services","levels","spiders","concentrate","temperature","Scotland","expensive","hearing","whiteboard","trade","cheese","crowded","shower","tools","aid","square","navigation","pattern","pegs","theatre","whales","example","creation","sun-cream","checklist","pool","ability","collecting","studio","coast","collection","college","shelf","concerts","position","smoking","preserved","weight","card index","sleeping bag","polished","processing","evidence","settle","ban","jewelry","feathers","viewpoint","consumers","contact","benefits","fuel","dirt","cap","blanket","downstairs","mistake","vocabulary","subway","restrictions","agent","subjects","chess","grandfather","drugs","rest area","earning","spoon","explain","semester","credit","bookkeeping","empty","cab","spare","indoor","balloons","goldfish","yoga","stream","charge","honest","donkeys","understand","version","alternative","fell","pure","soup","sky","canal","success","running","individual","builder","female","important","exam","whole","proof","football","hunger","investment","middle","rabbit","kilometers","pass","native","robots","salary","realistic","ropes","order","moods","reduction","starvation","storage","relevant","style","wings","pairs","sign","patients","stress","repair","voice","walking","seeds","jokes","invitations","hero","hire","minutes","rainbow","miss","inside","front","overseas","paragraphs","opinion","stressful","transparent","soccer","sharp","reservation","uncomfortable","calendar","dairy","casual","responsible","decision","calm","boring","stick","upstairs","armchair","reception","cigar","packaging","different","balance","clubhouse","companionship","productivity","waterproof","unnatural","specific","community","causes","honey","accept","prizes","multimedia","conclusions","talent","regulations","accountants","client","emotional","pressure","decrease","professor","lakeside","safeguard","condition","feedback","crisis","conservation","pounds","amount","certificates","carrots","specialized","firewood","unlimited","oxygen","windsurfing","loyal","hive","cover","lockers","genetic","articles","enjoyable","entire","electricity","silk","footbridges","competitive","presentations","seagrass","pleasure","massage","floated","teenagers","receptionist","nutrition","workload","threat","perception","noticeboard","windmills","containers","qualification","issue","abroad","technician","punctual","screen","electronic","wax","statistics","networking","tropical","variable","diploma","call diversion","fertilizers","methodology","maturity","washbasin","lifespan","theoretical","concentration","smoother","preservation","acceptable","flashing","altitude","frustration","ambulance","signature","mushroom","badge","ambition","lizard","bacteria","angle","fluctuate","fluent","psychologist","expansion","funding","accurate","slang","argument","terrace","artificial","archives","territory","shuttle","therapy","slaves","assess","limestone","assignment","expose","liable","reflective","refund","voluntary","subtopics","publication","acknowledgement","welfare","toothache","acid","fringe","microscope","centimeter","celebrities","excitement","leak","suitable","occupancy","irrigation","surfing","reusable","nylon","obligation","moderate","excellent","folded","situational","portable","souvenir","assessment","nursery","responsibility","jogging","evaluation","liquid","toaster","cotton","prevention","fountain","vertical","reproduction","horror","intelligence","barbershop","prevalent","torn","deadline","vetting","radar","cosmetics","adopt","motivation","consumption","adventure","maintenance","rack","curved","touching","rationally","damp","random","hardware","priority","tolerance","facilities","visa","intact","warehouse","admission","strap","medication","toilet","uniform","coconut","dismiss","rush","average","bakery","membership","brilliant","advisors","publishing","disappear","atlas","alter","index","discipline","wetsuit","integrate","antifreeze","breathing","shrimp","confusion","agreement","tuna","labels","weeding","dishwasher","shoot","depth","booths","opposite","oral","polish","maximum","sacred","outstanding","palace","digestion","zoom","powder","silence","herds","director","savings","achievement","scale","aspiration","purple","battery","edges","measurement","ecology","ladders","duration","sable","canteen","trace","predicting","Budget","circulation","display","rumor","broad","satellite","vanish","mould","stickers","persuading","corrupt","freight","geographical","motor","man-made","correction","status","fence","useless","perfumes","stimulation","stems","kindness","undergraduate","weed","stings","cream","current","definition","bucket","wires","brakes","depression","catalogue","sweetener","tides","catering","brushes","intensive","recommendation","obesity","categories","mammals","hostel","delivery","straight","thunderstorm","apology","broader","whistle","trends","ingredients","jazz","rivals","boiler","crocodiles","fishing net","crown","introduction","explanation","explode","junior","link","willing","curtains","sweaters","tail","platforms","sheet","movement","immigration","explosion","domestic","editor","isolation","automobile","orientation","calculating","glue","formats","compensation","degrees","interaction","manual","demand","necklace","mat","attack","Protein","morality","origins","monitor","outcomes","participation","room service","scent","kidney","influence","informal","journalism","bushes","butterflies","roots","bunch","scenery","expectations","shallow","mud","character","steel","expect","strain","faxing","flashlight","pockets","flute","loans","lungs","manufacture","manufacturers","count","audience","scare","demonstrations","reinvest","generation","treatment","pesticides","copies","carpenter","bargain","spine","model","symbol","destroy","contaminate","expert","flavor","trash","context","translation","diamond","efficiency","elastic","grant","humidity","fluids","pilots","luxury","magic","draft","strict","timber","cliffs","progress","recruit","roll over","schedule","capacities","hospitality","classifying","grandmother","critical","immune","judo","drawing","grocery","matching","spears","lawyers","democratic","moist","passages","passive","ceremonies","temple","frequency","font","gloves","term","gradual","convenient","distribute","encourage","enlargement","complaints","module","patterns","complete","humor","reinforce","lanes","legroom","realism","regular","bonus","height","erosion","string","strike","compulsory","compounds","tomatoes","tone","independent","titles","comprehension","leisure","tongue","confirm","length","stopwatch","impact","soap","apron","pressed","residents","laptops","freezer","equal","complex","distribution","released","district","mixed","popular","consistent","marriage","E. ticket","experiment","external","fingers","Europe","leather","revenue","textile","mask","mild","population","pots","fair","savvy","president","sort","source","resources","seasoned","seals","resistant","emperor","accountable","composers","retrain","review","restroom","solid","solution","socks","replacement","request","repeat","scarf","antibiotics","uncontrolled","hurricane","instinctive","weapon","odor","addictive","magnet","statue","pipes","fabric","friction","fur","shoulder","virus","foundation","menu","digging","fat","extinction","fossil","captive","fog","poetry","trays","promotional","saliva","referee","registration","slope","biography","headlines","logo","calculation","pharmacy","digestive","flamingos","efficient","claw","relocation","instructor","moisture","session","sculptures","infrastructure","nitrogen","trumpet","receiver","philosophers","chalk","representation","require","retained","sites","situation","herbivorous","guessing","authority","motel","carnival","monuments","hook","predators","stretching","kangaroo","lids","sociable","poster","photocopies","prepared","comedy","comfortable","reward","remote","evolution","rockets","pirates","distortion","flu","coastline","stuck","strangers","elevator","dolphins","elephants","journalists","peak","route","smash","soldiers","advertisement","stairlift","shame","state park","procedure","steam","helicopter","application","density","hothouse","scores","diversity","comics","consultant","exploration","identification","vegetarian","questionnaire","description","vegetation","machinery","donations","sustainable","shortlist","documentary","supervision","decorations","tribes","landmarks","migration","organizations","permanent","mathematics","germs","atoms","craft","unsocial","permission","triangle","pottery","supportive","microbiology","helmet","unpredictable","strength","unfurnished","forestry","navigational","arrows","unapproachable","automatic","layout","appearance","caravan","theme","translator","similar","insulation","barrier","reaction","signals","microfilm","olive oil","instinct","myth","effectiveness","dome","logic","dictation","poverty","graphics","combination","flies","retire","instructions","stabilize","embassy","drought","repel","shade"];
@@ -516,7 +598,7 @@
                 if (m.id === 'dictation') {
                     // 听力2400词 - 本页面内功能
                     html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showToast(\'学习功能开发中...\', \'info\')">学习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showLearnScreen()">学习</button>';
                     html += '<button class="btn btn-sm btn-success" onclick="switchStudentTab(\'history\')">历史</button>';
                 } else if (m.url) {
                     // 有外部链接
@@ -1096,44 +1178,6 @@
             showToast('导出成功', 'success');
         }
         
-        // iOS/Safari 语音引擎预热标记
-        let speechEngineWarmedUp = false;
-        // 备用音频引擎标记
-        let useAudioFallback = false;
-        // 预创建 audio 元素复用
-        const audioEl = new Audio();
-        audioEl.preload = 'auto';
-        // 防止 startTimer 重复调用
-        let timerStarted = false;
-        
-        // 预热语音引擎（iOS Safari 需要用户交互后才能播放语音）
-        function warmUpSpeechEngine() {
-            if (speechEngineWarmedUp) return;
-            speechEngineWarmedUp = true;
-            
-            // 尝试 speechSynthesis
-            if (window.speechSynthesis) {
-                try {
-                    const u = new SpeechSynthesisUtterance('test');
-                    u.volume = 0;
-                    u.rate = 10;
-                    speechSynthesis.speak(u);
-                    setTimeout(function(){ speechSynthesis.cancel(); }, 100);
-                    console.log('speechSynthesis 预热完成');
-                } catch (e) {
-                    console.warn('speechSynthesis 不可用');
-                }
-            }
-            
-            // 同时预热 audio 元素（微信浏览器需要）
-            try {
-                audioEl.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-                audioEl.volume = 0;
-                audioEl.play().catch(function(){});
-                console.log('audio 元素预热完成');
-            } catch (e) {}
-        }
-        
         async function startTest(mode) {
             currentTestMode = mode;
             document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
@@ -1154,10 +1198,6 @@
             }
             testResults = [];
             currentTestIndex = 0;
-            
-            // 预热语音引擎（关键：必须在用户点击的同步上下文中调用）
-            warmUpSpeechEngine();
-            
             showScreen('testScreen');
             showQuestion();
         }
@@ -1180,136 +1220,20 @@
             document.getElementById('timerDisplay').className = '';
             document.getElementById('statusIcon').textContent = '🔊';
             document.getElementById('statusIcon').className = '';
-            // 重置状态
-            timerStarted = false;
-            isPlaying = false;
             playWord();
-        }
-        
-        // 安全启动计时器（防止重复调用）
-        function safeStartTimer() {
-            if (timerStarted) return;
-            timerStarted = true;
-            isPlaying = false;
-            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
-            startTimer();
         }
         
         function playWord() {
             if (isPlaying) return;
-            isPlaying = true;
-            
-            var word = testWords[currentTestIndex];
-            document.getElementById('timerDisplay').textContent = '播放中...';
-            document.getElementById('statusIcon').className = 'playing';
-
-            // 超时保护：12秒
-            if (playTimeout) clearTimeout(playTimeout);
-            playTimeout = setTimeout(function() {
-                console.warn('播放超时');
-                try { speechSynthesis.cancel(); } catch(e) {}
-                try { audioEl.pause(); } catch(e) {}
-                safeStartTimer();
-            }, 12000);
-
-            // 优先使用 mp3 音频（音量稳定、清晰），备用 speechSynthesis
-            tryAudio(word);
-        }
-        
-        // 尝试 mp3 音频（优先）
-        function tryAudio(word) {
-            try { speechSynthesis.cancel(); } catch(e) {}
-            
-            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data || !data[0]) {
-                        // 没数据，用 speechSynthesis
-                        trySpeech(word);
-                        return;
-                    }
-                    var phonetics = data[0].phonetics || [];
-                    var audioUrl = '';
-                    for (var i = 0; i < phonetics.length; i++) {
-                        if (phonetics[i].audio) {
-                            audioUrl = phonetics[i].audio;
-                            break;
-                        }
-                    }
-                    if (audioUrl) {
-                        playAudio(audioUrl, word);
-                    } else {
-                        // 没找到 mp3，用 speechSynthesis
-                        trySpeech(word);
-                    }
-                })
-                .catch(function() {
-                    // fetch 失败，用 speechSynthesis
-                    trySpeech(word);
-                });
-        }
-        
-        // 播放音频 URL
-        function playAudio(url, word) {
-            audioEl.src = url;
-            audioEl.volume = 1;
-            
-            var played = false;
-            
-            audioEl.oncanplay = function() {
-                if (!played) {
-                    played = true;
-                    audioEl.play().catch(function() {
-                        // 播放失败，用 speechSynthesis
-                        trySpeech(word);
-                    });
-                }
-            };
-            
-            audioEl.onended = function() {
-                safeStartTimer();
-            };
-            
-            audioEl.onerror = function() {
-                // 音频错误，用 speechSynthesis
-                trySpeech(word);
-            };
-            
-            // 3秒内没触发 canplay，用 speechSynthesis
-            setTimeout(function() {
-                if (!played && !timerStarted) {
-                    trySpeech(word);
-                }
-            }, 3000);
-        }
-        
-        // 备用：speechSynthesis
-        function trySpeech(word) {
-            if (!window.speechSynthesis) {
-                safeStartTimer();
-                return;
-            }
-            
-            var utterance = new SpeechSynthesisUtterance(word);
+            const word = testWords[currentTestIndex];
+            const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
-            utterance.rate = 0.7;
-            utterance.volume = 1;
-            utterance.pitch = 1;
-            
-            // 尝试获取更好的语音
-            var voices = speechSynthesis.getVoices();
-            var enVoice = voices.find(function(v) { return v.lang.indexOf('en') === 0; });
-            if (enVoice) utterance.voice = enVoice;
-            
+            utterance.rate = 0.8;
+            isPlaying = true;
             utterance.onend = function() {
-                safeStartTimer();
+                isPlaying = false;
+                startTimer();
             };
-            
-            utterance.onerror = function() {
-                safeStartTimer();
-            };
-            
-            speechSynthesis.cancel();
             speechSynthesis.speak(utterance);
         }
         
@@ -1508,6 +1432,573 @@
         function backToStudentHome() {
             showStudentHome();
         }
+        
+        // ==================== 学习功能 ====================
+        
+        let learnSession = null;
+        let learnTimerInterval = null;
+        let learnStartTime = null;
+        
+        // 学习状态管理
+        function initLearnSession() {
+            return {
+                phase: 'initial', // initial, group_practice, group_test, final_review
+                words: [],
+                wrongWords: [],
+                currentGroups: [],
+                currentGroupIndex: 0,
+                currentWordIndex: 0,
+                practiceAttempts: {}, // word -> count
+                groupTestResults: [],
+                finalReviewResults: [],
+                initialCorrect: 0,
+                initialWrong: 0,
+                masteredInSession: 0,
+                completedGroups: 0,
+                startTime: Date.now()
+            };
+        }
+        
+        // 显示学习界面
+        async function showLearnScreen() {
+            showScreen('learnScreen');
+            await loadLearnStats();
+            startLearnTimer();
+        }
+        
+        // 退出学习
+        function exitLearn() {
+            stopLearnTimer();
+            if (learnSession && learnSession.phase !== 'initial') {
+                saveLearnProgress();
+            }
+            showStudentHome();
+        }
+        
+        // 学习计时器
+        function startLearnTimer() {
+            learnStartTime = Date.now();
+            learnTimerInterval = setInterval(updateLearnTimer, 1000);
+        }
+        
+        function stopLearnTimer() {
+            if (learnTimerInterval) {
+                clearInterval(learnTimerInterval);
+                learnTimerInterval = null;
+            }
+        }
+        
+        function updateLearnTimer() {
+            const elapsed = Math.floor((Date.now() - learnStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('learnTime').textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+        }
+        
+        // 加载学习统计
+        async function loadLearnStats() {
+            const result = await db.from('word_mastery').select('*').eq('student_id', currentStudent.student_id);
+            const masteryData = result.data || [];
+            
+            let mastered = 0, learning = 0, notStarted = 0;
+            
+            // 已掌握：初始正确或对过3次
+            mastered = masteryData.filter(m => m.is_initial_correct || m.correct_count >= 3).length;
+            
+            // 学习中：初始错且对过1-2次
+            learning = masteryData.filter(m => !m.is_initial_correct && m.correct_count >= 1 && m.correct_count < 3).length;
+            
+            // 未接触：从未测试过
+            notStarted = allWords.length - masteryData.length;
+            
+            document.getElementById('learnMastered').textContent = mastered;
+            document.getElementById('learnLearning').textContent = learning;
+            document.getElementById('learnNew').textContent = notStarted;
+        }
+        
+        // 开始学习会话
+        async function startLearnSession() {
+            learnSession = initLearnSession();
+            
+            // 获取学生已掌握的词汇（对过3次的）
+            const masteryResult = await db.from('word_mastery').select('*').eq('student_id', currentStudent.student_id);
+            const masteredWords = (masteryResult.data || [])
+                .filter(m => m.correct_count >= 3 || m.is_initial_correct)
+                .map(m => m.word);
+            
+            // 从未掌握或未接触的词中随机选50个
+            const availableWords = allWords.filter(w => masteredWords.indexOf(w) === -1);
+            learnSession.words = shuffleArray(availableWords.slice()).slice(0, 50);
+            
+            if (learnSession.words.length === 0) {
+                showToast('太棒了！你已经掌握了所有词汇', 'success');
+                return;
+            }
+            
+            // 开始初始测试
+            startInitialTest();
+        }
+        
+        // 第一阶段：初始测试
+        function startInitialTest() {
+            learnSession.phase = 'initial';
+            learnSession.currentWordIndex = 0;
+            learnSession.wrongWords = [];
+            learnSession.initialCorrect = 0;
+            learnSession.initialWrong = 0;
+            
+            document.getElementById('learnModeLabel').textContent = '初始测试';
+            document.getElementById('learnModeLabel').style.background = '#e9ecef';
+            showScreen('learnTestScreen');
+            showLearnQuestion();
+        }
+        
+        function showLearnQuestion() {
+            const word = learnSession.words[learnSession.currentWordIndex];
+            document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.words.length + ' 题';
+            document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.words.length * 100) + '%';
+            document.getElementById('learnAnswerInput').value = '';
+            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').className = '';
+            document.getElementById('learnStatusIcon').textContent = '🔊';
+            
+            // 播放单词
+            setTimeout(function() { playLearnWord(); }, 500);
+            
+            // 6秒倒计时
+            let timeLeft = 6;
+            learnTimerInterval = setInterval(function() {
+                timeLeft--;
+                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
+                if (timeLeft <= 3) {
+                    document.getElementById('learnTimerDisplay').className = 'warning';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(learnTimerInterval);
+                    learnAutoSubmit();
+                }
+            }, 1000);
+        }
+        
+        function playLearnWord() {
+            const word = learnSession.words[learnSession.currentWordIndex];
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+        }
+        
+        function learnSubmitAnswer() {
+            if (learnTimerInterval) {
+                clearInterval(learnTimerInterval);
+            }
+            const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
+            const correctAnswer = learnSession.words[learnSession.currentWordIndex].toLowerCase();
+            const isCorrect = userAnswer === correctAnswer;
+            
+            processLearnAnswer(isCorrect, userAnswer);
+        }
+        
+        function learnSkipWord() {
+            if (learnTimerInterval) {
+                clearInterval(learnTimerInterval);
+            }
+            processLearnAnswer(false, '(跳过)');
+        }
+        
+        function learnAutoSubmit() {
+            const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
+            const correctAnswer = learnSession.words[learnSession.currentWordIndex].toLowerCase();
+            const isCorrect = userAnswer === correctAnswer && userAnswer !== '';
+            processLearnAnswer(isCorrect, userAnswer || '(未作答)');
+        }
+        
+        function processLearnAnswer(isCorrect, userAnswer) {
+            const word = learnSession.words[learnSession.currentWordIndex];
+            
+            if (isCorrect) {
+                learnSession.initialCorrect++;
+                // 保存到数据库：初始正确
+                saveWordMastery(word, true, true);
+            } else {
+                learnSession.initialWrong++;
+                learnSession.wrongWords.push(word);
+                // 保存到数据库：初始错误
+                saveWordMastery(word, false, true);
+            }
+            
+            learnSession.currentWordIndex++;
+            
+            if (learnSession.currentWordIndex < learnSession.words.length) {
+                showLearnQuestion();
+            } else {
+                // 初始测试完成，开始分组学习
+                startGroupLearning();
+            }
+        }
+        
+        // 保存单词掌握状态
+        async function saveWordMastery(word, isCorrect, isInitial) {
+            const result = await db.from('word_mastery').select('*').eq('student_id', currentStudent.student_id).eq('word', word).single();
+            
+            if (result.data) {
+                // 更新
+                const update = {
+                    correct_count: result.data.correct_count + (isCorrect ? 1 : 0),
+                    last_tested: new Date().toISOString()
+                };
+                if (isInitial && isCorrect) {
+                    update.is_initial_correct = true;
+                }
+                await db.from('word_mastery').update(update).eq('id', result.data.id);
+            } else {
+                // 新建
+                await db.from('word_mastery').insert({
+                    student_id: currentStudent.student_id,
+                    word: word,
+                    correct_count: isCorrect ? 1 : 0,
+                    is_initial_correct: isInitial && isCorrect,
+                    last_tested: new Date().toISOString()
+                });
+            }
+        }
+        
+        // 第二阶段：分组学习
+        function startGroupLearning() {
+            if (learnSession.wrongWords.length === 0) {
+                // 全对，直接完成
+                showLearnResult();
+                return;
+            }
+            
+            // 分成10词一组
+            learnSession.currentGroups = [];
+            for (let i = 0; i < learnSession.wrongWords.length; i += 10) {
+                learnSession.currentGroups.push(learnSession.wrongWords.slice(i, i + 10));
+            }
+            
+            learnSession.currentGroupIndex = 0;
+            startGroupPractice();
+        }
+        
+        // 2.1 三次拼写练习
+        function startGroupPractice() {
+            learnSession.phase = 'group_practice';
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            learnSession.currentWordIndex = 0;
+            
+            // 初始化练习次数
+            for (let i = 0; i < group.length; i++) {
+                if (!learnSession.practiceAttempts[group[i]]) {
+                    learnSession.practiceAttempts[group[i]] = 0;
+                }
+            }
+            
+            showPracticeScreen();
+        }
+        
+        function showPracticeScreen() {
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            const word = group[learnSession.currentWordIndex];
+            const attempts = learnSession.practiceAttempts[word] || 0;
+            
+            document.getElementById('practiceGroupNum').textContent = learnSession.currentGroupIndex + 1;
+            document.getElementById('practiceRemaining').textContent = group.length;
+            document.getElementById('practiceProgress').textContent = '(' + (attempts + 1) + '/3)';
+            document.getElementById('practiceWord').textContent = word;
+            document.getElementById('practiceInput').value = '';
+            document.getElementById('practiceFeedback').style.display = 'none';
+            
+            showScreen('practiceScreen');
+            
+            // 自动播放
+            setTimeout(function() { playPracticeWord(); }, 500);
+        }
+        
+        function playPracticeWord() {
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            const word = group[learnSession.currentWordIndex];
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+        }
+        
+        function submitPractice() {
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            const word = group[learnSession.currentWordIndex];
+            const userAnswer = document.getElementById('practiceInput').value.trim().toLowerCase();
+            const isCorrect = userAnswer === word.toLowerCase();
+            
+            const feedback = document.getElementById('practiceFeedback');
+            
+            if (isCorrect) {
+                learnSession.practiceAttempts[word]++;
+                
+                if (learnSession.practiceAttempts[word] >= 3) {
+                    // 完成3次，标记为暂时掌握
+                    feedback.style.display = 'block';
+                    feedback.style.background = '#d4edda';
+                    feedback.style.color = '#155724';
+                    feedback.textContent = '✓ 完成3次！进入下一个';
+                    
+                    setTimeout(function() {
+                        nextPracticeWord();
+                    }, 1000);
+                } else {
+                    // 继续同一次数
+                    feedback.style.display = 'block';
+                    feedback.style.background = '#d1ecf1';
+                    feedback.style.color = '#0c5460';
+                    feedback.textContent = '✓ 正确！还有 ' + (3 - learnSession.practiceAttempts[word]) + ' 次';
+                    document.getElementById('practiceInput').value = '';
+                    setTimeout(function() { playPracticeWord(); }, 1000);
+                }
+            } else {
+                // 错误，归零重新计数
+                learnSession.practiceAttempts[word] = 0;
+                feedback.style.display = 'block';
+                feedback.style.background = '#f8d7da';
+                feedback.style.color = '#721c24';
+                feedback.innerHTML = '✗ 错误！正确拼写：<strong>' + word + '</strong><br>重新从第1次开始';
+                document.getElementById('practiceInput').value = '';
+                document.getElementById('practiceProgress').textContent = '(1/3)';
+            }
+        }
+        
+        function nextPracticeWord() {
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            learnSession.currentWordIndex++;
+            
+            if (learnSession.currentWordIndex < group.length) {
+                showPracticeScreen();
+            } else {
+                // 本组练习完成，进入听写测试
+                startGroupTest();
+            }
+        }
+        
+        // 2.2 听写10个词
+        function startGroupTest() {
+            learnSession.phase = 'group_test';
+            const group = learnSession.currentGroups[learnSession.currentGroupIndex];
+            learnSession.groupTestResults = [];
+            learnSession.currentWordIndex = 0;
+            
+            // 打乱顺序
+            learnSession.currentTestWords = shuffleArray(group.slice());
+            
+            document.getElementById('learnModeLabel').textContent = '第' + (learnSession.currentGroupIndex + 1) + '组听写';
+            document.getElementById('learnModeLabel').style.background = '#fff3cd';
+            showScreen('learnTestScreen');
+            showGroupTestQuestion();
+        }
+        
+        function showGroupTestQuestion() {
+            const word = learnSession.currentTestWords[learnSession.currentWordIndex];
+            document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.currentTestWords.length + ' 题';
+            document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.currentTestWords.length * 100) + '%';
+            document.getElementById('learnAnswerInput').value = '';
+            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').className = '';
+            document.getElementById('learnStatusIcon').textContent = '🔊';
+            
+            setTimeout(function() { playLearnWord(); }, 500);
+            
+            let timeLeft = 6;
+            learnTimerInterval = setInterval(function() {
+                timeLeft--;
+                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
+                if (timeLeft <= 3) {
+                    document.getElementById('learnTimerDisplay').className = 'warning';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(learnTimerInterval);
+                    groupTestAutoSubmit();
+                }
+            }, 1000);
+        }
+        
+        function groupTestAutoSubmit() {
+            const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
+            const word = learnSession.currentTestWords[learnSession.currentWordIndex];
+            const isCorrect = userAnswer === word.toLowerCase() && userAnswer !== '';
+            processGroupTestAnswer(isCorrect, userAnswer || '(未作答)');
+        }
+        
+        function processGroupTestAnswer(isCorrect, userAnswer) {
+            const word = learnSession.currentTestWords[learnSession.currentWordIndex];
+            
+            learnSession.groupTestResults.push({
+                word: word,
+                isCorrect: isCorrect,
+                userAnswer: userAnswer
+            });
+            
+            if (isCorrect) {
+                // 保存正确
+                saveWordMastery(word, true, false);
+            }
+            
+            learnSession.currentWordIndex++;
+            
+            if (learnSession.currentWordIndex < learnSession.currentTestWords.length) {
+                showGroupTestQuestion();
+            } else {
+                // 本组听写完成，检查是否有错词
+                const wrongInTest = learnSession.groupTestResults.filter(r => !r.isCorrect).map(r => r.word);
+                
+                if (wrongInTest.length > 0) {
+                    // 有错词，更新当前组为错词，重新练习
+                    learnSession.currentGroups[learnSession.currentGroupIndex] = wrongInTest;
+                    showToast('本组有 ' + wrongInTest.length + ' 个词需要继续练习', 'info');
+                    startGroupPractice();
+                } else {
+                    // 本组全对
+                    learnSession.completedGroups++;
+                    learnSession.currentGroupIndex++;
+                    
+                    if (learnSession.currentGroupIndex < learnSession.currentGroups.length) {
+                        // 下一组
+                        startGroupPractice();
+                    } else {
+                        // 所有组完成，进入最终复习
+                        startFinalReview();
+                    }
+                }
+            }
+        }
+        
+        // 第四阶段：最终复习
+        function startFinalReview() {
+            learnSession.phase = 'final_review';
+            // 所有错词一起测
+            learnSession.finalReviewWords = shuffleArray(learnSession.wrongWords.slice());
+            learnSession.finalReviewResults = [];
+            learnSession.currentWordIndex = 0;
+            
+            document.getElementById('learnModeLabel').textContent = '最终复习';
+            document.getElementById('learnModeLabel').style.background = '#d4edda';
+            showScreen('learnTestScreen');
+            showFinalReviewQuestion();
+        }
+        
+        function showFinalReviewQuestion() {
+            const word = learnSession.finalReviewWords[learnSession.currentWordIndex];
+            document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.finalReviewWords.length + ' 题';
+            document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.finalReviewWords.length * 100) + '%';
+            document.getElementById('learnAnswerInput').value = '';
+            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').className = '';
+            document.getElementById('learnStatusIcon').textContent = '🔊';
+            
+            setTimeout(function() { playLearnWord(); }, 500);
+            
+            let timeLeft = 6;
+            learnTimerInterval = setInterval(function() {
+                timeLeft--;
+                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
+                if (timeLeft <= 3) {
+                    document.getElementById('learnTimerDisplay').className = 'warning';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(learnTimerInterval);
+                    finalReviewAutoSubmit();
+                }
+            }, 1000);
+        }
+        
+        function finalReviewAutoSubmit() {
+            const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
+            const word = learnSession.finalReviewWords[learnSession.currentWordIndex];
+            const isCorrect = userAnswer === word.toLowerCase() && userAnswer !== '';
+            processFinalReviewAnswer(isCorrect, userAnswer || '(未作答)');
+        }
+        
+        function processFinalReviewAnswer(isCorrect, userAnswer) {
+            const word = learnSession.finalReviewWords[learnSession.currentWordIndex];
+            
+            learnSession.finalReviewResults.push({
+                word: word,
+                isCorrect: isCorrect,
+                userAnswer: userAnswer
+            });
+            
+            if (isCorrect) {
+                learnSession.masteredInSession++;
+                saveWordMastery(word, true, false);
+            }
+            
+            learnSession.currentWordIndex++;
+            
+            if (learnSession.currentWordIndex < learnSession.finalReviewWords.length) {
+                showFinalReviewQuestion();
+            } else {
+                // 最终复习完成，检查错词
+                const wrongInFinal = learnSession.finalReviewResults.filter(r => !r.isCorrect).map(r => r.word);
+                
+                if (wrongInFinal.length > 0) {
+                    // 还有错词，继续复习
+                    learnSession.finalReviewWords = shuffleArray(wrongInFinal.slice());
+                    learnSession.finalReviewResults = [];
+                    learnSession.currentWordIndex = 0;
+                    showToast('还有 ' + wrongInFinal.length + ' 个词需要复习', 'info');
+                    showFinalReviewQuestion();
+                } else {
+                    // 全部完成
+                    showLearnResult();
+                }
+            }
+        }
+        
+        // 显示学习结果
+        function showLearnResult() {
+            stopLearnTimer();
+            
+            const elapsed = Math.floor((Date.now() - learnSession.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            document.getElementById('learnResultTime').textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            document.getElementById('learnResultInitial').textContent = learnSession.initialCorrect;
+            document.getElementById('learnResultWrong').textContent = learnSession.initialWrong;
+            document.getElementById('learnResultMastered').textContent = learnSession.masteredInSession;
+            document.getElementById('learnResultGroups').textContent = learnSession.completedGroups;
+            
+            showScreen('learnResultScreen');
+            
+            // 保存学习记录
+            saveLearnSession();
+        }
+        
+        // 保存学习会话记录
+        async function saveLearnSession() {
+            const elapsed = Math.floor((Date.now() - learnSession.startTime) / 1000);
+            await db.from('study_sessions').insert({
+                student_id: currentStudent.student_id,
+                words_tested: learnSession.words.length,
+                initial_correct: learnSession.initialCorrect,
+                initial_wrong: learnSession.initialWrong,
+                groups_completed: learnSession.completedGroups,
+                duration_seconds: elapsed,
+                created_at: new Date().toISOString()
+            });
+        }
+        
+        // 保存学习进度（退出时）
+        async function saveLearnProgress() {
+            // 保存当前进度到本地存储或数据库
+            // 实现按组保存的逻辑
+        }
+        
+        // 学习功能相关函数绑定到全局
+        window.showLearnScreen = showLearnScreen;
+        window.exitLearn = exitLearn;
+        window.startLearnSession = startLearnSession;
+        window.learnSubmitAnswer = learnSubmitAnswer;
+        window.learnSkipWord = learnSkipWord;
+        window.playPracticeWord = playPracticeWord;
+        window.submitPractice = submitPractice;
     </script>
 </body>
 </html>
