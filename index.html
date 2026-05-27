@@ -1223,43 +1223,55 @@
             playWord();
         }
         
+        var audioEl = new Audio();
+        
         function playWord() {
             if (isPlaying) return;
             isPlaying = true;
-            const word = testWords[currentTestIndex];
+            var word = testWords[currentTestIndex];
             
-            if (!window.speechSynthesis) {
-                isPlaying = false;
-                startTimer();
-                return;
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            utterance.volume = 1;
-            
-            utterance.onend = function() {
-                isPlaying = false;
-                startTimer();
-            };
-            
-            utterance.onerror = function() {
-                isPlaying = false;
-                startTimer();
-            };
-            
-            speechSynthesis.cancel();
-            speechSynthesis.speak(utterance);
-            
-            // 超时保护：3秒后如果还在播放状态，强制开始计时
+            // 超时保护：8秒后强制开始计时
             setTimeout(function() {
                 if (isPlaying) {
-                    speechSynthesis.cancel();
+                    try { audioEl.pause(); } catch(e) {}
+                    try { speechSynthesis.cancel(); } catch(e) {}
                     isPlaying = false;
                     startTimer();
                 }
-            }, 3000);
+            }, 8000);
+            
+            // 主引擎：dictionaryapi.dev mp3（真人发音，音质好，支持CORS）
+            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data || !data[0]) { fallbackSpeech(word); return; }
+                    var ps = data[0].phonetics || [];
+                    var url = '';
+                    for (var i = 0; i < ps.length; i++) {
+                        if (ps[i].audio) { url = ps[i].audio; break; }
+                    }
+                    if (url) {
+                        audioEl.src = url;
+                        audioEl.onended = function() { isPlaying = false; startTimer(); };
+                        audioEl.onerror = function() { fallbackSpeech(word); };
+                        audioEl.play().catch(function() { fallbackSpeech(word); });
+                    } else {
+                        fallbackSpeech(word);
+                    }
+                })
+                .catch(function() { fallbackSpeech(word); });
+        }
+        
+        // 备用引擎：speechSynthesis
+        function fallbackSpeech(word) {
+            try { audioEl.pause(); } catch(e) {}
+            if (!window.speechSynthesis) { isPlaying = false; startTimer(); return; }
+            var u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
+            u.onend = function() { isPlaying = false; startTimer(); };
+            u.onerror = function() { isPlaying = false; startTimer(); };
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
         }
         
         function startTimer() {
