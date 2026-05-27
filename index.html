@@ -1180,8 +1180,9 @@
             document.getElementById('timerDisplay').className = '';
             document.getElementById('statusIcon').textContent = '🔊';
             document.getElementById('statusIcon').className = '';
-            // 重置计时器锁
+            // 重置状态
             timerStarted = false;
+            isPlaying = false;
             playWord();
         }
         
@@ -1196,106 +1197,79 @@
         
         function playWord() {
             if (isPlaying) return;
-            
-            const word = testWords[currentTestIndex];
             isPlaying = true;
             
-            // 更新显示为播放中
+            var word = testWords[currentTestIndex];
             document.getElementById('timerDisplay').textContent = '播放中...';
             document.getElementById('statusIcon').className = 'playing';
 
-            // 清除上一题的超时保护
-            if (playTimeout) {
-                clearTimeout(playTimeout);
-                playTimeout = null;
-            }
-
-            // 超时保护：8秒内没完成播放，强制开始计时
+            // 超时保护：10秒
+            if (playTimeout) clearTimeout(playTimeout);
             playTimeout = setTimeout(function() {
-                if (isPlaying) {
-                    console.warn('播放超时，强制开始计时');
-                    try { speechSynthesis.cancel(); } catch(e) {}
-                    try { audioEl.pause(); audioEl.currentTime = 0; } catch(e) {}
-                    safeStartTimer();
-                }
-            }, 8000);
+                console.warn('播放超时');
+                try { speechSynthesis.cancel(); } catch(e) {}
+                try { audioEl.pause(); } catch(e) {}
+                safeStartTimer();
+            }, 10000);
 
-            // 如果已确认需要使用备用音频引擎，直接走备用
-            if (useAudioFallback) {
-                playWithAudio(word);
-                return;
-            }
-
-            // 尝试 speechSynthesis 播放
+            // 先尝试 speechSynthesis
             if (window.speechSynthesis) {
-                playWithSpeechSynthesis(word);
+                trySpeech(word);
             } else {
-                useAudioFallback = true;
-                playWithAudio(word);
+                tryAudio(word);
             }
         }
         
-        // 引擎1：speechSynthesis 播放
-        function playWithSpeechSynthesis(word) {
-            const utterance = new SpeechSynthesisUtterance(word);
+        // 尝试 speechSynthesis
+        function trySpeech(word) {
+            var utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
             utterance.volume = 1;
-
+            
+            var started = false;
+            
+            utterance.onstart = function() {
+                started = true;
+            };
+            
             utterance.onend = function() {
-                safeStartTimer();
+                if (started) {
+                    safeStartTimer();
+                } else {
+                    // 没真正开始播放
+                    tryAudio(word);
+                }
             };
-
-            utterance.onerror = function(e) {
-                console.warn('speechSynthesis 失败，切换备用引擎');
-                useAudioFallback = true;
-                playWithAudio(word);
+            
+            utterance.onerror = function() {
+                tryAudio(word);
             };
-
+            
             speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
+            
+            // 800ms 后检测是否开始播放
             setTimeout(function() {
-                speechSynthesis.speak(utterance);
-                
-                // 500ms 后检测是否真的在播放
-                setTimeout(function() {
-                    if (isPlaying && !speechSynthesis.speaking) {
-                        console.warn('speechSynthesis 未播放，切换备用引擎');
-                        useAudioFallback = true;
-                        playWithAudio(word);
-                    }
-                }, 500);
-            }, 50);
+                if (!started && !timerStarted) {
+                    speechSynthesis.cancel();
+                    tryAudio(word);
+                }
+            }, 800);
         }
         
-        // 引擎2：通过 dictionary API 获取音频 URL 并播放（兼容微信浏览器）
-        function playWithAudio(word) {
+        // 尝试 audio（直接 fetch 获取正确 URL）
+        function tryAudio(word) {
             try { speechSynthesis.cancel(); } catch(e) {}
             
-            // 先尝试直接拼 URL（大多数单词有 -au.mp3 发音）
-            var audioUrl = 'https://api.dictionaryapi.dev/media/pronunciations/en/' + encodeURIComponent(word) + '-au.mp3';
-            
-            audioEl.onended = function() {
-                safeStartTimer();
-            };
-            
-            audioEl.onerror = function() {
-                // 直接拼的 URL 不存在，通过 API 查询
-                playWithAudioFallback(word);
-            };
-            
-            audioEl.src = audioUrl;
-            audioEl.volume = 1;
-            audioEl.play().catch(function() {
-                playWithAudioFallback(word);
-            });
-        }
-        
-        // 引擎3：通过 fetch dictionary API 获取正确的音频 URL
-        function playWithAudioFallback(word) {
             fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    var phonetics = data[0].phonetics;
+                    if (!data || !data[0]) {
+                        safeStartTimer();
+                        return;
+                    }
+                    var phonetics = data[0].phonetics || [];
                     var audioUrl = '';
                     for (var i = 0; i < phonetics.length; i++) {
                         if (phonetics[i].audio) {
@@ -1303,29 +1277,35 @@
                             break;
                         }
                     }
-                    if (!audioUrl) {
-                        console.warn('未找到音频 URL');
-                        safeStartTimer();
-                        return;
+                    if (audioUrl) {
+                        playAudio(audioUrl);
+                    } else {
+                        // 没找到音频，再尝试 speechSynthesis（某些单词可能没有 mp3）
+                        if (window.speechSynthesis && !useAudioFallback) {
+                            trySpeech(word);
+                        } else {
+                            safeStartTimer();
+                        }
                     }
-                    
-                    audioEl.onended = function() {
-                        safeStartTimer();
-                    };
-                    audioEl.onerror = function() {
-                        console.warn('音频播放失败');
-                        safeStartTimer();
-                    };
-                    audioEl.src = audioUrl;
-                    audioEl.volume = 1;
-                    audioEl.play().catch(function() {
-                        safeStartTimer();
-                    });
                 })
                 .catch(function() {
-                    console.warn('dictionary API 请求失败');
                     safeStartTimer();
                 });
+        }
+        
+        // 播放音频 URL
+        function playAudio(url) {
+            audioEl.src = url;
+            audioEl.volume = 1;
+            audioEl.onended = function() {
+                safeStartTimer();
+            };
+            audioEl.onerror = function() {
+                safeStartTimer();
+            };
+            audioEl.play().catch(function() {
+                safeStartTimer();
+            });
         }
         
         function startTimer() {
