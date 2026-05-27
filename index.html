@@ -1178,7 +1178,29 @@
             showToast('导出成功', 'success');
         }
         
+        // 音频上下文解锁标记
+        var audioUnlocked = false;
+        
+        // 解锁音频上下文（必须在用户交互后调用）
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            audioUnlocked = true;
+            // 播放一个无声音频来解锁
+            var silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+            silentAudio.play().catch(function(){});
+            // 同时解锁 speechSynthesis
+            if (window.speechSynthesis) {
+                var u = new SpeechSynthesisUtterance('');
+                u.volume = 0;
+                speechSynthesis.speak(u);
+            }
+            console.log('音频上下文已解锁');
+        }
+        
         async function startTest(mode) {
+            // 用户点击了开始测试，解锁音频
+            unlockAudio();
+            
             currentTestMode = mode;
             document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
             document.getElementById('testModeLabel').style.background = mode === 'random' ? '#e9ecef' : '#d4edda';
