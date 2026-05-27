@@ -1223,11 +1223,34 @@
             playWord();
         }
         
-        // 使用 Web Speech API 播放（最可靠，无需外部资源）
+        // 检测是否为 iOS/Safari/微信浏览器（这些浏览器 speechSynthesis 需要用户交互）
+        function isRestrictedBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(ua) ||           // iOS
+                   /safari/.test(ua) && !/chrome/.test(ua) || // Safari (非 Chrome)
+                   /micromessenger/.test(ua);              // 微信
+        }
+        
+        // 播放单词（自动播放 + 点击播放双模式）
         function playWord() {
             if (isPlaying) return;
-            isPlaying = true;
+            
             const word = testWords[currentTestIndex];
+            const timerDisplay = document.getElementById('timerDisplay');
+            
+            // 如果是受限浏览器，显示点击播放按钮
+            if (isRestrictedBrowser()) {
+                timerDisplay.innerHTML = '<button onclick="manualPlayWord()" style="padding:10px 20px;font-size:16px;background:#667eea;color:white;border:none;border-radius:20px;cursor:pointer;">🔊 点击播放单词</button>';
+                return;
+            }
+            
+            // 其他浏览器尝试自动播放
+            tryAutoPlay(word);
+        }
+        
+        // 尝试自动播放
+        function tryAutoPlay(word) {
+            isPlaying = true;
             
             if (!window.speechSynthesis) {
                 isPlaying = false;
@@ -1237,32 +1260,23 @@
             
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
-            utterance.rate = 0.6;        // 更慢，更清晰
-            utterance.pitch = 1;         // 正常音调
-            utterance.volume = 1;        // 最大音量
+            utterance.rate = 0.8;
+            utterance.pitch = 1;
+            utterance.volume = 1;
             
-            // 选择最好的英文语音
+            // 选择语音
             const voices = speechSynthesis.getVoices();
-            // 优先选择 Samantha (macOS) 或 Google US English
             let bestVoice = voices.find(function(v) { 
-                return v.name.indexOf('Samantha') !== -1 || 
-                       v.name.indexOf('Google US English') !== -1;
+                return v.name.indexOf('Google US English') !== -1 ||
+                       v.name.indexOf('Samantha') !== -1;
             });
-            // 其次选择任何美式英语
             if (!bestVoice) {
-                bestVoice = voices.find(function(v) { 
-                    return v.lang === 'en-US';
-                });
+                bestVoice = voices.find(function(v) { return v.lang === 'en-US'; });
             }
-            // 最后选择任何英语
-            if (!bestVoice) {
-                bestVoice = voices.find(function(v) { 
-                    return v.lang.indexOf('en') === 0;
-                });
-            }
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-            }
+            if (bestVoice) utterance.voice = bestVoice;
+            
+            let played = false;
+            utterance.onstart = function() { played = true; };
             
             utterance.onend = function() {
                 isPlaying = false;
@@ -1274,11 +1288,54 @@
                 startTimer();
             };
             
-            // 确保语音队列清空后再播放
             speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
+            
+            // 1秒后检测是否播放，如果没播放显示点击按钮
             setTimeout(function() {
-                speechSynthesis.speak(utterance);
-            }, 100);
+                if (!played && isPlaying) {
+                    document.getElementById('timerDisplay').innerHTML = '<button onclick="manualPlayWord()" style="padding:10px 20px;font-size:16px;background:#667eea;color:white;border:none;border-radius:20px;cursor:pointer;">🔊 点击播放单词</button>';
+                    isPlaying = false;
+                }
+            }, 1000);
+        }
+        
+        // 手动播放（用户点击按钮后）
+        function manualPlayWord() {
+            if (isPlaying) return;
+            isPlaying = true;
+            
+            const word = testWords[currentTestIndex];
+            document.getElementById('timerDisplay').textContent = '播放中...';
+            document.getElementById('statusIcon').className = 'playing';
+            
+            if (!window.speechSynthesis) {
+                isPlaying = false;
+                startTimer();
+                return;
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            utterance.volume = 1;
+            
+            const voices = speechSynthesis.getVoices();
+            const voice = voices.find(function(v) { return v.lang === 'en-US'; }) || voices[0];
+            if (voice) utterance.voice = voice;
+            
+            utterance.onend = function() {
+                isPlaying = false;
+                startTimer();
+            };
+            
+            utterance.onerror = function() {
+                isPlaying = false;
+                startTimer();
+            };
+            
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
         }
         
         function startTimer() {
