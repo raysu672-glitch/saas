@@ -1224,10 +1224,12 @@
         }
         
         var audioEl = new Audio();
+        var timerStarted = false;
         
         function playWord() {
             if (isPlaying) return;
             isPlaying = true;
+            timerStarted = false;
             var word = testWords[currentTestIndex];
             
             // 超时保护：8秒后强制开始计时
@@ -1236,7 +1238,7 @@
                     try { audioEl.pause(); } catch(e) {}
                     try { speechSynthesis.cancel(); } catch(e) {}
                     isPlaying = false;
-                    startTimer();
+                    safeStartTimer();
                 }
             }, 8000);
             
@@ -1252,7 +1254,7 @@
                     }
                     if (url) {
                         audioEl.src = url;
-                        audioEl.onended = function() { isPlaying = false; startTimer(); };
+                        audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
                         audioEl.onerror = function() { fallbackSpeech(word); };
                         audioEl.play().catch(function() { fallbackSpeech(word); });
                     } else {
@@ -1264,14 +1266,22 @@
         
         // 备用引擎：speechSynthesis
         function fallbackSpeech(word) {
+            if (!isPlaying) return; // 防止重复调用
             try { audioEl.pause(); } catch(e) {}
-            if (!window.speechSynthesis) { isPlaying = false; startTimer(); return; }
+            if (!window.speechSynthesis) { isPlaying = false; safeStartTimer(); return; }
             var u = new SpeechSynthesisUtterance(word);
             u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
-            u.onend = function() { isPlaying = false; startTimer(); };
-            u.onerror = function() { isPlaying = false; startTimer(); };
+            u.onend = function() { isPlaying = false; safeStartTimer(); };
+            u.onerror = function() { isPlaying = false; safeStartTimer(); };
             speechSynthesis.cancel();
             speechSynthesis.speak(u);
+        }
+        
+        // 安全启动计时器（每题只启动一次）
+        function safeStartTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+            startTimer();
         }
         
         function startTimer() {
