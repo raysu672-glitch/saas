@@ -1223,17 +1223,82 @@
             playWord();
         }
         
+        // 音频元素用于备用播放
+        const audioPlayer = new Audio();
+        audioPlayer.preload = 'auto';
+        
         function playWord() {
             if (isPlaying) return;
+            isPlaying = true;
             const word = testWords[currentTestIndex];
+            
+            // 优先使用在线音频API（音质更好）
+            tryPlayOnlineAudio(word);
+        }
+        
+        // 尝试使用在线音频API播放
+        function tryPlayOnlineAudio(word) {
+            // 使用有道词典发音API（清晰、稳定）
+            const audioUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
+            
+            audioPlayer.onended = function() {
+                isPlaying = false;
+                startTimer();
+            };
+            
+            audioPlayer.onerror = function() {
+                // 在线音频失败，回退到浏览器语音合成
+                console.warn('在线音频失败，使用语音合成');
+                trySpeechSynthesis(word);
+            };
+            
+            audioPlayer.oncanplay = function() {
+                audioPlayer.play().catch(function() {
+                    trySpeechSynthesis(word);
+                });
+            };
+            
+            // 3秒超时
+            setTimeout(function() {
+                if (isPlaying && audioPlayer.paused) {
+                    trySpeechSynthesis(word);
+                }
+            }, 3000);
+            
+            audioPlayer.src = audioUrl;
+        }
+        
+        // 备用：浏览器语音合成
+        function trySpeechSynthesis(word) {
+            if (!window.speechSynthesis) {
+                isPlaying = false;
+                startTimer();
+                return;
+            }
+            
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            isPlaying = true;
+            utterance.rate = 0.7;
+            utterance.volume = 1;
+            
+            // 尝试选择更好的语音
+            const voices = speechSynthesis.getVoices();
+            const enVoice = voices.find(function(v) { 
+                return v.lang.indexOf('en-US') === 0 || v.lang.indexOf('en-GB') === 0; 
+            });
+            if (enVoice) utterance.voice = enVoice;
+            
             utterance.onend = function() {
                 isPlaying = false;
                 startTimer();
             };
+            
+            utterance.onerror = function() {
+                isPlaying = false;
+                startTimer();
+            };
+            
+            speechSynthesis.cancel();
             speechSynthesis.speak(utterance);
         }
         
