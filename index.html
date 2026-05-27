@@ -1223,32 +1223,10 @@
             playWord();
         }
         
-        // 检测是否为移动设备（移动浏览器通常需要用户交互才能播放音频）
-        function isMobileDevice() {
-            const ua = navigator.userAgent.toLowerCase();
-            return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|huawei|xiaomi|miui|samsung|oppo|vivo/.test(ua);
-        }
-        
-        // 播放单词（移动设备显示按钮，桌面设备自动播放）
         function playWord() {
             if (isPlaying) return;
-            
-            const word = testWords[currentTestIndex];
-            const timerDisplay = document.getElementById('timerDisplay');
-            
-            // 移动设备显示点击播放按钮（更可靠）
-            if (isMobileDevice()) {
-                timerDisplay.innerHTML = '<button onclick="manualPlayWord()" style="padding:10px 20px;font-size:16px;background:#667eea;color:white;border:none;border-radius:20px;cursor:pointer;">🔊 点击播放单词</button>';
-                return;
-            }
-            
-            // 桌面浏览器尝试自动播放
-            tryAutoPlay(word);
-        }
-        
-        // 尝试自动播放
-        function tryAutoPlay(word) {
             isPlaying = true;
+            const word = testWords[currentTestIndex];
             
             if (!window.speechSynthesis) {
                 isPlaying = false;
@@ -1259,22 +1237,7 @@
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
             utterance.rate = 0.8;
-            utterance.pitch = 1;
             utterance.volume = 1;
-            
-            // 选择语音
-            const voices = speechSynthesis.getVoices();
-            let bestVoice = voices.find(function(v) { 
-                return v.name.indexOf('Google US English') !== -1 ||
-                       v.name.indexOf('Samantha') !== -1;
-            });
-            if (!bestVoice) {
-                bestVoice = voices.find(function(v) { return v.lang === 'en-US'; });
-            }
-            if (bestVoice) utterance.voice = bestVoice;
-            
-            let played = false;
-            utterance.onstart = function() { played = true; };
             
             utterance.onend = function() {
                 isPlaying = false;
@@ -1289,51 +1252,14 @@
             speechSynthesis.cancel();
             speechSynthesis.speak(utterance);
             
-            // 1秒后检测是否播放，如果没播放显示点击按钮
+            // 超时保护：3秒后如果还在播放状态，强制开始计时
             setTimeout(function() {
-                if (!played && isPlaying) {
-                    document.getElementById('timerDisplay').innerHTML = '<button onclick="manualPlayWord()" style="padding:10px 20px;font-size:16px;background:#667eea;color:white;border:none;border-radius:20px;cursor:pointer;">🔊 点击播放单词</button>';
+                if (isPlaying) {
+                    speechSynthesis.cancel();
                     isPlaying = false;
+                    startTimer();
                 }
-            }, 1000);
-        }
-        
-        // 手动播放（用户点击按钮后）
-        function manualPlayWord() {
-            if (isPlaying) return;
-            isPlaying = true;
-            
-            const word = testWords[currentTestIndex];
-            document.getElementById('timerDisplay').textContent = '播放中...';
-            document.getElementById('statusIcon').className = 'playing';
-            
-            if (!window.speechSynthesis) {
-                isPlaying = false;
-                startTimer();
-                return;
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            utterance.volume = 1;
-            
-            const voices = speechSynthesis.getVoices();
-            const voice = voices.find(function(v) { return v.lang === 'en-US'; }) || voices[0];
-            if (voice) utterance.voice = voice;
-            
-            utterance.onend = function() {
-                isPlaying = false;
-                startTimer();
-            };
-            
-            utterance.onerror = function() {
-                isPlaying = false;
-                startTimer();
-            };
-            
-            speechSynthesis.cancel();
-            speechSynthesis.speak(utterance);
+            }, 3000);
         }
         
         function startTimer() {
