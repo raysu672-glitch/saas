@@ -1232,7 +1232,7 @@
             timerStarted = false;
             var word = testWords[currentTestIndex];
             
-            // 超时保护：8秒后强制开始计时
+            // 超时保护：6秒后强制开始计时
             setTimeout(function() {
                 if (isPlaying) {
                     try { audioEl.pause(); } catch(e) {}
@@ -1240,43 +1240,29 @@
                     isPlaying = false;
                     safeStartTimer();
                 }
-            }, 8000);
+            }, 6000);
             
-            // 主引擎：Google Translate TTS（100%覆盖，音质好，所有单词都能读）
-            var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
+            // 主引擎：有道词典 TTS（国内稳定，无需 CORS）
+            var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
             audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
-            audioEl.onerror = function() { fallbackDict(word); };
-            audioEl.src = googleUrl;
+            audioEl.onerror = function() { fallbackGoogle(word); };
+            audioEl.src = youdaoUrl;
             audioEl.play().catch(function() {
-                fallbackDict(word);
+                fallbackGoogle(word);
             });
         }
         
-        // 备用引擎2：dictionaryapi.dev mp3（真人发音）
-        function fallbackDict(word) {
+        // 备用引擎2：Google Translate TTS
+        function fallbackGoogle(word) {
             if (!isPlaying) return;
             try { audioEl.pause(); } catch(e) {}
-            
-            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!isPlaying) return;
-                    if (!data || !data[0]) { fallbackSpeech(word); return; }
-                    var ps = data[0].phonetics || [];
-                    var url = '';
-                    for (var i = 0; i < ps.length; i++) {
-                        if (ps[i].audio) { url = ps[i].audio; break; }
-                    }
-                    if (url) {
-                        audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
-                        audioEl.onerror = function() { fallbackSpeech(word); };
-                        audioEl.src = url;
-                        audioEl.play().catch(function() { fallbackSpeech(word); });
-                    } else {
-                        fallbackSpeech(word);
-                    }
-                })
-                .catch(function() { fallbackSpeech(word); });
+            var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
+            audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
+            audioEl.onerror = function() { fallbackSpeech(word); };
+            audioEl.src = googleUrl;
+            audioEl.play().catch(function() {
+                fallbackSpeech(word);
+            });
         }
         
         // 备用引擎3：speechSynthesis
