@@ -1588,6 +1588,9 @@
         
         // 开始学习会话
         async function startLearnSession() {
+            // 用户点击了开始学习，解锁音频
+            unlockAudio();
+            
             learnSession = initLearnSession();
             
             // 获取学生已掌握的词汇（对过3次的）
@@ -1650,12 +1653,60 @@
             }, 1000);
         }
         
+        // 学习板块音频元素
+        var learnAudioEl = new Audio();
+        var learnTimerStarted = false;
+        var learnIsPlaying = false;
+        
         function playLearnWord() {
+            if (learnIsPlaying) return;
+            learnIsPlaying = true;
+            learnTimerStarted = false;
             const word = learnSession.words[learnSession.currentWordIndex];
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            speechSynthesis.speak(utterance);
+            
+            // 超时保护：6秒后强制结束
+            setTimeout(function() {
+                if (learnIsPlaying) {
+                    try { learnAudioEl.pause(); } catch(e) {}
+                    try { speechSynthesis.cancel(); } catch(e) {}
+                    learnIsPlaying = false;
+                }
+            }, 6000);
+            
+            // 主引擎：有道词典 TTS
+            var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
+            learnAudioEl.onended = function() { learnIsPlaying = false; };
+            learnAudioEl.onerror = function() { learnFallbackGoogle(word); };
+            learnAudioEl.src = youdaoUrl;
+            learnAudioEl.play().catch(function() {
+                learnFallbackGoogle(word);
+            });
+        }
+        
+        // 学习板块备用：Google TTS
+        function learnFallbackGoogle(word) {
+            if (!learnIsPlaying) return;
+            try { learnAudioEl.pause(); } catch(e) {}
+            var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
+            learnAudioEl.onended = function() { learnIsPlaying = false; };
+            learnAudioEl.onerror = function() { learnFallbackSpeech(word); };
+            learnAudioEl.src = googleUrl;
+            learnAudioEl.play().catch(function() {
+                learnFallbackSpeech(word);
+            });
+        }
+        
+        // 学习板块备用：speechSynthesis
+        function learnFallbackSpeech(word) {
+            if (!learnIsPlaying) return;
+            try { learnAudioEl.pause(); } catch(e) {}
+            if (!window.speechSynthesis) { learnIsPlaying = false; return; }
+            var u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
+            u.onend = function() { learnIsPlaying = false; };
+            u.onerror = function() { learnIsPlaying = false; };
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
         }
         
         function learnSubmitAnswer() {
