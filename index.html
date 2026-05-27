@@ -1223,28 +1223,26 @@
             playWord();
         }
         
-        // 检测是否为 iOS/Safari/微信浏览器（这些浏览器 speechSynthesis 需要用户交互）
-        function isRestrictedBrowser() {
+        // 检测是否为移动设备（移动浏览器通常需要用户交互才能播放音频）
+        function isMobileDevice() {
             const ua = navigator.userAgent.toLowerCase();
-            return /iphone|ipad|ipod/.test(ua) ||           // iOS
-                   /safari/.test(ua) && !/chrome/.test(ua) || // Safari (非 Chrome)
-                   /micromessenger/.test(ua);              // 微信
+            return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|huawei|xiaomi|miui|samsung|oppo|vivo/.test(ua);
         }
         
-        // 播放单词（自动播放 + 点击播放双模式）
+        // 播放单词（移动设备显示按钮，桌面设备自动播放）
         function playWord() {
             if (isPlaying) return;
             
             const word = testWords[currentTestIndex];
             const timerDisplay = document.getElementById('timerDisplay');
             
-            // 如果是受限浏览器，显示点击播放按钮
-            if (isRestrictedBrowser()) {
+            // 移动设备显示点击播放按钮（更可靠）
+            if (isMobileDevice()) {
                 timerDisplay.innerHTML = '<button onclick="manualPlayWord()" style="padding:10px 20px;font-size:16px;background:#667eea;color:white;border:none;border-radius:20px;cursor:pointer;">🔊 点击播放单词</button>';
                 return;
             }
             
-            // 其他浏览器尝试自动播放
+            // 桌面浏览器尝试自动播放
             tryAutoPlay(word);
         }
         
