@@ -1223,84 +1223,12 @@
             playWord();
         }
         
-        // 音频元素用于备用播放
-        const audioPlayer = new Audio();
-        audioPlayer.preload = 'auto';
-        
+        // 使用 Web Speech API 播放（最可靠，无需外部资源）
         function playWord() {
             if (isPlaying) return;
             isPlaying = true;
             const word = testWords[currentTestIndex];
             
-            // 优先使用在线音频API（音质更好）
-            tryPlayOnlineAudio(word);
-        }
-        
-        // 尝试使用在线音频API播放
-        function tryPlayOnlineAudio(word) {
-            // 使用 dictionaryapi.dev（支持CORS，可在所有浏览器播放）
-            // 先尝试直接拼URL，失败则通过API查询
-            const directUrl = 'https://api.dictionaryapi.dev/media/pronunciations/en/' + encodeURIComponent(word) + '-au.mp3';
-            
-            audioPlayer.onended = function() {
-                isPlaying = false;
-                startTimer();
-            };
-            
-            audioPlayer.onerror = function() {
-                // 直接URL不存在，通过API查询正确的音频URL
-                fetchAudioFromApi(word);
-            };
-            
-            audioPlayer.oncanplay = function() {
-                audioPlayer.play().catch(function() {
-                    trySpeechSynthesis(word);
-                });
-            };
-            
-            // 3秒超时
-            setTimeout(function() {
-                if (isPlaying && audioPlayer.paused) {
-                    fetchAudioFromApi(word);
-                }
-            }, 3000);
-            
-            audioPlayer.src = directUrl;
-        }
-        
-        // 通过API获取正确的音频URL
-        function fetchAudioFromApi(word) {
-            fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data || !data[0]) {
-                        trySpeechSynthesis(word);
-                        return;
-                    }
-                    const phonetics = data[0].phonetics || [];
-                    let audioUrl = '';
-                    for (let i = 0; i < phonetics.length; i++) {
-                        if (phonetics[i].audio) {
-                            audioUrl = phonetics[i].audio;
-                            break;
-                        }
-                    }
-                    if (audioUrl) {
-                        audioPlayer.src = audioUrl;
-                        audioPlayer.play().catch(function() {
-                            trySpeechSynthesis(word);
-                        });
-                    } else {
-                        trySpeechSynthesis(word);
-                    }
-                })
-                .catch(function() {
-                    trySpeechSynthesis(word);
-                });
-        }
-        
-        // 备用：浏览器语音合成
-        function trySpeechSynthesis(word) {
             if (!window.speechSynthesis) {
                 isPlaying = false;
                 startTimer();
@@ -1309,15 +1237,32 @@
             
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
-            utterance.rate = 0.7;
-            utterance.volume = 1;
+            utterance.rate = 0.6;        // 更慢，更清晰
+            utterance.pitch = 1;         // 正常音调
+            utterance.volume = 1;        // 最大音量
             
-            // 尝试选择更好的语音
+            // 选择最好的英文语音
             const voices = speechSynthesis.getVoices();
-            const enVoice = voices.find(function(v) { 
-                return v.lang.indexOf('en-US') === 0 || v.lang.indexOf('en-GB') === 0; 
+            // 优先选择 Samantha (macOS) 或 Google US English
+            let bestVoice = voices.find(function(v) { 
+                return v.name.indexOf('Samantha') !== -1 || 
+                       v.name.indexOf('Google US English') !== -1;
             });
-            if (enVoice) utterance.voice = enVoice;
+            // 其次选择任何美式英语
+            if (!bestVoice) {
+                bestVoice = voices.find(function(v) { 
+                    return v.lang === 'en-US';
+                });
+            }
+            // 最后选择任何英语
+            if (!bestVoice) {
+                bestVoice = voices.find(function(v) { 
+                    return v.lang.indexOf('en') === 0;
+                });
+            }
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+            }
             
             utterance.onend = function() {
                 isPlaying = false;
@@ -1329,8 +1274,11 @@
                 startTimer();
             };
             
+            // 确保语音队列清空后再播放
             speechSynthesis.cancel();
-            speechSynthesis.speak(utterance);
+            setTimeout(function() {
+                speechSynthesis.speak(utterance);
+            }, 100);
         }
         
         function startTimer() {
