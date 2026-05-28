@@ -360,92 +360,13 @@
             </div>
         </div>
         
-        <!-- 写作词伙学习界面 -->
-        <div class="card screen" id="phraseScreen">
-            <div class="admin-header">
+        <!-- 写作词伙学习界面（iframe 嵌入完整功能） -->
+        <div class="card screen" id="phraseScreen" style="padding:0; overflow:hidden;">
+            <div class="admin-header" style="padding:15px 20px;">
                 <h2>✍️ 写作词伙练习</h2>
                 <button class="btn btn-secondary btn-sm" onclick="exitPhrase()">返回</button>
             </div>
-            
-            <!-- 分类选择页 -->
-            <div id="phraseCategoryPage">
-                <div style="text-align:center; margin-bottom:30px;">
-                    <h3 style="color:#667eea;">选择词伙分类</h3>
-                    <p style="color:#666;">选择一个分类开始练习</p>
-                </div>
-                
-                <!-- 基础词伙 -->
-                <div style="margin-bottom:20px;">
-                    <button class="btn" style="width:100%; padding:20px; text-align:left; display:flex; align-items:center; gap:15px;" onclick="selectPhraseCategory('__foundation__')">
-                        <span style="font-size:24px;">⭐</span>
-                        <div>
-                            <div style="font-weight:bold;">基础必背词伙</div>
-                            <div style="color:#666; font-size:0.85rem;">20 个高频核心写作词伙，建议首先掌握</div>
-                        </div>
-                        <span style="margin-left:auto;">›</span>
-                    </button>
-                </div>
-                
-                <!-- 小作文 -->
-                <div style="margin-bottom:15px;">
-                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px; letter-spacing:2px;">小作文词伙</div>
-                    <div id="phraseGridXiao" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;"></div>
-                </div>
-                
-                <!-- 大作文 -->
-                <div style="margin-bottom:15px;">
-                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px; letter-spacing:2px;">大作文词伙</div>
-                    <div id="phraseGridDa" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;"></div>
-                </div>
-            </div>
-            
-            <!-- 词伙练习页 -->
-            <div id="phrasePracticePage" style="display:none;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <div>
-                        <span id="phraseCategoryBadge" style="background:rgba(102,126,234,0.1); padding:5px 15px; border-radius:20px; color:#667eea;"></span>
-                    </div>
-                    <div style="display:flex; gap:20px;">
-                        <span>进度: <strong id="phraseProgress">0/20</strong></span>
-                        <span>正确: <strong id="phraseCorrect">0</strong></span>
-                    </div>
-                </div>
-                
-                <div style="text-align:center; margin:30px 0;">
-                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px;" id="phraseQuestionNum">01 / 20</div>
-                    <div style="font-size:1.8rem; font-weight:bold; color:#333; margin-bottom:15px;" id="phraseChinese">正在加载...</div>
-                    <div style="color:#666; font-size:0.9rem;" id="phraseHint">点击下方单词组成答案</div>
-                </div>
-                
-                <!-- 答案槽 -->
-                <div id="phraseAnswerSlots" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; min-height:50px; padding:15px; border-radius:12px; background:rgba(102,126,234,0.05); border:2px dashed rgba(102,126,234,0.2); margin-bottom:20px;">
-                    <span style="color:#999;">点击下方单词组成答案 →</span>
-                </div>
-                
-                <!-- 选词池 -->
-                <div id="phraseWordPool" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;"></div>
-                
-                <!-- 操作按钮 -->
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="phraseClearSelection()">清空</button>
-                    <button class="btn" onclick="phraseCheckAnswer()">确认</button>
-                </div>
-            </div>
-            
-            <!-- 完成页 -->
-            <div id="phraseFinishPage" style="display:none; text-align:center;">
-                <h1 style="color:#667eea;">练习完成！</h1>
-                <div style="font-size:3rem; font-weight:bold; margin:20px 0;" id="phraseFinalScore">0%</div>
-                <p style="color:#666;">正确率</p>
-                <div class="stats-grid" style="margin-top:30px;">
-                    <div class="stat-box"><div class="stat-value" id="phraseFinalCorrect">0</div><div class="stat-label">正确</div></div>
-                    <div class="stat-box"><div class="stat-value" id="phraseFinalWrong">0</div><div class="stat-label">错误</div></div>
-                </div>
-                <div class="btn-group" style="margin-top:30px;">
-                    <button class="btn" onclick="phraseRestart()">再来一次</button>
-                    <button class="btn btn-secondary" onclick="phraseBackToCategory()">返回分类</button>
-                </div>
-            </div>
+            <iframe id="phraseIframe" src="" style="width:100%; height:calc(100vh - 120px); border:none;" allow="autoplay"></iframe>
         </div>
     </div>
     
@@ -1101,9 +1022,9 @@
                     html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showLearnScreen()">学习</button>';
                     html += '<button class="btn btn-sm btn-success" onclick="switchStudentTab(\'history\')">历史</button>';
                 } else if (m.id === 'writing_phrase') {
-                    // 写作词伙 - 本页面内功能
-                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="showPhraseScreen()">练习</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showPhraseScreen()">学习</button>';
+                    // 写作词伙 - 打开 iframe 嵌入完整功能
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openPhraseIframe()">练习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openPhraseIframe()">学习</button>';
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else if (m.url) {
                     // 有外部链接
@@ -2899,22 +2820,20 @@
             showScreen('studentHome');
         }
         
-        function showPhraseScreen() {
+        function openPhraseIframe() {
             showScreen('phraseScreen');
-            document.getElementById('phraseCategoryPage').style.display = 'block';
-            document.getElementById('phrasePracticePage').style.display = 'none';
-            document.getElementById('phraseFinishPage').style.display = 'none';
-            initPhraseCategoryPage();
+            document.getElementById('phraseIframe').src = 'https://raysu672-glitch.github.io/xiezuocihuo/';
+        }
+        
+        function exitPhrase() {
+            document.getElementById('phraseIframe').src = '';
+            showScreen('studentHome');
         }
         
         // 导出函数到全局
         window.exitPhrase = exitPhrase;
-        window.selectPhraseCategory = selectPhraseCategory;
-        window.phraseClearSelection = phraseClearSelection;
-        window.phraseCheckAnswer = phraseCheckAnswer;
-        window.phraseRestart = phraseRestart;
-        window.phraseBackToCategory = phraseBackToCategory;
-        window.showPhraseScreen = showPhraseScreen;
+        window.openPhraseIframe = openPhraseIframe;
+        window.showPhraseScreen = openPhraseIframe;
     </script>
 </body>
 </html>
