@@ -359,6 +359,94 @@
                 <button class="btn btn-secondary" onclick="backToStudentHome()">返回主页</button>
             </div>
         </div>
+        
+        <!-- 写作词伙学习界面 -->
+        <div class="card screen" id="phraseScreen">
+            <div class="admin-header">
+                <h2>✍️ 写作词伙练习</h2>
+                <button class="btn btn-secondary btn-sm" onclick="exitPhrase()">返回</button>
+            </div>
+            
+            <!-- 分类选择页 -->
+            <div id="phraseCategoryPage">
+                <div style="text-align:center; margin-bottom:30px;">
+                    <h3 style="color:#667eea;">选择词伙分类</h3>
+                    <p style="color:#666;">选择一个分类开始练习</p>
+                </div>
+                
+                <!-- 基础词伙 -->
+                <div style="margin-bottom:20px;">
+                    <button class="btn" style="width:100%; padding:20px; text-align:left; display:flex; align-items:center; gap:15px;" onclick="selectPhraseCategory('__foundation__')">
+                        <span style="font-size:24px;">⭐</span>
+                        <div>
+                            <div style="font-weight:bold;">基础必背词伙</div>
+                            <div style="color:#666; font-size:0.85rem;">20 个高频核心写作词伙，建议首先掌握</div>
+                        </div>
+                        <span style="margin-left:auto;">›</span>
+                    </button>
+                </div>
+                
+                <!-- 小作文 -->
+                <div style="margin-bottom:15px;">
+                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px; letter-spacing:2px;">小作文词伙</div>
+                    <div id="phraseGridXiao" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;"></div>
+                </div>
+                
+                <!-- 大作文 -->
+                <div style="margin-bottom:15px;">
+                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px; letter-spacing:2px;">大作文词伙</div>
+                    <div id="phraseGridDa" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;"></div>
+                </div>
+            </div>
+            
+            <!-- 词伙练习页 -->
+            <div id="phrasePracticePage" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div>
+                        <span id="phraseCategoryBadge" style="background:rgba(102,126,234,0.1); padding:5px 15px; border-radius:20px; color:#667eea;"></span>
+                    </div>
+                    <div style="display:flex; gap:20px;">
+                        <span>进度: <strong id="phraseProgress">0/20</strong></span>
+                        <span>正确: <strong id="phraseCorrect">0</strong></span>
+                    </div>
+                </div>
+                
+                <div style="text-align:center; margin:30px 0;">
+                    <div style="color:#999; font-size:0.85rem; margin-bottom:10px;" id="phraseQuestionNum">01 / 20</div>
+                    <div style="font-size:1.8rem; font-weight:bold; color:#333; margin-bottom:15px;" id="phraseChinese">正在加载...</div>
+                    <div style="color:#666; font-size:0.9rem;" id="phraseHint">点击下方单词组成答案</div>
+                </div>
+                
+                <!-- 答案槽 -->
+                <div id="phraseAnswerSlots" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; min-height:50px; padding:15px; border-radius:12px; background:rgba(102,126,234,0.05); border:2px dashed rgba(102,126,234,0.2); margin-bottom:20px;">
+                    <span style="color:#999;">点击下方单词组成答案 →</span>
+                </div>
+                
+                <!-- 选词池 -->
+                <div id="phraseWordPool" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;"></div>
+                
+                <!-- 操作按钮 -->
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="phraseClearSelection()">清空</button>
+                    <button class="btn" onclick="phraseCheckAnswer()">确认</button>
+                </div>
+            </div>
+            
+            <!-- 完成页 -->
+            <div id="phraseFinishPage" style="display:none; text-align:center;">
+                <h1 style="color:#667eea;">练习完成！</h1>
+                <div style="font-size:3rem; font-weight:bold; margin:20px 0;" id="phraseFinalScore">0%</div>
+                <p style="color:#666;">正确率</p>
+                <div class="stats-grid" style="margin-top:30px;">
+                    <div class="stat-box"><div class="stat-value" id="phraseFinalCorrect">0</div><div class="stat-label">正确</div></div>
+                    <div class="stat-box"><div class="stat-value" id="phraseFinalWrong">0</div><div class="stat-label">错误</div></div>
+                </div>
+                <div class="btn-group" style="margin-top:30px;">
+                    <button class="btn" onclick="phraseRestart()">再来一次</button>
+                    <button class="btn btn-secondary" onclick="phraseBackToCategory()">返回分类</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="modal" id="addStudentModal">
@@ -447,6 +535,396 @@
         
         // 单词列表
         const allWords = ["brain","booklet","bridges","social","national","rats","marketing","snakes","round","agency","insects","children","early","cleaning","cloud","conference","ants","hospital","open","insurance","supermarket","pencil","normal","medal","illness","pillow","Arranging","interviews","pizza","magazines","dinner","clever","bathrooms","tickets","accents","save","club","end","water","fireworks","time","glass","goat","rice","hiking","education","against","engineering","orange","pencils","welcome","rules","knees","sister","toys","wait","fitness","citizen","songs","hat","watch","packing","communication","winds","colds","tourists","break","blood","bookshop","teeth","balcony","block","birth","beaches","dark","cooperation","keyboard","hunting","company","meals","address","spelling","wedding","Northeast","corners","check","cultures","booking","shirt","crying","visitors","grammar","lunch","ocean","male","gold","rocks","season","tiger","store","gender","circles","campus","tower","rubber","stars","discussion","advertising","central","change","oven","international","reading","recorders","kite","plants","advertise","Mold","actors","classification","rivers","day","legal","dance","lions","map","bike","watering","view","sand","chain","swimming","technology","sun hat","protection","sheep","numbers","organize","outdoor","difficult","India","noisy","quiet","summer","confidence","price","chocolate","breakdown","couple","results","special","scientific","course","fires","worker","files","healthcare","guard","selfish","greenfield","lines","planner","chemical","aunt","manager","autumn","chemist","eyesight","farmers","fear","kitchen","management","lights","information","wild","humans","bikes","location","search","relationships","feet","gas","messages","choose","sales","bedroom","pollution","politics","museum","bill","cleaner","choosing","hungry","bicycle","salts","skin","leaders","neck","note","noise","bones","parks","patience","printer","programs","rope","salt","none","backdoor","artists","forests","answer","crops","soft","Internet","mapping","blue","mountains","outside","mining","aging","tests","floodwater","storm","global","healthy","oldest","personal","math","wide","lakes","volcano","grain","harm","driver","pictures","beginning","financial","calls","products","guide","notebook","reporter","salads","pets","engineers","leg","radio","tires","hotels","island","furniture","lighting","market","methods","notes","warm","energy","environmental","factory","small","emails","bears","flowers","medicines","housing","income","airports","flat","production","fruits","eyedrops","unsure","trains","milk","villages","workshop","babies","unhealthy","tears","media","gym","friendship","garage","tutors","feeding","fans","minerals","Thursday","problems","profits","left","band","forecast","weekend","military","shadow","smooth","foot","still","unfair","voices","warning","write","family","shipbuilding","training","unanswered","frame","customers","dangerous","dry","traveling","lost","design","footprints","games","hard","images","improvement","king","lab","monkeys","evenings","samples","workplace","town","drive","foods","gardening","approaches","beer","country","department","exercises","negative","outline","modern","sandwiches","jeans","guest","cycling","danger","beginners","frogs","printed","bright","industry","ink","writing","objects","living","account","items","right","land","memories","mental","prisoners","stage","highway","computer","increase","potatoes","morning","strong","carpets","cable","parents","paining","wrong","arts","exhibitor","factories","nests","quality","rural","structure","green","hardworking","quite","tape","promotion","maps","bricks","traffic","unfriendly","yellow","garden","spring","eyes","Eat","cameraman","poison","flooding","ages","distance","colours","cleanest","driving","plates","roads","technical","timetable","gun","hairs","fieldwork","climbing","creativity","list","machines","control","focus","wallet","geese","pianist","salesman","size","runner","choice","urban","tunnel","fashion","plans","main","waste","codes","tour","silver","sandy","economy","economics","movies","hands","contract","cattle","cave","telephone","drinking","accidents","snowboarding","fields","escape","dried","floors","deserts","films","friends","grasses","natural","printers","sport","experience","key","heat","videos","adults","ships","flight","engine","boots","stomach","entrance","surprise","chicken","farming","stairs","bananas","plan","doctors","waterfall","friendly","glasses","oil","printing","seat","government","stories","painting","castles","remember","arms","coloured","animals","fact","political","airplane","firework","closed","army","groundplan","meetings","raining","half","sunset","advance","package","drinks","horsehair","crime","policies","free pick","export","smart","heart","type","horses","reports","value","undeveloped","surveys","self-drive","recording","references","photographs","computers","common","cafe","fill","bath","Russia","cashier","cameras","airline","groups","fireplaces","rainwear","drying","tourism","science","gaps","cash","free","sugar","waiter","TRUE","rainfall","clothes","double","finance","parking","person","writers","rainwater","fresh","newspapers","station","scientist","back","passport","topics","climate","languages","sailing","postcard","restaurant","postbox","meat","varies","researcher","actions","learner","birds","singing","teams","streets","apartment","colony","words","sleep","Safety","various","jacket","present","shipping","loyalty","wheelchair","vitamin A","shoppers","plastic","politician","sunscreen","nurse","concert","super","taxes","weathers","identity","heater","photos","specialist","headache","society","wheels","workforce","analysis","biology","challenge","nesting","administration","harmful","worksheet","coursework","strategies","overfill","picnic","knowledge","fridge","racecar","essays","downhill","impossible","lounge","objectives","quiz","range","harvest","rubbish","antiseptic","bins","cement","observation","trousers","cabin","performance","nuts","organic","breakfast","metals","migrate","overfishing","painters","hairdresser","rare trees","pennies","swans","breed","commitment","concrete","Confirmation","journals","port","gravity","habitat","transportation","gene","extra","retail","microwave","relatively","literature","license","pioneer","handle","entry","basement","entertainment","clinic","minibus","woodland","polluted","sharing","reliable","primary","network","estimate","data","air pump","tastes","relaxation","laundry","non-native","internal","taxi","vision","cheque","recycling","behaviors","attitude","deposit","dentist","resident","innovation","biological","commercial","comparison","emotions","leaflet","ice pack","videotape","originality","prison","grade","diseases","durable","flexibility","handouts","return","underground","interest","play area","seminars","bronze","painkiller","teamwork","backpacker","religions","employee","employer","refreshments","darkroom","roof","satisfaction","part-time","selection","environment","evaporation","Exhibitions","campsite","relatives","typing","smell","security","riverside","monthly","defense","summarize","garbage","designers","seating","mail","agriculture","daylight","golf","joining","traders","website","minivan","brother-in-law","fruitcake","variety","decline","arrangement","password","traditional","camp","reasonable","stand","long-term","purpose","reasons","tents","seasonal","diary","creature","total","lifestyle","boards","carbon","homework","personality","branches","worms","wool","develop","landlady","secretary","freedom","general","petrol","documentation","economical","tutorials","intermediate","joint","development","gifts","imported","frozen","guidelines","iron","corn","nets","diet","cooperate","diaries","wealthy","speeches","opera","stolen","self-defense","documents","necessary","slide","section","handbook","lower","nursing","online","lateral-line","lecture","liberty","leadership","cookery","clay","shells","shape","headphones","direct","direction","lectures","lecturer","wildlife","towels","flexible","theory","permit","secondary","conversation","diving","long stick","singer","growing","surface","textbooks","drums","lifting","chairman","basic","sharks","apologize","guitar","pest","candles","built","cartoons","heavy","process","services","levels","spiders","concentrate","temperature","Scotland","expensive","hearing","whiteboard","trade","cheese","crowded","shower","tools","aid","square","navigation","pattern","pegs","theatre","whales","example","creation","sun-cream","checklist","pool","ability","collecting","studio","coast","collection","college","shelf","concerts","position","smoking","preserved","weight","card index","sleeping bag","polished","processing","evidence","settle","ban","jewelry","feathers","viewpoint","consumers","contact","benefits","fuel","dirt","cap","blanket","downstairs","mistake","vocabulary","subway","restrictions","agent","subjects","chess","grandfather","drugs","rest area","earning","spoon","explain","semester","credit","bookkeeping","empty","cab","spare","indoor","balloons","goldfish","yoga","stream","charge","honest","donkeys","understand","version","alternative","fell","pure","soup","sky","canal","success","running","individual","builder","female","important","exam","whole","proof","football","hunger","investment","middle","rabbit","kilometers","pass","native","robots","salary","realistic","ropes","order","moods","reduction","starvation","storage","relevant","style","wings","pairs","sign","patients","stress","repair","voice","walking","seeds","jokes","invitations","hero","hire","minutes","rainbow","miss","inside","front","overseas","paragraphs","opinion","stressful","transparent","soccer","sharp","reservation","uncomfortable","calendar","dairy","casual","responsible","decision","calm","boring","stick","upstairs","armchair","reception","cigar","packaging","different","balance","clubhouse","companionship","productivity","waterproof","unnatural","specific","community","causes","honey","accept","prizes","multimedia","conclusions","talent","regulations","accountants","client","emotional","pressure","decrease","professor","lakeside","safeguard","condition","feedback","crisis","conservation","pounds","amount","certificates","carrots","specialized","firewood","unlimited","oxygen","windsurfing","loyal","hive","cover","lockers","genetic","articles","enjoyable","entire","electricity","silk","footbridges","competitive","presentations","seagrass","pleasure","massage","floated","teenagers","receptionist","nutrition","workload","threat","perception","noticeboard","windmills","containers","qualification","issue","abroad","technician","punctual","screen","electronic","wax","statistics","networking","tropical","variable","diploma","call diversion","fertilizers","methodology","maturity","washbasin","lifespan","theoretical","concentration","smoother","preservation","acceptable","flashing","altitude","frustration","ambulance","signature","mushroom","badge","ambition","lizard","bacteria","angle","fluctuate","fluent","psychologist","expansion","funding","accurate","slang","argument","terrace","artificial","archives","territory","shuttle","therapy","slaves","assess","limestone","assignment","expose","liable","reflective","refund","voluntary","subtopics","publication","acknowledgement","welfare","toothache","acid","fringe","microscope","centimeter","celebrities","excitement","leak","suitable","occupancy","irrigation","surfing","reusable","nylon","obligation","moderate","excellent","folded","situational","portable","souvenir","assessment","nursery","responsibility","jogging","evaluation","liquid","toaster","cotton","prevention","fountain","vertical","reproduction","horror","intelligence","barbershop","prevalent","torn","deadline","vetting","radar","cosmetics","adopt","motivation","consumption","adventure","maintenance","rack","curved","touching","rationally","damp","random","hardware","priority","tolerance","facilities","visa","intact","warehouse","admission","strap","medication","toilet","uniform","coconut","dismiss","rush","average","bakery","membership","brilliant","advisors","publishing","disappear","atlas","alter","index","discipline","wetsuit","integrate","antifreeze","breathing","shrimp","confusion","agreement","tuna","labels","weeding","dishwasher","shoot","depth","booths","opposite","oral","polish","maximum","sacred","outstanding","palace","digestion","zoom","powder","silence","herds","director","savings","achievement","scale","aspiration","purple","battery","edges","measurement","ecology","ladders","duration","sable","canteen","trace","predicting","Budget","circulation","display","rumor","broad","satellite","vanish","mould","stickers","persuading","corrupt","freight","geographical","motor","man-made","correction","status","fence","useless","perfumes","stimulation","stems","kindness","undergraduate","weed","stings","cream","current","definition","bucket","wires","brakes","depression","catalogue","sweetener","tides","catering","brushes","intensive","recommendation","obesity","categories","mammals","hostel","delivery","straight","thunderstorm","apology","broader","whistle","trends","ingredients","jazz","rivals","boiler","crocodiles","fishing net","crown","introduction","explanation","explode","junior","link","willing","curtains","sweaters","tail","platforms","sheet","movement","immigration","explosion","domestic","editor","isolation","automobile","orientation","calculating","glue","formats","compensation","degrees","interaction","manual","demand","necklace","mat","attack","Protein","morality","origins","monitor","outcomes","participation","room service","scent","kidney","influence","informal","journalism","bushes","butterflies","roots","bunch","scenery","expectations","shallow","mud","character","steel","expect","strain","faxing","flashlight","pockets","flute","loans","lungs","manufacture","manufacturers","count","audience","scare","demonstrations","reinvest","generation","treatment","pesticides","copies","carpenter","bargain","spine","model","symbol","destroy","contaminate","expert","flavor","trash","context","translation","diamond","efficiency","elastic","grant","humidity","fluids","pilots","luxury","magic","draft","strict","timber","cliffs","progress","recruit","roll over","schedule","capacities","hospitality","classifying","grandmother","critical","immune","judo","drawing","grocery","matching","spears","lawyers","democratic","moist","passages","passive","ceremonies","temple","frequency","font","gloves","term","gradual","convenient","distribute","encourage","enlargement","complaints","module","patterns","complete","humor","reinforce","lanes","legroom","realism","regular","bonus","height","erosion","string","strike","compulsory","compounds","tomatoes","tone","independent","titles","comprehension","leisure","tongue","confirm","length","stopwatch","impact","soap","apron","pressed","residents","laptops","freezer","equal","complex","distribution","released","district","mixed","popular","consistent","marriage","E. ticket","experiment","external","fingers","Europe","leather","revenue","textile","mask","mild","population","pots","fair","savvy","president","sort","source","resources","seasoned","seals","resistant","emperor","accountable","composers","retrain","review","restroom","solid","solution","socks","replacement","request","repeat","scarf","antibiotics","uncontrolled","hurricane","instinctive","weapon","odor","addictive","magnet","statue","pipes","fabric","friction","fur","shoulder","virus","foundation","menu","digging","fat","extinction","fossil","captive","fog","poetry","trays","promotional","saliva","referee","registration","slope","biography","headlines","logo","calculation","pharmacy","digestive","flamingos","efficient","claw","relocation","instructor","moisture","session","sculptures","infrastructure","nitrogen","trumpet","receiver","philosophers","chalk","representation","require","retained","sites","situation","herbivorous","guessing","authority","motel","carnival","monuments","hook","predators","stretching","kangaroo","lids","sociable","poster","photocopies","prepared","comedy","comfortable","reward","remote","evolution","rockets","pirates","distortion","flu","coastline","stuck","strangers","elevator","dolphins","elephants","journalists","peak","route","smash","soldiers","advertisement","stairlift","shame","state park","procedure","steam","helicopter","application","density","hothouse","scores","diversity","comics","consultant","exploration","identification","vegetarian","questionnaire","description","vegetation","machinery","donations","sustainable","shortlist","documentary","supervision","decorations","tribes","landmarks","migration","organizations","permanent","mathematics","germs","atoms","craft","unsocial","permission","triangle","pottery","supportive","microbiology","helmet","unpredictable","strength","unfurnished","forestry","navigational","arrows","unapproachable","automatic","layout","appearance","caravan","theme","translator","similar","insulation","barrier","reaction","signals","microfilm","olive oil","instinct","myth","effectiveness","dome","logic","dictation","poverty","graphics","combination","flies","retire","instructions","stabilize","embassy","drought","repel","shade"];
+        
+        // 写作词伙分类数据（来自 xiezuocihuo 项目）
+        const phraseCategories = [
+            {
+                id: '小作文词伙一',
+                name: '小作文词伙一',
+                icon: '📊',
+                group: '小作文',
+                vocab: [
+                    { zh: '略微高于平均值', en: 'be slightly above the average' },
+                    { zh: '平稳地爬升', en: 'climb steadily/solidly' },
+                    { zh: '波动式爬升', en: 'climb up with fluctuations' },
+                    { zh: '持续上涨', en: 'continue to increase /soar' },
+                    { zh: '呈现持续的增长', en: 'display a continuous growth' },
+                    { zh: '从 38 稳定增长到 61', en: 'grow steadily from 38 to 61' },
+                    { zh: '在数值上呈现增长', en: 'illustrate an increase in a number' },
+                    { zh: '更快的增长', en: 'increase more rapidly' },
+                    { zh: '呈现一个大幅的增长', en: 'present a significant increase' },
+                    { zh: '匀速地增长', en: 'increase uniformly' },
+                    { zh: '急剧地下降', en: 'a dramatic decrease' },
+                    { zh: '一个快速的降幅', en: 'a drastic decrement' },
+                    { zh: '过去十年里一个轻微的下降', en: 'a modest dip/drop over the last decade' },
+                    { zh: '除了一次下跌以外', en: 'apart from a slump' },
+                    { zh: '预计会下降', en: 'be expected to fall steadily' },
+                    { zh: '继续保持下降', en: 'continue to decline' },
+                    { zh: '逐渐地从10%下降到 7%', en: 'decline gradually from 10% to 7%' },
+                    { zh: '明显地下降', en: 'decline noticeably' },
+                    { zh: '下降得越来越快', en: 'decrease more rapidly' },
+                    { zh: '尽管下降到1995年水平', en: 'despite a drop to 1995 level' },
+                ],
+            },
+            {
+                id: '小作文词伙二',
+                name: '小作文词伙二',
+                icon: '📉',
+                group: '小作文',
+                vocab: [
+                    { zh: '降到仅仅2.5%', en: 'dip/drop to only 2.5%' },
+                    { zh: '呈现轻微的下降', en: 'display a slight decrease' },
+                    { zh: '保持稳定', en: 'remain stable/steady' },
+                    { zh: '保持不变', en: 'stay unchanged' },
+                    { zh: '保持大概不变', en: 'remain roughly constant' },
+                    { zh: '在整个期间保持稳定', en: 'remain steady throughout the period' },
+                    { zh: '保持相同的水平', en: 'maintain the same level' },
+                    { zh: '达到 94%的峰值不变', en: 'reach a plateau at 94%' },
+                    { zh: '保持大致的不变的', en: 'remain roughly static' },
+                    { zh: '停滞了几乎十年', en: 'stagnated for nearly a decade' },
+                    { zh: '自从2000年以后稳定在19%', en: 'stabilize at 19% since 2000' },
+                    { zh: '预计会保持这个水平', en: 'be expected to maintain this level' },
+                    { zh: '伴随着波动下降', en: 'decrease with fluctuations' },
+                    { zh: '尽管最初有些波动', en: 'despite some initial fluctuations' },
+                    { zh: '降到34%的最低点', en: 'drop to its bottom at 34%' },
+                    { zh: '在 8000 位置上下波动', en: 'fluctuate around 8 thousand' },
+                    { zh: '微幅地波动', en: 'fluctuate moderately' },
+                    { zh: '在十年内波动式上升', en: 'fluctuate upwardly within a decade' },
+                    { zh: '增长的最大', en: 'have the biggest increase' },
+                    { zh: '在1995 年达到峰值 200 亿', en: 'peak at 2 billion in 1995' },
+                ],
+            },
+            {
+                id: '小作文词伙三',
+                name: '小作文词伙三',
+                icon: '📈',
+                group: '小作文',
+                vocab: [
+                    { zh: '占了学校预算的 25%', en: 'represent 25% of the school budget' },
+                    { zh: '增长超过八倍', en: 'rise more than eight fold' },
+                    { zh: '女性是男性的两倍', en: 'twice as many women as men' },
+                    { zh: '是2015 年的两倍尺寸大', en: 'be twice the size of it was in 2015' },
+                    { zh: '一个池子在东北角', en: 'a pond in the northeast corner' },
+                    { zh: '沿着街道南边', en: 'along the south side of the street' },
+                    { zh: '围绕着小镇中心', en: 'around the town center' },
+                    { zh: '在最初的阶段', en: 'at the initial stage' },
+                    { zh: '附加在紧挨着旅馆旁边', en: 'be added next to the hotel' },
+                    { zh: '被森林环绕', en: 'be circled by forests' },
+                    { zh: '紧挨在购物中心旁', en: 'be located on the shopping mall' },
+                    { zh: '在马路的对面', en: 'be on the opposite side of the road' },
+                    { zh: '经历三个不同的阶段', en: 'pass through three distinct stages' },
+                    { zh: '在最后的阶段', en: 'in the final phase/stage' },
+                    { zh: '在这个流程的第一阶段', en: 'at the first stage in the process' },
+                    { zh: '被整修成室内区域', en: 'be modified into an indoor area' },
+                    { zh: '被并列放置在了体育馆的左边(不接触)', en: 'be juxtaposed to the left of the gym' },
+                    { zh: '入口处的重新安置', en: 'the relocation of the entrance' },
+                    { zh: '被传送到一个地方进行混合', en: 'be transferred to a place to be mixed' },
+                    { zh: '把容器颠倒过来', en: 'turn the container upside down' },
+                ],
+            },
+            {
+                id: '暴力犯罪类',
+                name: '暴力犯罪类',
+                icon: '⚖️',
+                group: '大作文',
+                vocab: [
+                    { zh: '被绳之以法', en: 'be brought to justice' },
+                    { zh: '被认为是个威胁', en: 'be identified as a threat' },
+                    { zh: '违反法律', en: 'break laws' },
+                    { zh: '性格缺陷', en: 'character flaw' },
+                    { zh: '连带损伤', en: 'collateral damage' },
+                    { zh: '犯下严重的侵犯(罪)', en: 'commit serious offences' },
+                    { zh: '抑制犯罪', en: 'curb crime / deter crime' },
+                    { zh: '减少犯罪倾向', en: 'diminish criminal propensity' },
+                    { zh: '辨别是非', en: 'discriminate between right and wrong' },
+                    { zh: '危害社会稳定和安全', en: 'endanger social stability and safety' },
+                    { zh: '逃避惩罚', en: 'escape punishment' },
+                    { zh: '有震慑作用', en: 'have deterrent effect' },
+                    { zh: '憎恨社会', en: 'hold a grudge against society' },
+                    { zh: '侵犯隐私', en: 'intrusion of privacy' },
+                    { zh: '侵犯了..的隐私', en: 'invade one\'s privacy' },
+                    { zh: '青少年犯罪', en: 'juvenile delinquency' },
+                    { zh: '青少年罪犯', en: 'juvenile offenders' },
+                    { zh: '少年教养院', en: 'juvenile reformatory' },
+                    { zh: '守法的公民', en: 'law-abiding citizens' },
+                    { zh: '执法部门', en: 'law enforcement agencies' },
+                ],
+            },
+            {
+                id: '家庭旅游类',
+                name: '家庭旅游类',
+                icon: '✈️',
+                group: '大作文',
+                vocab: [
+                    { zh: '满足他们的一些需求', en: 'address some of their needs' },
+                    { zh: '承担责任', en: 'assume the responsibility' },
+                    { zh: '平衡工作和生活', en: 'balance work and life' },
+                    { zh: '忙于家务', en: 'be swamped by household chores' },
+                    { zh: '被家务事拖累', en: 'be tied down to household chores' },
+                    { zh: '忙于他们的工作', en: 'bury themselves in work' },
+                    { zh: '车辆租赁公司', en: 'car rental company' },
+                    { zh: '生活成本', en: 'cost of living' },
+                    { zh: '导致人与人疏远', en: 'create alienation between people' },
+                    { zh: '可支配收入', en: 'disposable income' },
+                    { zh: '家务活', en: 'domestic chores' },
+                    { zh: '家庭暴力', en: 'domestic violence' },
+                    { zh: '促进旅游业的发展', en: 'facilitate the development of tourism' },
+                    { zh: '家庭归属感', en: 'family attachment' },
+                    { zh: '经济困难的家庭', en: 'financial-disadvantaged families' },
+                    { zh: '有好的生活质量', en: 'have a reasonable quality of life' },
+                    { zh: '家庭杂务', en: 'household chores' },
+                    { zh: '提高生活标准', en: 'improve living standards' },
+                    { zh: '保持低调', en: 'keep a low profile' },
+                    { zh: '过着充实的生活', en: 'lead a fulfilling life' },
+                ],
+            },
+            {
+                id: '健康饮食类',
+                name: '健康饮食类',
+                icon: '🥗',
+                group: '大作文',
+                vocab: [
+                    { zh: '更好的生活质量', en: 'a better quality of life' },
+                    { zh: '采取健康的生活方式', en: 'adopt a healthy lifestyle' },
+                    { zh: '缓解粮食短缺', en: 'alleviate food shortage' },
+                    { zh: '对人们的健康有害', en: 'be harmful to human health' },
+                    { zh: '产生严重的健康问题', en: 'cause serious health problems' },
+                    { zh: '导致与压力相关的疾病', en: 'cause stress-related illness' },
+                    { zh: '转基因食品', en: 'genetically modified food' },
+                    { zh: '提高人们的生活水平', en: 'improve people\'s living standards' },
+                    { zh: '危害人类的健康', en: 'jeopardize human health' },
+                    { zh: '过着健康的生活', en: 'lead a healthy life' },
+                    { zh: '长期的副作用', en: 'long-term side effects' },
+                    { zh: '增加慢性疾病的患病率', en: 'increase the incidence of chronic illnesses' },
+                    { zh: '健康的饮食', en: 'a wholesome diet' },
+                    { zh: '提倡素食', en: 'advocate vegetarian diet' },
+                    { zh: '不健康的饮食', en: 'an unhealthy diet' },
+                    { zh: '是罪魁祸首', en: 'be the main culprit' },
+                    { zh: '不愿意戒烟', en: 'be unwilling to cease smoking' },
+                    { zh: '增强免疫力', en: 'boost the immune system' },
+                    { zh: '碳酸饮料', en: 'carbonated drinks' },
+                    { zh: '慢性疾病', en: 'chronic illnesses' },
+                ],
+            },
+            {
+                id: '媒体广告类',
+                name: '媒体广告类',
+                icon: '📺',
+                group: '大作文',
+                vocab: [
+                    { zh: '快速发展的产业', en: 'a fast-developing industry' },
+                    { zh: '真人秀节目', en: 'a reality TV program' },
+                    { zh: '针对儿童的广告宣传', en: 'advertisements aimed at children' },
+                    { zh: '被广告吸引', en: 'be intrigued by the advertisement' },
+                    { zh: '非常的昂贵', en: 'be prohibitively expensive' },
+                    { zh: '易受媒体的影响', en: 'be subjected to the influence of the media' },
+                    { zh: '冲动性购买产品', en: 'buy products on impulse' },
+                    { zh: '心血来潮买东西', en: 'buy something on a whim' },
+                    { zh: '代言一个体育服装品牌', en: 'endorse a brand of sportswear' },
+                    { zh: '代言一个指定的产品', en: 'endorse a particular brand' },
+                    { zh: '掩盖政治丑闻', en: 'cover up political scandals' },
+                    { zh: '刺激购买冲动', en: 'evoke impulsive buying' },
+                    { zh: '送货到家', en: 'have things delivered to their homes' },
+                    { zh: '高水平的媒体曝光', en: 'high level of media coverage' },
+                    { zh: '实施一定程度的审查', en: 'impose a degree of censorship' },
+                    { zh: '公益广告', en: 'non-profit advertisement' },
+                    { zh: '过度包装的商品', en: 'over-packaged products' },
+                    { zh: '黄金时段电视', en: 'prime-time television' },
+                    { zh: '娱乐业', en: 'show business' },
+                    { zh: '视觉享受', en: 'visual enjoyment' },
+                ],
+            },
+            {
+                id: '能源环保类',
+                name: '能源环保类',
+                icon: '🌱',
+                group: '大作文',
+                vocab: [
+                    { zh: '以(牺牲)环境为代价', en: 'at the expense of the environment' },
+                    { zh: '禁止燃烧化石燃料', en: 'ban the burning of fossil fuels' },
+                    { zh: '对土壤退化视而不见', en: 'be blind to land degradation' },
+                    { zh: '对保护环境重要', en: 'be crucial to protecting the environment' },
+                    { zh: '对环境友好的', en: 'be environmentally friendly' },
+                    { zh: '有环境意识的', en: 'be environmentally conscious' },
+                    { zh: '破坏生态平衡', en: 'break ecological balance' },
+                    { zh: '造成不可逆转的损失', en: 'cause irreversible damage' },
+                    { zh: '构成了潜在的风险', en: 'constitute a potential risk' },
+                    { zh: '创造一个有利的环境', en: 'create a favorable condition' },
+                    { zh: '产生废气', en: 'create exhaust fumes' },
+                    { zh: '毁坏野生动物栖息地', en: 'destroy wildlife habitats' },
+                    { zh: '对生态系统产生深远的影响', en: 'exert a far-reaching impact on ecology' },
+                    { zh: '过渡地开采大自然', en: 'exploit the nature excessively' },
+                    { zh: '极端天气情况', en: 'extreme weather conditions' },
+                    { zh: '全球变暖', en: 'global warming' },
+                    { zh: '提高土地生产率', en: 'improve land productivity' },
+                    { zh: '导致..的迅速枯竭', en: 'lead to the rapid depletion of…' },
+                    { zh: '维持生态平衡', en: 'maintain the ecological balance' },
+                    { zh: '做出短期的牺牲', en: 'make the short-term sacrifice' },
+                ],
+            },
+            {
+                id: '品格教育类',
+                name: '品格教育类',
+                icon: '🎓',
+                group: '大作文',
+                vocab: [
+                    { zh: '一种虐待的方式', en: 'a form of abuse' },
+                    { zh: '名牌大学', en: 'a prestigious university' },
+                    { zh: '在整个学校教育体系里', en: 'throughout the schooling system' },
+                    { zh: '放弃物质的追求', en: 'abandon the pursuit of materialism' },
+                    { zh: '改掉这一恶习', en: 'abandon the vile habit' },
+                    { zh: '学术能力', en: 'academic capabilities' },
+                    { zh: '学业优异的学生', en: 'academically advantaged students' },
+                    { zh: '发挥某人的潜力', en: 'achieve one\'s potential' },
+                    { zh: '适应未来的挑战', en: 'adapt to future challenges' },
+                    { zh: '承担教育花费', en: 'afford educational expenses' },
+                    { zh: '一个空头的承诺', en: 'an empty promise' },
+                    { zh: '重视教育背景', en: 'attach importance to education background' },
+                    { zh: '参加补习班', en: 'attend \'cram schools\'' },
+                    { zh: '避免拖延', en: 'avoid procrastination' },
+                    { zh: '从伦理上说是错误的/理论上说是错误的', en: 'be ethically wrong / theoretically wrong' },
+                    { zh: '遵从父母的意愿', en: 'be obedient to parents \'expectations' },
+                    { zh: '对学生带来巨大的好处', en: 'be of immense benefit to students' },
+                    { zh: '叛逆的', en: 'be rebellious' },
+                    { zh: '对他们的行为负责', en: 'be responsible for what they do' },
+                    { zh: '易受不良的影响', en: 'be vulnerable to negative influence' },
+                ],
+            },
+            {
+                id: '人文历史类',
+                name: '人文历史类',
+                icon: '🏛️',
+                group: '大作文',
+                vocab: [
+                    { zh: '全球性的语言', en: 'a global language' },
+                    { zh: '归属感', en: 'a sense of belonging' },
+                    { zh: '认同感', en: 'a sense of identity' },
+                    { zh: '习得一门外语', en: 'acquire a foreign language' },
+                    { zh: '建筑的风格', en: 'architectural styles' },
+                    { zh: '有经济和文化价值', en: 'be of commercial and cultural values' },
+                    { zh: '文化同化', en: 'cultural assimilation' },
+                    { zh: '文化退化', en: 'cultural devolution' },
+                    { zh: '文化多样性', en: 'cultural diversity' },
+                    { zh: '文化遗产', en: 'cultural heritage' },
+                    { zh: '文化身份', en: 'cultural identity' },
+                    { zh: '文化或历史景点', en: 'cultural or historical attractions' },
+                    { zh: '文化禁忌', en: 'cultural taboo' },
+                    { zh: '文化同一性', en: 'cultural uniformity' },
+                    { zh: '消除偏见和敌意', en: 'dispel prejudice and hostility' },
+                    { zh: '接受不同文化和价值观', en: 'embrace different cultures and values' },
+                    { zh: '濒临消失的语言', en: 'endangered language' },
+                    { zh: '表达个人品味和身份', en: 'express individual taste and identity' },
+                    { zh: '一直成为禁忌', en: 'have been a taboo' },
+                    { zh: '有利益冲突', en: 'have conflicting interests' },
+                ],
+            },
+            {
+                id: '商业职场类',
+                name: '商业职场类',
+                icon: '💼',
+                group: '大作文',
+                vocab: [
+                    { zh: '有成就感的事业', en: 'a fulfilling career' },
+                    { zh: '良好的工作前景', en: 'a good job prospect' },
+                    { zh: '前景乐观的职业', en: 'a promising career' },
+                    { zh: '工作的安全感', en: 'a sense of job security' },
+                    { zh: '失业期', en: 'a spell of unemployment' },
+                    { zh: '对一些技能精通', en: 'become proficient in some skills' },
+                    { zh: '职业愿景', en: 'career aspirations' },
+                    { zh: '职业成就', en: 'career achievement' },
+                    { zh: '上下班通勤时间', en: 'commuting time' },
+                    { zh: '竞争的优势', en: 'competitive advantage' },
+                    { zh: '消费品', en: 'consumer goods /products' },
+                    { zh: '培养人际关系能力', en: 'develop interpersonal skills' },
+                    { zh: '性别/年龄歧视', en: 'discriminate on the basis of gender' },
+                    { zh: '建立亲密的关系', en: 'build a close rapport' },
+                    { zh: '做出共同的努力', en: 'engage in a concerted effort' },
+                    { zh: '增加创造力', en: 'enhance creativity' },
+                    { zh: '增强团队合作', en: 'enhance teamwork spirit' },
+                    { zh: '建立性别平等', en: 'establish gender equality' },
+                    { zh: '没有实现工作生活的平衡', en: 'fail to achieve work-life balance' },
+                    { zh: '在他们工作中感觉安全', en: 'feel secure in their jobs' },
+                ],
+            },
+            {
+                id: '网络科技类',
+                name: '网络科技类',
+                icon: '💻',
+                group: '大作文',
+                vocab: [
+                    { zh: '比以前获取更多的信息', en: 'access more information than ever before' },
+                    { zh: '采用尖端的科技', en: 'adopt cutting-edge technology' },
+                    { zh: '寻求在线退款复杂而低效', en: 'be cumbersome to seek a refund online' },
+                    { zh: '可以无限制的上网', en: 'be given unlimited Internet access' },
+                    { zh: '沉溺于在线游戏', en: 'be addicted to online games' },
+                    { zh: '被网购快速的取代', en: 'be rapidly giving way to online shopping' },
+                    { zh: '被看做是一种必须的装备', en: 'be seen as a must-have device' },
+                    { zh: '不被诱惑干扰', en: 'be undistracted by temptations' },
+                    { zh: '成为一种耗费时间的诱惑', en: 'be a time-consuming temptation' },
+                    { zh: '又流行起来', en: 'come back into fashion' },
+                    { zh: '通过互联网和他人交流', en: 'communicate with others via the Internet' },
+                    { zh: '包含敏感信息', en: 'contain sensitive information' },
+                    { zh: '尖端的技术', en: 'cutting-edge technology' },
+                    { zh: '网络约会', en: 'digital/online dating' },
+                    { zh: '网络科技的革新', en: 'digital revolution' },
+                    { zh: '分散他们的注意力', en: 'distract their attention' },
+                    { zh: '运用最新科技技术', en: 'employ cutting-edge technology' },
+                    { zh: '没有抵挡住的诱惑', en: 'fail to resist the lure of...' },
+                    { zh: '政府对互联网的审查', en: 'government censorship of the Internet' },
+                    { zh: '安装过滤软件', en: 'install filtering software' },
+                ],
+            },
+            {
+                id: '政府社会类',
+                name: '政府社会类',
+                icon: '🏛️',
+                group: '大作文',
+                vocab: [
+                    { zh: '预算盈余', en: 'a budget surplus' },
+                    { zh: '公众对税收政策的强烈反对', en: 'a public backlash against tax policy' },
+                    { zh: '安全感', en: 'a sense of security' },
+                    { zh: '流动人口', en: 'a transient population' },
+                    { zh: '摒弃我们的传统习俗', en: 'abandon our traditional custom' },
+                    { zh: '积累社会经验', en: 'accumulate social experience' },
+                    { zh: '适应一个新环境', en: 'adapt to a new environment' },
+                    { zh: '足够的可支配收入', en: 'adequate disposable income' },
+                    { zh: '倡导新的生活方式', en: 'advocate the new lifestyle' },
+                    { zh: '老龄化人群', en: 'the elderly / the senior population' },
+                    { zh: '社会各个阶层', en: 'all walks of life' },
+                    { zh: '与现实隔绝', en: 'be detached from reality' },
+                    { zh: '逐渐得到社会重视', en: 'be increasingly valued by society' },
+                    { zh: '有更高的社会接受度', en: 'be more socially acceptable' },
+                    { zh: '成为政府首要任务', en: 'be the government\'s priority' },
+                    { zh: '处在贫困线以下', en: 'below the poverty line' },
+                    { zh: '迫于公众压力', en: 'bow to public pressure' },
+                    { zh: '带来不可估量的经济效益', en: 'bring immeasurable economic benefits' },
+                ],
+            },
+        ];
+        
+        // 基础词伙（高频核心写作词伙）
+        const foundationPhrases = [
+            { zh: "一系列的问题", en: "a barrage of problems" },
+            { zh: "一个产生影响的因素", en: "a contributing factor" },
+            { zh: "关注的焦点", en: "a focus of attention" },
+            { zh: "越来越多的证据", en: "a growing body of evidence" },
+            { zh: "一件备受关注的事", en: "a matter of heightened concern" },
+            { zh: "一个更可行的方法", en: "a more feasible approach" },
+            { zh: "满足感", en: "a sense of fulfillment" },
+            { zh: "一个非常短视的观点", en: "a very shortsighted view" },
+            { zh: "重要的组成部分", en: "a vital component" },
+            { zh: "大量的信息", en: "a wealth of information" },
+            { zh: "一个众所周知的事实", en: "a well-known fact" },
+            { zh: "各种各样的选择", en: "a wide range of options" },
+            { zh: "大量的证据", en: "ample evidence" },
+            { zh: "主要的原因", en: "primary cause" },
+            { zh: "一个问题的症结", en: "the crux of a problem" },
+            { zh: "迫在眉睫的危机", en: "the looming crisis" },
+            { zh: "最主要的障碍", en: "the major barrier" },
+            { zh: "自我满足感", en: "a sense of self-fulfillment" },
+            { zh: "令人信服的证据", en: "compelling evidence" },
+            { zh: "令人信服的理由", en: "compelling reasons" }
+        ];
         
         // 工具函数
         function showScreen(screenId) {
@@ -622,6 +1100,11 @@
                     html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
                     html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showLearnScreen()">学习</button>';
                     html += '<button class="btn btn-sm btn-success" onclick="switchStudentTab(\'history\')">历史</button>';
+                } else if (m.id === 'writing_phrase') {
+                    // 写作词伙 - 本页面内功能
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="showPhraseScreen()">练习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="showPhraseScreen()">学习</button>';
+                    html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else if (m.url) {
                     // 有外部链接
                     html += '<a href="' + m.url + '" target="_blank" style="margin-right:5px;"><button class="btn btn-sm">测试</button></a>';
@@ -2182,6 +2665,256 @@
         window.learnSkipWord = learnSkipWord;
         window.playPracticeWord = playPracticeWord;
         window.submitPractice = submitPractice;
+        
+        // ══════════════════════════════════════════════════
+        // 写作词伙练习功能
+        // ══════════════════════════════════════════════════
+        let phraseState = {
+            category: null,
+            vocab: [],
+            currentIndex: 0,
+            selectedWords: [],
+            correctCount: 0,
+            totalAnswered: 0
+        };
+        
+        // 初始化分类页面
+        function initPhraseCategoryPage() {
+            const gridXiao = document.getElementById('phraseGridXiao');
+            const gridDa = document.getElementById('phraseGridDa');
+            
+            gridXiao.innerHTML = '';
+            gridDa.innerHTML = '';
+            
+            phraseCategories.forEach(function(cat) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-secondary';
+                btn.style.cssText = 'padding:15px; text-align:left; font-size:0.9rem;';
+                btn.innerHTML = '<span style="font-size:20px; margin-right:10px;">' + cat.icon + '</span>' + cat.name + ' <span style="color:#999; font-size:0.8rem;">(' + cat.vocab.length + '词)</span>';
+                btn.onclick = function() { selectPhraseCategory(cat.id); };
+                
+                if (cat.group === '小作文') {
+                    gridXiao.appendChild(btn);
+                } else {
+                    gridDa.appendChild(btn);
+                }
+            });
+        }
+        
+        function selectPhraseCategory(catId) {
+            let catName, catVocab;
+            
+            if (catId === '__foundation__') {
+                catName = '⭐ 基础必背词伙';
+                catVocab = foundationPhrases.slice();
+            } else {
+                const cat = phraseCategories.find(function(c) { return c.id === catId; });
+                if (!cat) return;
+                catName = cat.icon + ' ' + cat.name;
+                catVocab = cat.vocab.slice();
+            }
+            
+            phraseState.category = catId;
+            phraseState.vocab = shuffleArray(catVocab);
+            phraseState.currentIndex = 0;
+            phraseState.selectedWords = [];
+            phraseState.correctCount = 0;
+            phraseState.totalAnswered = 0;
+            
+            document.getElementById('phraseCategoryBadge').textContent = catName;
+            document.getElementById('phraseCategoryPage').style.display = 'none';
+            document.getElementById('phrasePracticePage').style.display = 'block';
+            document.getElementById('phraseFinishPage').style.display = 'none';
+            
+            loadPhraseQuestion();
+        }
+        
+        function loadPhraseQuestion() {
+            if (phraseState.currentIndex >= phraseState.vocab.length) {
+                showPhraseFinish();
+                return;
+            }
+            
+            const q = phraseState.vocab[phraseState.currentIndex];
+            phraseState.selectedWords = [];
+            
+            document.getElementById('phraseQuestionNum').textContent = String(phraseState.currentIndex + 1).padStart(2, '0') + ' / ' + phraseState.vocab.length;
+            document.getElementById('phraseChinese').textContent = q.zh;
+            document.getElementById('phraseProgress').textContent = phraseState.currentIndex + '/' + phraseState.vocab.length;
+            document.getElementById('phraseCorrect').textContent = phraseState.correctCount;
+            document.getElementById('phraseHint').textContent = '点击下方单词组成答案';
+            document.getElementById('phraseHint').style.color = '#666';
+            
+            buildPhraseWordPool(q);
+            updatePhraseAnswerSlots();
+        }
+        
+        function buildPhraseWordPool(q) {
+            const pool = document.getElementById('phraseWordPool');
+            pool.innerHTML = '';
+            
+            // 正确答案的单词
+            const correctWords = q.en.split(' ');
+            const allWords = correctWords.slice();
+            
+            // 从其他词伙中获取干扰词
+            const otherWords = [];
+            phraseCategories.forEach(function(cat) {
+                cat.vocab.forEach(function(v) {
+                    if (v.en !== q.en) {
+                        v.en.split(' ').forEach(function(w) {
+                            if (otherWords.indexOf(w) === -1) {
+                                otherWords.push(w);
+                            }
+                        });
+                    }
+                });
+            });
+            foundationPhrases.forEach(function(v) {
+                if (v.en !== q.en) {
+                    v.en.split(' ').forEach(function(w) {
+                        if (otherWords.indexOf(w) === -1) {
+                            otherWords.push(w);
+                        }
+                    });
+                }
+            });
+            
+            // 随机选择干扰词
+            const shuffledOthers = shuffleArray(otherWords);
+            const targetCount = Math.max(correctWords.length + 4, 8);
+            for (let i = 0; allWords.length < targetCount && i < shuffledOthers.length; i++) {
+                if (allWords.indexOf(shuffledOthers[i]) === -1) {
+                    allWords.push(shuffledOthers[i]);
+                }
+            }
+            
+            const shuffledAll = shuffleArray(allWords);
+            
+            shuffledAll.forEach(function(word) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-secondary';
+                btn.style.cssText = 'padding:8px 16px; font-size:1rem; border-radius:8px;';
+                btn.textContent = word;
+                btn.dataset.word = word;
+                btn.onclick = function() { togglePhraseWord(word, btn); };
+                pool.appendChild(btn);
+            });
+        }
+        
+        function togglePhraseWord(word, btn) {
+            const idx = phraseState.selectedWords.indexOf(word);
+            if (idx >= 0) {
+                phraseState.selectedWords.splice(idx, 1);
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+            } else {
+                phraseState.selectedWords.push(word);
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+            }
+            updatePhraseAnswerSlots();
+        }
+        
+        function updatePhraseAnswerSlots() {
+            const slotsEl = document.getElementById('phraseAnswerSlots');
+            slotsEl.innerHTML = '';
+            
+            if (phraseState.selectedWords.length === 0) {
+                slotsEl.innerHTML = '<span style="color:#999;">点击下方单词组成答案 →</span>';
+                return;
+            }
+            
+            phraseState.selectedWords.forEach(function(word) {
+                const slot = document.createElement('span');
+                slot.style.cssText = 'background:#667eea; color:white; padding:8px 16px; border-radius:8px; font-size:1rem;';
+                slot.textContent = word;
+                slotsEl.appendChild(slot);
+            });
+        }
+        
+        function phraseClearSelection() {
+            phraseState.selectedWords = [];
+            document.querySelectorAll('#phraseWordPool button').forEach(function(btn) {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+            });
+            updatePhraseAnswerSlots();
+        }
+        
+        function phraseCheckAnswer() {
+            if (phraseState.selectedWords.length === 0) return;
+            
+            const q = phraseState.vocab[phraseState.currentIndex];
+            const userAnswer = phraseState.selectedWords.join(' ').toLowerCase();
+            const correctAnswer = q.en.toLowerCase();
+            
+            // 比较答案（忽略顺序）
+            const userSorted = phraseState.selectedWords.map(function(w) { return w.toLowerCase(); }).sort().join(' ');
+            const correctSorted = q.en.toLowerCase().split(' ').sort().join(' ');
+            
+            phraseState.totalAnswered++;
+            
+            if (userSorted === correctSorted) {
+                phraseState.correctCount++;
+                document.getElementById('phraseHint').textContent = '✓ 正确！';
+                document.getElementById('phraseHint').style.color = '#28a745';
+                
+                setTimeout(function() {
+                    phraseState.currentIndex++;
+                    loadPhraseQuestion();
+                }, 800);
+            } else {
+                document.getElementById('phraseHint').textContent = '✗ 正确答案：' + q.en;
+                document.getElementById('phraseHint').style.color = '#dc3545';
+                
+                setTimeout(function() {
+                    phraseState.currentIndex++;
+                    loadPhraseQuestion();
+                }, 1500);
+            }
+        }
+        
+        function showPhraseFinish() {
+            document.getElementById('phrasePracticePage').style.display = 'none';
+            document.getElementById('phraseFinishPage').style.display = 'block';
+            
+            const score = Math.round(phraseState.correctCount / phraseState.vocab.length * 100);
+            document.getElementById('phraseFinalScore').textContent = score + '%';
+            document.getElementById('phraseFinalCorrect').textContent = phraseState.correctCount;
+            document.getElementById('phraseFinalWrong').textContent = phraseState.vocab.length - phraseState.correctCount;
+        }
+        
+        function phraseRestart() {
+            selectPhraseCategory(phraseState.category);
+        }
+        
+        function phraseBackToCategory() {
+            document.getElementById('phraseCategoryPage').style.display = 'block';
+            document.getElementById('phrasePracticePage').style.display = 'none';
+            document.getElementById('phraseFinishPage').style.display = 'none';
+        }
+        
+        function exitPhrase() {
+            showScreen('studentHome');
+        }
+        
+        function showPhraseScreen() {
+            showScreen('phraseScreen');
+            document.getElementById('phraseCategoryPage').style.display = 'block';
+            document.getElementById('phrasePracticePage').style.display = 'none';
+            document.getElementById('phraseFinishPage').style.display = 'none';
+            initPhraseCategoryPage();
+        }
+        
+        // 导出函数到全局
+        window.exitPhrase = exitPhrase;
+        window.selectPhraseCategory = selectPhraseCategory;
+        window.phraseClearSelection = phraseClearSelection;
+        window.phraseCheckAnswer = phraseCheckAnswer;
+        window.phraseRestart = phraseRestart;
+        window.phraseBackToCategory = phraseBackToCategory;
+        window.showPhraseScreen = showPhraseScreen;
     </script>
 </body>
 </html>
