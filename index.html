@@ -1673,15 +1673,19 @@
         
         var audioEl = new Audio();
         var timerStarted = false;
+        var playTimeout = null; // 存储播放超时 ID
         
         function playWord() {
             if (isPlaying) return;
             isPlaying = true;
             timerStarted = false;
+            // 取消上一题的 timeout 和计时器
+            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
             var word = testWords[currentTestIndex];
             
             // 超时保护：6秒后强制开始计时
-            setTimeout(function() {
+            playTimeout = setTimeout(function() {
                 if (isPlaying) {
                     try { audioEl.pause(); } catch(e) {}
                     try { speechSynthesis.cancel(); } catch(e) {}
@@ -1692,7 +1696,7 @@
             
             // 主引擎：有道词典 TTS（国内稳定，无需 CORS）
             var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
-            audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
+            audioEl.onended = function() { if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; } isPlaying = false; safeStartTimer(); };
             audioEl.onerror = function() { fallbackGoogle(word); };
             audioEl.src = youdaoUrl;
             audioEl.play().catch(function() {
@@ -1705,7 +1709,7 @@
             if (!isPlaying) return;
             try { audioEl.pause(); } catch(e) {}
             var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
-            audioEl.onended = function() { isPlaying = false; safeStartTimer(); };
+            audioEl.onended = function() { if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; } isPlaying = false; safeStartTimer(); };
             audioEl.onerror = function() { fallbackSpeech(word); };
             audioEl.src = googleUrl;
             audioEl.play().catch(function() {
@@ -1720,8 +1724,8 @@
             if (!window.speechSynthesis) { isPlaying = false; safeStartTimer(); return; }
             var u = new SpeechSynthesisUtterance(word);
             u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
-            u.onend = function() { isPlaying = false; safeStartTimer(); };
-            u.onerror = function() { isPlaying = false; safeStartTimer(); };
+            u.onend = function() { if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; } isPlaying = false; safeStartTimer(); };
+            u.onerror = function() { if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; } isPlaying = false; safeStartTimer(); };
             speechSynthesis.cancel();
             speechSynthesis.speak(u);
         }
@@ -1741,6 +1745,7 @@
                 updateTimerDisplay();
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
+                    timerInterval = null;
                     document.getElementById('timerDisplay').textContent = '时间到！';
                     setTimeout(autoSubmit, 800);
                 }
@@ -1754,9 +1759,10 @@
         }
         
         function autoSubmit() {
-            // 重置播放状态，确保下一题能正常播放
+            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
             isPlaying = false;
-            timerStarted = true;
+            timerStarted = false; // 重置，让下一题正常启动
             try { audioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
@@ -1772,10 +1778,10 @@
         }
         
         function submitAnswer() {
-            clearInterval(timerInterval);
-            // 重置播放状态，确保下一题能正常播放
+            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
             isPlaying = false;
-            timerStarted = true; // 防止 safeStartTimer 重复启动
+            timerStarted = false; // 重置，让下一题正常启动
             try { audioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
@@ -1791,9 +1797,10 @@
         }
         
         function skipWord() {
-            clearInterval(timerInterval);
+            if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
             isPlaying = false;
-            timerStarted = true;
+            timerStarted = false; // 重置，让下一题正常启动
             try { audioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             testResults.push({
@@ -2084,15 +2091,19 @@
         var learnAudioEl = new Audio();
         var learnTimerStarted = false;
         var learnIsPlaying = false;
+        var learnPlayTimeout = null; // 存储播放超时 ID
         
         function playLearnWord() {
             if (learnIsPlaying) return;
             learnIsPlaying = true;
             learnTimerStarted = false;
+            // 取消上一题的 timeout 和计时器
+            if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
+            if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
             const word = learnSession.words[learnSession.currentWordIndex];
             
             // 超时保护：6秒后强制开始计时
-            setTimeout(function() {
+            learnPlayTimeout = setTimeout(function() {
                 if (learnIsPlaying) {
                     try { learnAudioEl.pause(); } catch(e) {}
                     try { speechSynthesis.cancel(); } catch(e) {}
@@ -2103,7 +2114,7 @@
             
             // 主引擎：有道词典 TTS
             var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
-            learnAudioEl.onended = function() { learnIsPlaying = false; learnSafeStartTimer(); };
+            learnAudioEl.onended = function() { if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; } learnIsPlaying = false; learnSafeStartTimer(); };
             learnAudioEl.onerror = function() { learnFallbackGoogle(word); };
             learnAudioEl.src = youdaoUrl;
             learnAudioEl.play().catch(function() {
@@ -2116,7 +2127,7 @@
             if (!learnIsPlaying) return;
             try { learnAudioEl.pause(); } catch(e) {}
             var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
-            learnAudioEl.onended = function() { learnIsPlaying = false; learnSafeStartTimer(); };
+            learnAudioEl.onended = function() { if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; } learnIsPlaying = false; learnSafeStartTimer(); };
             learnAudioEl.onerror = function() { learnFallbackSpeech(word); };
             learnAudioEl.src = googleUrl;
             learnAudioEl.play().catch(function() {
@@ -2131,8 +2142,8 @@
             if (!window.speechSynthesis) { learnIsPlaying = false; learnSafeStartTimer(); return; }
             var u = new SpeechSynthesisUtterance(word);
             u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
-            u.onend = function() { learnIsPlaying = false; learnSafeStartTimer(); };
-            u.onerror = function() { learnIsPlaying = false; learnSafeStartTimer(); };
+            u.onend = function() { if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; } learnIsPlaying = false; learnSafeStartTimer(); };
+            u.onerror = function() { if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; } learnIsPlaying = false; learnSafeStartTimer(); };
             speechSynthesis.cancel();
             speechSynthesis.speak(u);
         }
@@ -2156,6 +2167,7 @@
                 }
                 if (timeLeft <= 0) {
                     clearInterval(learnTimerInterval);
+                    learnTimerInterval = null;
                     document.getElementById('learnTimerDisplay').textContent = '时间到！';
                     setTimeout(learnAutoSubmit, 800);
                 }
@@ -2163,12 +2175,10 @@
         }
         
         function learnSubmitAnswer() {
-            if (learnTimerInterval) {
-                clearInterval(learnTimerInterval);
-            }
-            // 重置播放状态，确保下一题能正常播放
+            if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
+            if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
             learnIsPlaying = false;
-            learnTimerStarted = true;
+            learnTimerStarted = false; // 重置，让下一题正常启动
             try { learnAudioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
@@ -2179,19 +2189,20 @@
         }
         
         function learnSkipWord() {
-            if (learnTimerInterval) {
-                clearInterval(learnTimerInterval);
-            }
+            if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
+            if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
             learnIsPlaying = false;
-            learnTimerStarted = true;
+            learnTimerStarted = false; // 重置，让下一题正常启动
             try { learnAudioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             processLearnAnswer(false, '(跳过)');
         }
         
         function learnAutoSubmit() {
+            if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
+            if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
             learnIsPlaying = false;
-            learnTimerStarted = true;
+            learnTimerStarted = false; // 重置，让下一题正常启动
             try { learnAudioEl.pause(); } catch(e) {}
             try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
