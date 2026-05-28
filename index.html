@@ -1350,6 +1350,11 @@
         }
         
         function autoSubmit() {
+            // 重置播放状态，确保下一题能正常播放
+            isPlaying = false;
+            timerStarted = true;
+            try { audioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
             const correctAnswer = testWords[currentTestIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer;
