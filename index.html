@@ -1364,6 +1364,11 @@
         
         function submitAnswer() {
             clearInterval(timerInterval);
+            // 重置播放状态，确保下一题能正常播放
+            isPlaying = false;
+            timerStarted = true; // 防止 safeStartTimer 重复启动
+            try { audioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
             const correctAnswer = testWords[currentTestIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer;
@@ -1378,6 +1383,10 @@
         
         function skipWord() {
             clearInterval(timerInterval);
+            isPlaying = false;
+            timerStarted = true;
+            try { audioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             testResults.push({
                 word: testWords[currentTestIndex],
                 userAnswer: '(跳过)',
@@ -1748,6 +1757,11 @@
             if (learnTimerInterval) {
                 clearInterval(learnTimerInterval);
             }
+            // 重置播放状态，确保下一题能正常播放
+            learnIsPlaying = false;
+            learnTimerStarted = true;
+            try { learnAudioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
             const correctAnswer = learnSession.words[learnSession.currentWordIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer;
@@ -1759,10 +1773,18 @@
             if (learnTimerInterval) {
                 clearInterval(learnTimerInterval);
             }
+            learnIsPlaying = false;
+            learnTimerStarted = true;
+            try { learnAudioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             processLearnAnswer(false, '(跳过)');
         }
         
         function learnAutoSubmit() {
+            learnIsPlaying = false;
+            learnTimerStarted = true;
+            try { learnAudioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
             const correctAnswer = learnSession.words[learnSession.currentWordIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer && userAnswer !== '';
