@@ -2918,8 +2918,18 @@
         });
         
         function exitPhrase() {
-            document.getElementById('phraseIframe').src = '';
-            showScreen('studentHome');
+            // 通知 iframe 保存学习时长（如果正在学习中）
+            try {
+                var iframe = document.getElementById('phraseIframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'requestSave' }, '*');
+                }
+            } catch(e) {}
+            // 延迟关闭，给 iframe 时间保存
+            setTimeout(function() {
+                document.getElementById('phraseIframe').src = '';
+                showScreen('studentHome');
+            }, 500);
         }
         
         // 导出函数到全局
