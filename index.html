@@ -307,7 +307,8 @@
                 <div>第 <span id="practiceGroupNum">1</span> 组 - 剩余 <span id="practiceRemaining">10</span> 词</div>
             </div>
             <div style="text-align:center; margin:30px 0;">
-                <div id="practiceWord" style="font-size:2rem; font-weight:bold; color:#667eea; margin-bottom:10px;"></div>
+                <div id="practiceWord" style="font-size:2.5rem; font-weight:bold; color:#667eea; margin-bottom:5px;"></div>
+                <div id="practiceHint" style="font-size:0.9rem; color:#999; margin-bottom:15px;"></div>
                 <button class="btn btn-sm btn-secondary" onclick="playPracticeWord()">🔊 播放发音</button>
             </div>
             <div class="input-group">
@@ -2338,7 +2339,7 @@
         
         // 2.1 三次拼写练习
         function startGroupPractice() {
-            learnSession.phase = 'group_practice';
+            learnSession.phase = (learnSession.phase === 'final_practice') ? 'final_practice' : 'group_practice';
             const group = learnSession.currentGroups[learnSession.currentGroupIndex];
             learnSession.currentWordIndex = 0;
             
@@ -2361,22 +2362,29 @@
             document.getElementById('practiceRemaining').textContent = group.length;
             document.getElementById('practiceProgress').textContent = '(' + (attempts + 1) + '/3)';
             document.getElementById('practiceWord').textContent = word;
+            document.getElementById('practiceHint').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + group.length + ' 个单词';
             document.getElementById('practiceInput').value = '';
             document.getElementById('practiceFeedback').style.display = 'none';
             
             showScreen('practiceScreen');
             
-            // 自动播放
+            // 自动播放读音
             setTimeout(function() { playPracticeWord(); }, 500);
         }
         
         function playPracticeWord() {
             const group = learnSession.currentGroups[learnSession.currentGroupIndex];
             const word = group[learnSession.currentWordIndex];
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.8;
-            speechSynthesis.speak(utterance);
+            // 使用有道TTS（和学习/测试板块一致）
+            var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
+            var audio = new Audio(youdaoUrl);
+            audio.play().catch(function() {
+                // 备用：speechSynthesis
+                var u = new SpeechSynthesisUtterance(word);
+                u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(u);
+            });
         }
         
         function submitPractice() {
@@ -2395,18 +2403,19 @@
                     feedback.style.display = 'block';
                     feedback.style.background = '#d4edda';
                     feedback.style.color = '#155724';
-                    feedback.textContent = '✓ 完成3次！进入下一个';
+                    feedback.textContent = '✓ 完成3次拼写！进入下一个单词';
                     
                     setTimeout(function() {
                         nextPracticeWord();
                     }, 1000);
                 } else {
-                    // 继续同一次数
+                    // 继续下一次拼写，播放读音
                     feedback.style.display = 'block';
                     feedback.style.background = '#d1ecf1';
                     feedback.style.color = '#0c5460';
-                    feedback.textContent = '✓ 正确！还有 ' + (3 - learnSession.practiceAttempts[word]) + ' 次';
+                    feedback.textContent = '✓ 正确！还有 ' + (3 - learnSession.practiceAttempts[word]) + ' 次拼写';
                     document.getElementById('practiceInput').value = '';
+                    document.getElementById('practiceProgress').textContent = '(' + (learnSession.practiceAttempts[word] + 1) + '/3)';
                     setTimeout(function() { playPracticeWord(); }, 1000);
                 }
             } else {
@@ -2418,6 +2427,7 @@
                 feedback.innerHTML = '✗ 错误！正确拼写：<strong>' + word + '</strong><br>重新从第1次开始';
                 document.getElementById('practiceInput').value = '';
                 document.getElementById('practiceProgress').textContent = '(1/3)';
+                setTimeout(function() { playPracticeWord(); }, 1500);
             }
         }
         
@@ -2433,9 +2443,9 @@
             }
         }
         
-        // 2.2 听写10个词
+        // 2.2 听写当前组
         function startGroupTest() {
-            learnSession.phase = 'group_test';
+            learnSession.phase = (learnSession.phase === 'final_practice') ? 'final_practice' : 'group_test';
             const group = learnSession.currentGroups[learnSession.currentGroupIndex];
             learnSession.groupTestResults = [];
             learnSession.currentWordIndex = 0;
@@ -2504,9 +2514,14 @@
                 const wrongInTest = learnSession.groupTestResults.filter(r => !r.isCorrect).map(r => r.word);
                 
                 if (wrongInTest.length > 0) {
-                    // 有错词，更新当前组为错词，重新练习
+                    // 有错词，更新当前组为错词，重新拼写练习
                     learnSession.currentGroups[learnSession.currentGroupIndex] = wrongInTest;
-                    showToast('本组有 ' + wrongInTest.length + ' 个词需要继续练习', 'info');
+                    learnSession.practiceAttempts = {};
+                    // 重置错词的练习次数
+                    for (var k = 0; k < wrongInTest.length; k++) {
+                        learnSession.practiceAttempts[wrongInTest[k]] = 0;
+                    }
+                    showToast('本组有 ' + wrongInTest.length + ' 个词需要继续拼写', 'info');
                     startGroupPractice();
                 } else {
                     // 本组全对
@@ -2517,22 +2532,36 @@
                         // 下一组
                         startGroupPractice();
                     } else {
-                        // 所有组完成，进入最终复习
-                        startFinalReview();
+                        // 所有组完成
+                        if (learnSession.phase === 'final_practice') {
+                            // 第四阶段：回到听写测试
+                            learnSession.finalReviewRound++;
+                            learnSession.finalReviewWords = shuffleArray(learnSession.wrongWords.slice());
+                            learnSession.finalReviewResults = [];
+                            learnSession.currentWordIndex = 0;
+                            document.getElementById('learnModeLabel').textContent = '全部错词听写（第' + learnSession.finalReviewRound + '轮）';
+                            document.getElementById('learnModeLabel').style.background = '#d4edda';
+                            showScreen('learnTestScreen');
+                            showFinalReviewQuestion();
+                        } else {
+                            // 第二阶段：进入最终复习
+                            startFinalReview();
+                        }
                     }
                 }
             }
         }
         
-        // 第四阶段：最终复习
+        // 第四阶段：对所有错词进行听写测试
         function startFinalReview() {
             learnSession.phase = 'final_review';
+            learnSession.finalReviewRound = 1;
             // 所有错词一起测
             learnSession.finalReviewWords = shuffleArray(learnSession.wrongWords.slice());
             learnSession.finalReviewResults = [];
             learnSession.currentWordIndex = 0;
             
-            document.getElementById('learnModeLabel').textContent = '最终复习';
+            document.getElementById('learnModeLabel').textContent = '全部错词听写（第' + learnSession.finalReviewRound + '轮）';
             document.getElementById('learnModeLabel').style.background = '#d4edda';
             showScreen('learnTestScreen');
             showFinalReviewQuestion();
@@ -2543,27 +2572,22 @@
             document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.finalReviewWords.length + ' 题';
             document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.finalReviewWords.length * 100) + '%';
             document.getElementById('learnAnswerInput').value = '';
-            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').textContent = '准备中...';
             document.getElementById('learnTimerDisplay').className = '';
             document.getElementById('learnStatusIcon').textContent = '🔊';
+            document.getElementById('learnStatusIcon').className = '';
             
-            setTimeout(function() { playLearnWord(); }, 500);
-            
-            let timeLeft = 6;
-            learnTimerInterval = setInterval(function() {
-                timeLeft--;
-                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
-                if (timeLeft <= 3) {
-                    document.getElementById('learnTimerDisplay').className = 'warning';
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(learnTimerInterval);
-                    finalReviewAutoSubmit();
-                }
-            }, 1000);
+            // 使用统一的 playLearnWord
+            playLearnWord();
         }
         
         function finalReviewAutoSubmit() {
+            if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
+            if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
+            learnIsPlaying = false;
+            learnTimerStarted = false;
+            try { learnAudioEl.pause(); } catch(e) {}
+            try { speechSynthesis.cancel(); } catch(e) {}
             const userAnswer = document.getElementById('learnAnswerInput').value.trim().toLowerCase();
             const word = learnSession.finalReviewWords[learnSession.currentWordIndex];
             const isCorrect = userAnswer === word.toLowerCase() && userAnswer !== '';
@@ -2589,21 +2613,31 @@
             if (learnSession.currentWordIndex < learnSession.finalReviewWords.length) {
                 showFinalReviewQuestion();
             } else {
-                // 最终复习完成，检查错词
+                // 本轮听写完成，检查错词
                 const wrongInFinal = learnSession.finalReviewResults.filter(r => !r.isCorrect).map(r => r.word);
                 
                 if (wrongInFinal.length > 0) {
-                    // 还有错词，继续复习
-                    learnSession.finalReviewWords = shuffleArray(wrongInFinal.slice());
-                    learnSession.finalReviewResults = [];
-                    learnSession.currentWordIndex = 0;
-                    showToast('还有 ' + wrongInFinal.length + ' 个词需要复习', 'info');
-                    showFinalReviewQuestion();
+                    // 有错词：分组拼写训练 → 听写 → 循环
+                    startFinalReviewPractice(wrongInFinal);
                 } else {
-                    // 全部完成
+                    // 全部正确，学习完成
                     showLearnResult();
                 }
             }
+        }
+        
+        // 第四阶段补充：对错词进行分组拼写训练
+        function startFinalReviewPractice(wrongWords) {
+            learnSession.phase = 'final_practice';
+            // 分成10词一组
+            learnSession.currentGroups = [];
+            for (let i = 0; i < wrongWords.length; i += 10) {
+                learnSession.currentGroups.push(wrongWords.slice(i, i + 10));
+            }
+            learnSession.currentGroupIndex = 0;
+            learnSession.practiceAttempts = {};
+            
+            startGroupPractice();
         }
         
         // 显示学习结果
