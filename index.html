@@ -2894,6 +2894,29 @@
             document.getElementById('phraseIframe').src = 'https://raysu672-glitch.github.io/xiezuocihuo/';
         }
         
+        // 监听 iframe 发来的学习时长消息
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'phraseStudyComplete') {
+                var data = event.data;
+                if (data.durationSeconds > 0 && currentStudent) {
+                    db.from('study_sessions').insert({
+                        student_id: currentStudent.student_id,
+                        module_type: data.moduleType || 'writing_phrase',
+                        words_tested: data.totalWords || 0,
+                        initial_correct: data.totalCorrect || 0,
+                        initial_wrong: (data.totalWords || 0) - (data.totalCorrect || 0),
+                        groups_completed: 0,
+                        duration_seconds: data.durationSeconds,
+                        created_at: new Date().toISOString()
+                    }).then(function() {
+                        console.log('写作词伙学习时长已保存：' + data.durationSeconds + '秒');
+                    }).catch(function(err) {
+                        console.error('保存写作词伙学习时长失败:', err);
+                    });
+                }
+            }
+        });
+        
         function exitPhrase() {
             document.getElementById('phraseIframe').src = '';
             showScreen('studentHome');
