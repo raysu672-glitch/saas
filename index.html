@@ -501,29 +501,38 @@
         // 学习进度模块配置
         // url: 外部页面链接（为空表示本页面内功能）
         // target_type: 'fixed' = 固定目标, 'dynamic' = 根据学生目标分数动态计算
+        // 标准来源：雅思目标拆分.xlsx
         const MODULES = [
-            { id: 'dictation', name: '听力2400词', target: 80, unit: '%', url: '', icon: 'headphones' },
-            { id: 'writing_words', name: '小初单词', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'pencil' },
-            { id: 'highschool_words', name: '高中单词', target: 100, unit: '%', url: '', icon: 'book' },
-            { id: 'ielts_core', name: '雅思核心800词', target: 85, unit: '%', url: '', icon: 'star' },
-            { id: 'grammar', name: '基础语法', target: 65, unit: '%', url: '', icon: 'academic' },
-            { id: 'sentence', name: '长难句分析', target: 75, unit: '%', url: '', icon: 'analysis' },
-            { id: 'listening_p4', name: '听力P4跟读', target: 70, unit: '%', url: '', icon: 'mic' },
-            { id: 'writing_phrase', name: '写作词伙', target: 50, unit: '%', url: '', icon: 'writing' },
-            { id: 'writing_translate', name: '写作句子翻译', target: 50, unit: '%', url: '', icon: 'translate' },
-            { id: 'reading_p1', name: '阅读P1', target: 9, unit: '分', url: '', icon: 'eye' },
-            { id: 'reading_p2', name: '阅读P2', target: 8, unit: '分', url: '', icon: 'eye' },
-            { id: 'reading_p3', name: '阅读P3', target: 6, unit: '分', url: '', icon: 'eye' },
+            // 一、需要掌握百分比
+            { id: 'writing_words', name: '小初单词', target_type: 'dynamic', targets: { 6: 100, 6.5: 100, 7: 100 }, unit: '%', url: '', icon: 'pencil' },
+            { id: 'highschool_words', name: '高中单词', target_type: 'dynamic', targets: { 6: 85, 6.5: 95, 7: 100 }, unit: '%', url: '', icon: 'book' },
+            { id: 'ielts_core', name: '雅思核心800词', target_type: 'dynamic', targets: { 6: 65, 6.5: 80, 7: 95 }, unit: '%', url: '', icon: 'star' },
+            { id: 'grammar', name: '基础语法', target_type: 'dynamic', targets: { 6: 75, 6.5: 85, 7: 85 }, unit: '%', url: '', icon: 'academic' },
             { id: 'reading_synonym', name: '阅读同义替换', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'eye' },
-            { id: 'listening_p1', name: '听力P1', target: 7, unit: '分', url: '', icon: 'headphones' },
-            { id: 'listening_p2', name: '听力P2', target: 4, unit: '分', url: '', icon: 'headphones' },
-            { id: 'listening_p3', name: '听力P3', target: 4, unit: '分', url: '', icon: 'headphones' },
+            { id: 'sentence', name: '长难句分析', target_type: 'dynamic', targets: { 6: 60, 6.5: 80, 7: 80 }, unit: '%', url: '', icon: 'analysis' },
+            { id: 'dictation', name: '听力2400词', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'headphones' },
             { id: 'listening_synonym', name: '听力同义替换', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'headphones' },
-            { id: 'speaking_p1', name: '口语P1', target: 5.5, unit: '分', url: '', icon: 'message' },
-            { id: 'speaking_p2', name: '口语P2', target: 5.5, unit: '分', url: '', icon: 'message' },
-            { id: 'speaking_p3', name: '口语P3', target: 5.5, unit: '分', url: '', icon: 'message' },
-            { id: 'writing_essay', name: '写作大作文', target: 5.5, unit: '分', url: '', icon: 'edit' },
-            { id: 'writing_small', name: '写作小作文', target: 5.5, unit: '分', url: '', icon: 'edit' }
+            { id: 'writing_phrase', name: '写作词伙', target_type: 'dynamic', targets: { 6: 50, 6.5: 70, 7: 90 }, unit: '%', url: '', icon: 'writing' },
+            { id: 'writing_translate', name: '写作句子翻译', target_type: 'dynamic', targets: { 6: 50, 6.5: 70, 7: 90 }, unit: '%', url: '', icon: 'translate' },
+            
+            // 二、音频倍速（听力P4跟读）- 特殊处理，显示为文本
+            { id: 'listening_p4_speed', name: '听力P4跟读倍速', target_type: 'dynamic', targets: { 6: 0.75, 6.5: 1, 7: 1 }, unit: '倍', url: '', icon: 'mic' },
+            
+            // 三、每项需要答对个数
+            { id: 'reading_p1', name: '第一篇阅读', target_type: 'dynamic', targets: { 6: 9, 6.5: 11, 7: 12 }, unit: '个', url: '', icon: 'eye' },
+            { id: 'reading_p2', name: '第二篇阅读', target_type: 'dynamic', targets: { 6: 8, 6.5: 10, 7: 10 }, unit: '个', url: '', icon: 'eye' },
+            { id: 'reading_p3', name: '第三篇阅读', target_type: 'dynamic', targets: { 6: 6, 6.5: 6, 7: 8 }, unit: '个', url: '', icon: 'eye' },
+            { id: 'listening_p1', name: '听力P1', target_type: 'dynamic', targets: { 6: 8, 6.5: 9, 7: 9 }, unit: '个', url: '', icon: 'headphones' },
+            { id: 'listening_p2', name: '听力P2', target_type: 'dynamic', targets: { 6: 7, 6.5: 8, 7: 9 }, unit: '个', url: '', icon: 'headphones' },
+            { id: 'listening_p3', name: '听力P3', target_type: 'dynamic', targets: { 6: 4, 6.5: 4, 7: 5 }, unit: '个', url: '', icon: 'headphones' },
+            { id: 'listening_p4', name: '听力P4', target_type: 'dynamic', targets: { 6: 4, 6.5: 6, 7: 7 }, unit: '个', url: '', icon: 'headphones' },
+            
+            // 四、雅思单项目标分数
+            { id: 'speaking_p1', name: '口语P1', target_type: 'dynamic', targets: { 6: 5.5, 6.5: 6, 7: 6.5 }, unit: '分', url: '', icon: 'message' },
+            { id: 'speaking_p2', name: '口语P2', target_type: 'dynamic', targets: { 6: 5.5, 6.5: 6, 7: 6.5 }, unit: '分', url: '', icon: 'message' },
+            { id: 'speaking_p3', name: '口语P3', target_type: 'dynamic', targets: { 6: 5.5, 6.5: 6, 7: 6.5 }, unit: '分', url: '', icon: 'message' },
+            { id: 'writing_essay', name: '写作大作文', target_type: 'dynamic', targets: { 6: 5.5, 6.5: 6, 7: 6.5 }, unit: '分', url: '', icon: 'edit' },
+            { id: 'writing_small', name: '写作小作文', target_type: 'dynamic', targets: { 6: 5.5, 6.5: 6, 7: 6.5 }, unit: '分', url: '', icon: 'edit' }
         ];
         
         // 根据学生目标分数获取模块目标
