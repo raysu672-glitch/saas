@@ -2158,7 +2158,16 @@
             // 取消上一题的 timeout 和计时器
             if (learnPlayTimeout) { clearTimeout(learnPlayTimeout); learnPlayTimeout = null; }
             if (learnTimerInterval) { clearInterval(learnTimerInterval); learnTimerInterval = null; }
-            const word = learnSession.words[learnSession.currentWordIndex];
+            
+            // 根据当前阶段获取正确的单词
+            let word;
+            if (learnSession.phase === 'group_test') {
+                word = learnSession.currentTestWords[learnSession.currentWordIndex];
+            } else if (learnSession.phase === 'final_review') {
+                word = learnSession.finalReviewWords[learnSession.currentWordIndex];
+            } else {
+                word = learnSession.words[learnSession.currentWordIndex];
+            }
             
             // 超时保护：6秒后强制开始计时
             learnPlayTimeout = setTimeout(function() {
@@ -2227,7 +2236,16 @@
                     clearInterval(learnTimerInterval);
                     learnTimerInterval = null;
                     document.getElementById('learnTimerDisplay').textContent = '时间到！';
-                    setTimeout(learnAutoSubmit, 800);
+                    // 根据阶段调用正确的提交函数
+                    setTimeout(function() {
+                        if (learnSession.phase === 'group_test') {
+                            groupTestAutoSubmit();
+                        } else if (learnSession.phase === 'final_review') {
+                            finalReviewAutoSubmit();
+                        } else {
+                            learnAutoSubmit();
+                        }
+                    }, 800);
                 }
             }, 1000);
         }
@@ -2464,24 +2482,13 @@
             document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.currentTestWords.length + ' 题';
             document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.currentTestWords.length * 100) + '%';
             document.getElementById('learnAnswerInput').value = '';
-            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').textContent = '准备中...';
             document.getElementById('learnTimerDisplay').className = '';
             document.getElementById('learnStatusIcon').textContent = '🔊';
+            document.getElementById('learnStatusIcon').className = '';
             
-            setTimeout(function() { playLearnWord(); }, 500);
-            
-            let timeLeft = 6;
-            learnTimerInterval = setInterval(function() {
-                timeLeft--;
-                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
-                if (timeLeft <= 3) {
-                    document.getElementById('learnTimerDisplay').className = 'warning';
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(learnTimerInterval);
-                    groupTestAutoSubmit();
-                }
-            }, 1000);
+            // 使用统一的 playLearnWord（它会启动计时器）
+            playLearnWord();
         }
         
         function groupTestAutoSubmit() {
