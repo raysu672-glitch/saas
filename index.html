@@ -1385,16 +1385,22 @@
             html += '<h3 style="display:inline-block; margin-left:20px;">' + studentName + ' 的学习进度表</h3>';
             html += '</div>';
             
-            // 获取学习时长数据（从测试记录计算，每次测试约6秒）
-            const totalLearnSeconds = records.length * 6;
+            // 获取该学生的目标分数
+            const studentResult = await db.from('students').select('target_score').eq('student_id', studentId).single();
+            const studentTargetScore = studentResult.data ? studentResult.data.target_score : 6.5;
+            
+            // 获取学习时长数据（从 study_sessions 表读取真实时长）
+            const sessionsResult = await db.from('study_sessions').select('*').eq('student_id', studentId);
+            const sessions = sessionsResult.data || [];
+            const totalLearnSeconds = sessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
             const totalLearnMinutes = Math.floor(totalLearnSeconds / 60);
             const totalLearnHours = Math.floor(totalLearnMinutes / 60);
-            const displayTotalTime = totalLearnHours > 0 ? totalLearnHours + '小时' + (totalLearnMinutes % 60) + '分钟' : totalLearnMinutes + '分钟';
+            const displayTotalTime = totalLearnHours > 0 ? totalLearnHours + '小时' + (totalLearnMinutes % 60) + '分钟' : (totalLearnMinutes > 0 ? totalLearnMinutes + '分钟' : (totalLearnSeconds > 0 ? totalLearnSeconds + '秒' : '暂无记录'));
             
             html += '<div style="margin-bottom:15px; padding:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:10px; color:white;">';
             html += '<div style="display:flex; justify-content:space-between; align-items:center;">';
             html += '<div><strong>总学习时长：</strong><span style="font-size:1.5rem;">' + displayTotalTime + '</span></div>';
-            html += '<div style="font-size:0.9rem; opacity:0.9;">基于测试记录统计</div>';
+            html += '<div style="font-size:0.9rem; opacity:0.9;">共 ' + sessions.length + ' 次学习</div>';
             html += '</div></div>';
             
             html += '<table style="width:100%; border-collapse: collapse;">';
@@ -1405,10 +1411,6 @@
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">状态</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">学习时长</th>';
             html += '</tr></thead><tbody>';
-            
-            // 获取该学生的目标分数
-            const studentResult = await db.from('students').select('target_score').eq('student_id', studentId).single();
-            const studentTargetScore = studentResult.data ? studentResult.data.target_score : 6.5;
             
             for (let i = 0; i < MODULES.length; i++) {
                 const m = MODULES[i];
@@ -1423,6 +1425,18 @@
                 let statusText = '';
                 let moduleLearnTime = '-';
                 
+                // 计算该模块的学习时长
+                const moduleSessions = sessions.filter(function(s) {
+                    if (m.id === 'dictation') return s.module_type === 'dictation' || s.module_type === 'dictation_learn';
+                    return s.module_type === m.id;
+                });
+                if (moduleSessions.length > 0) {
+                    const moduleSeconds = moduleSessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
+                    const moduleMinutes = Math.floor(moduleSeconds / 60);
+                    const moduleHours = Math.floor(moduleMinutes / 60);
+                    moduleLearnTime = moduleHours > 0 ? moduleHours + '小时' + (moduleMinutes % 60) + '分钟' : (moduleMinutes > 0 ? moduleMinutes + '分钟' : moduleSeconds + '秒');
+                }
+                
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
@@ -1436,11 +1450,6 @@
                         statusClass = 'badge-info';
                         statusText = '未开始';
                     }
-                    // 计算该模块学习时长（听力2400词模块）
-                    const moduleSeconds = records.length * 6;
-                    const moduleMinutes = Math.floor(moduleSeconds / 60);
-                    const moduleHours = Math.floor(moduleMinutes / 60);
-                    moduleLearnTime = moduleHours > 0 ? moduleHours + '小时' + (moduleMinutes % 60) + '分钟' : (moduleMinutes > 0 ? moduleMinutes + '分钟' : moduleSeconds + '秒');
                 }
                 
                 const progressColor = progressPercent >= 100 ? '#28a745' : '#667eea';
@@ -1655,6 +1664,7 @@
         async function startTest(mode) {
             // 用户点击了开始测试，解锁音频
             unlockAudio();
+            testStartTime = Date.now(); // 记录测试开始时间
             
             currentTestMode = mode;
             document.getElementById('testModeLabel').textContent = mode === 'random' ? '随机测试' : '错题测试';
@@ -1703,6 +1713,7 @@
         var audioEl = new Audio();
         var timerStarted = false;
         var playTimeout = null; // 存储播放超时 ID
+        var testStartTime = 0; // 测试开始时间
         
         function playWord() {
             if (isPlaying) return;
@@ -1884,6 +1895,23 @@
                 pass_threshold: threshold,
                 details: JSON.stringify(testResults)
             });
+            
+            // 保存学习时长到 study_sessions
+            if (testStartTime > 0) {
+                const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+                if (elapsed > 0) {
+                    await db.from('study_sessions').insert({
+                        student_id: currentStudent.student_id,
+                        module_type: 'dictation',
+                        words_tested: testResults.length,
+                        initial_correct: correctCount,
+                        initial_wrong: incorrectCount,
+                        groups_completed: 0,
+                        duration_seconds: elapsed,
+                        created_at: new Date().toISOString()
+                    });
+                }
+            }
             
             if (insertResult.error) {
                 console.error('保存测试记录失败:', insertResult.error);
@@ -2603,6 +2631,7 @@
             const elapsed = Math.floor((Date.now() - learnSession.startTime) / 1000);
             await db.from('study_sessions').insert({
                 student_id: currentStudent.student_id,
+                module_type: 'dictation_learn',
                 words_tested: learnSession.words.length,
                 initial_correct: learnSession.initialCorrect,
                 initial_wrong: learnSession.initialWrong,
