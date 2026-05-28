@@ -1653,26 +1653,13 @@
             document.getElementById('learnQuestionCounter').textContent = '第 ' + (learnSession.currentWordIndex + 1) + ' / ' + learnSession.words.length + ' 题';
             document.getElementById('learnProgressFill').style.width = ((learnSession.currentWordIndex + 1) / learnSession.words.length * 100) + '%';
             document.getElementById('learnAnswerInput').value = '';
-            document.getElementById('learnTimerDisplay').textContent = '6秒';
+            document.getElementById('learnTimerDisplay').textContent = '准备中...';
             document.getElementById('learnTimerDisplay').className = '';
             document.getElementById('learnStatusIcon').textContent = '🔊';
+            document.getElementById('learnStatusIcon').className = '';
             
-            // 播放单词
-            setTimeout(function() { playLearnWord(); }, 500);
-            
-            // 6秒倒计时
-            let timeLeft = 6;
-            learnTimerInterval = setInterval(function() {
-                timeLeft--;
-                document.getElementById('learnTimerDisplay').textContent = timeLeft + '秒';
-                if (timeLeft <= 3) {
-                    document.getElementById('learnTimerDisplay').className = 'warning';
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(learnTimerInterval);
-                    learnAutoSubmit();
-                }
-            }, 1000);
+            // 播放单词（playLearnWord 会启动计时器）
+            playLearnWord();
         }
         
         // 学习板块音频元素
@@ -1686,18 +1673,19 @@
             learnTimerStarted = false;
             const word = learnSession.words[learnSession.currentWordIndex];
             
-            // 超时保护：6秒后强制结束
+            // 超时保护：6秒后强制开始计时
             setTimeout(function() {
                 if (learnIsPlaying) {
                     try { learnAudioEl.pause(); } catch(e) {}
                     try { speechSynthesis.cancel(); } catch(e) {}
                     learnIsPlaying = false;
+                    learnSafeStartTimer();
                 }
             }, 6000);
             
             // 主引擎：有道词典 TTS
             var youdaoUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=2';
-            learnAudioEl.onended = function() { learnIsPlaying = false; };
+            learnAudioEl.onended = function() { learnIsPlaying = false; learnSafeStartTimer(); };
             learnAudioEl.onerror = function() { learnFallbackGoogle(word); };
             learnAudioEl.src = youdaoUrl;
             learnAudioEl.play().catch(function() {
@@ -1710,7 +1698,7 @@
             if (!learnIsPlaying) return;
             try { learnAudioEl.pause(); } catch(e) {}
             var googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(word);
-            learnAudioEl.onended = function() { learnIsPlaying = false; };
+            learnAudioEl.onended = function() { learnIsPlaying = false; learnSafeStartTimer(); };
             learnAudioEl.onerror = function() { learnFallbackSpeech(word); };
             learnAudioEl.src = googleUrl;
             learnAudioEl.play().catch(function() {
@@ -1722,13 +1710,38 @@
         function learnFallbackSpeech(word) {
             if (!learnIsPlaying) return;
             try { learnAudioEl.pause(); } catch(e) {}
-            if (!window.speechSynthesis) { learnIsPlaying = false; return; }
+            if (!window.speechSynthesis) { learnIsPlaying = false; learnSafeStartTimer(); return; }
             var u = new SpeechSynthesisUtterance(word);
             u.lang = 'en-US'; u.rate = 0.8; u.volume = 1;
-            u.onend = function() { learnIsPlaying = false; };
-            u.onerror = function() { learnIsPlaying = false; };
+            u.onend = function() { learnIsPlaying = false; learnSafeStartTimer(); };
+            u.onerror = function() { learnIsPlaying = false; learnSafeStartTimer(); };
             speechSynthesis.cancel();
             speechSynthesis.speak(u);
+        }
+        
+        // 学习板块安全启动计时器
+        function learnSafeStartTimer() {
+            if (learnTimerStarted) return;
+            learnTimerStarted = true;
+            learnStartTimer();
+        }
+        
+        // 学习板块启动计时器
+        function learnStartTimer() {
+            let timeLeft = 6;
+            document.getElementById('learnTimerDisplay').textContent = '剩余 ' + timeLeft + ' 秒';
+            learnTimerInterval = setInterval(function() {
+                timeLeft--;
+                document.getElementById('learnTimerDisplay').textContent = '剩余 ' + timeLeft + ' 秒';
+                if (timeLeft <= 2) {
+                    document.getElementById('learnTimerDisplay').className = 'fail';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(learnTimerInterval);
+                    document.getElementById('learnTimerDisplay').textContent = '时间到！';
+                    setTimeout(learnAutoSubmit, 800);
+                }
+            }, 1000);
         }
         
         function learnSubmitAnswer() {
