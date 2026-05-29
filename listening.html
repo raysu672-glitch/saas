@@ -692,8 +692,9 @@
         // ==================== 状态管理 ====================
         let currentStage = 0;
         let currentWordIndex = 0;
-        let masteredWords = [];
         let failedWords = [];
+        let masteredWords = [];
+        let allWrongWords = [];  // 收集所有错词，用于阶段4
         let currentGroup = [];
         let groupIndex = 0;
         let spellingRound = 1;
@@ -868,6 +869,7 @@
                 showToast('正确！');
             } else {
                 failedWords.push(ALL_WORDS[currentWordIndex]);
+                allWrongWords.push(ALL_WORDS[currentWordIndex]);
                 showToast(`错误，正确答案是：${correct}`);
             }
 
@@ -893,6 +895,7 @@
 
         function skipWord() {
             failedWords.push(ALL_WORDS[currentWordIndex]);
+            allWrongWords.push(ALL_WORDS[currentWordIndex]);
             currentWordIndex++;
             
             if (currentWordIndex >= ALL_WORDS.length) {
@@ -1044,6 +1047,7 @@
                 showToast('正确！');
             } else {
                 failedWords.push(currentGroup[currentWordIndex]);
+                allWrongWords.push(currentGroup[currentWordIndex]);
                 showToast(`错误：${correct}`);
             }
 
@@ -1075,10 +1079,9 @@
         // ==================== 阶段4：全局漏斗 ====================
         function startStage4() {
             // 合并所有错词并打乱
-            funnelWords = shuffleArray([...failedWords]);
+            funnelWords = shuffleArray([...allWrongWords]);
             currentWordIndex = 0;
             funnelCorrectCount = 0;
-            failedWords = [];
             
             // 如果没有错词，直接完成
             if (funnelWords.length === 0) {
@@ -1184,6 +1187,7 @@
         function startLearning() {
             masteredWords = [];
             failedWords = [];
+            allWrongWords = [];
             currentGroup = [];
             setStage(1);
         }
@@ -1191,6 +1195,7 @@
         function restartLearning() {
             masteredWords = [];
             failedWords = [];
+            allWrongWords = [];
             currentGroup = [];
             funnelWords = [];
             totalSeconds = 0;
