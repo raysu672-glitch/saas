@@ -699,6 +699,8 @@
         let spellingRound = 1;
         let funnelWords = [];
         let funnelCorrectCount = 0;
+        let funnelPaused = false;
+        let funnelPausedIndex = 0;
         let startTime = Date.now();
         let totalSeconds = 0;
         let heartbeatInterval = null;
@@ -956,8 +958,19 @@
                     if (groupIndex >= currentGroup.length) {
                         spellingRound++;
                         if (spellingRound > 3) {
-                            // 3轮完成，进入阶段3
-                            setStage(3);
+                            // 3轮完成，判断从哪个阶段来的
+                            if (funnelPaused) {
+                                // 从漏斗暂停来的，回到阶段4
+                                funnelPaused = false;
+                                setStage(4);
+                                updateFunnelDisplay();
+                                document.getElementById('funnel-input').value = '';
+                                document.getElementById('funnel-input').focus();
+                                setTimeout(() => playCurrentWord(), 300);
+                            } else {
+                                // 正常流程，进入阶段3
+                                setStage(3);
+                            }
                         } else {
                             // 下一轮
                             groupIndex = 0;
@@ -1042,10 +1055,14 @@
                     // 100%正确，进入阶段4
                     setStage(4);
                 } else {
-                    // 有错误，重新测试
-                    showToast('有错误，重新开始测试');
+                    // 有错误，先拼写强化再重新听写
+                    showToast(`有 ${failedWords.length} 个错误，先进行拼写强化`);
                     currentGroup = [...failedWords];
-                    setTimeout(() => startStage3(), 1500);
+                    failedWords = [];
+                    setTimeout(() => {
+                        setStage(2);
+                        startStage2();
+                    }, 1500);
                 }
             } else {
                 updateStage3Progress();
@@ -1088,11 +1105,22 @@
                 showToast('正确！');
                 currentWordIndex++;
             } else {
-                // 错误，放到队列末尾
+                // 错误，先拼写强化再放回队列末尾
                 const wrongWord = funnelWords[currentWordIndex];
+                showToast(`错误：${correct}，先进行拼写强化`);
+                funnelWords.splice(currentWordIndex, 1);
                 funnelWords.push(wrongWord);
-                showToast(`错误：${correct}，已加入队列末尾`);
-                currentWordIndex++;
+                // 暂停漏斗，进入拼写强化
+                funnelPaused = true;
+                funnelPausedIndex = funnelWords.length - 1;
+                currentGroup = [wrongWord];
+                spellingRound = 1;
+                groupIndex = 0;
+                setTimeout(() => {
+                    setStage(2);
+                    startStage2();
+                }, 1500);
+                return;
             }
 
             if (currentWordIndex >= funnelWords.length) {
