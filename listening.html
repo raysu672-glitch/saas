@@ -1079,6 +1079,13 @@
             currentWordIndex = 0;
             funnelCorrectCount = 0;
             failedWords = [];
+            
+            // 如果没有错词，直接完成
+            if (funnelWords.length === 0) {
+                setStage(5);
+                return;
+            }
+            
             updateFunnelDisplay();
             document.getElementById('funnel-input').value = '';
             document.getElementById('funnel-input').focus();
