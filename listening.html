@@ -870,11 +870,11 @@
 
             const correct = ALL_WORDS[currentWordIndex].word.toLowerCase();
             if (input === correct) {
-                masteredWords.push(ALL_WORDS[currentWordIndex]);
+                addWord(masteredWords, ALL_WORDS[currentWordIndex]);
                 showToast('正确！');
             } else {
-                failedWords.push(ALL_WORDS[currentWordIndex]);
-                allWrongWords.push(ALL_WORDS[currentWordIndex]);
+                addWord(failedWords, ALL_WORDS[currentWordIndex]);
+                addWord(allWrongWords, ALL_WORDS[currentWordIndex]);
                 showToast(`错误，正确答案是：${correct}`);
             }
 
@@ -899,8 +899,8 @@
         }
 
         function skipWord() {
-            failedWords.push(ALL_WORDS[currentWordIndex]);
-            allWrongWords.push(ALL_WORDS[currentWordIndex]);
+            addWord(failedWords, ALL_WORDS[currentWordIndex]);
+            addWord(allWrongWords, ALL_WORDS[currentWordIndex]);
             currentWordIndex++;
             
             if (currentWordIndex >= ALL_WORDS.length) {
@@ -1057,8 +1057,8 @@
             if (input === correct) {
                 showToast('正确！');
             } else {
-                failedWords.push(currentGroup[currentWordIndex]);
-                allWrongWords.push(currentGroup[currentWordIndex]);
+                addWord(failedWords, currentGroup[currentWordIndex]);
+                addWord(allWrongWords, currentGroup[currentWordIndex]);
                 showToast(`错误：${correct}`);
             }
 
@@ -1100,23 +1100,22 @@
 
         // ==================== 阶段4：全局漏斗 ====================
         function startStage4() {
-            // 如果是新一轮靶向收敛，使用上轮的错词
-            if (funnelRound > 1 && funnelWrongWords.length > 0) {
-                funnelWords = shuffleArray([...funnelWrongWords]);
-                funnelWrongWords = [];
-            } else if (funnelRound === 1) {
-                // 第一轮，使用所有错词
-                funnelWords = shuffleArray([...allWrongWords]);
-            }
+            // 使用 Set 来跟踪已掌握的词，并从所有错词中过滤
+            const masteredSet = new Set(masteredWords.map(w => w.word));
             
-            currentWordIndex = 0;
-            funnelCorrectCount = 0;
+            // 收集还未掌握的错词（漏斗效果）
+            const remainingWrongWords = allWrongWords.filter(w => !masteredSet.has(w.word));
             
-            // 如果没有错词，直接完成
-            if (funnelWords.length === 0) {
+            // 如果没有未掌握的错词，直接完成
+            if (remainingWrongWords.length === 0) {
                 setStage(5);
                 return;
             }
+            
+            // 打乱并设置为本轮靶向收敛的词
+            funnelWords = shuffleArray([...remainingWrongWords]);
+            currentWordIndex = 0;
+            funnelCorrectCount = 0;
             
             // 更新轮次显示
             const roundIndicator = document.getElementById('funnel-round-indicator');
@@ -1145,13 +1144,13 @@
 
             const correct = funnelWords[currentWordIndex].word.toLowerCase();
             if (input === correct) {
-                masteredWords.push(funnelWords[currentWordIndex]);
+                addWord(masteredWords, funnelWords[currentWordIndex]);
                 funnelCorrectCount++;
                 showToast('正确！');
             } else {
                 // 错误，收集到本轮错词，继续听写其他词
                 const wrongWord = funnelWords[currentWordIndex];
-                funnelWrongWords.push(wrongWord);
+                addWord(funnelWrongWords, wrongWord);
                 showToast(`错误：${correct}`);
             }
             
@@ -1204,7 +1203,14 @@
             }
             return array;
         }
-
+        
+        // 安全添加词到数组（避免重复）
+        function addWord(array, word) {
+            if (!array.some(w => w.word === word.word)) {
+                array.push(word);
+            }
+        }
+        
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
