@@ -621,6 +621,7 @@
                         <div class="stat-label">本次正确</div>
                     </div>
                 </div>
+                <p class="word-counter" id="funnel-round-indicator" style="color:#667eea;font-weight:bold;">第 1 轮靶向收敛</p>
                 <p class="word-counter">第 <span id="funnel-index">1</span> 个单词</p>
                 <button class="audio-btn" onclick="playCurrentWord()">
                     <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
@@ -702,6 +703,8 @@
         let funnelCorrectCount = 0;
         let funnelPaused = false;
         let funnelPausedIndex = 0;
+        let funnelRound = 1;  // 靶向收敛轮次
+        let funnelWrongWords = [];  // 本轮靶向收敛的错词
         let startTime = Date.now();
         let totalSeconds = 0;
         let heartbeatInterval = null;
@@ -1078,8 +1081,15 @@
 
         // ==================== 阶段4：全局漏斗 ====================
         function startStage4() {
-            // 合并所有错词并打乱
-            funnelWords = shuffleArray([...allWrongWords]);
+            // 如果是新一轮靶向收敛，使用上轮的错词
+            if (funnelRound > 1 && funnelWrongWords.length > 0) {
+                funnelWords = shuffleArray([...funnelWrongWords]);
+                funnelWrongWords = [];
+            } else if (funnelRound === 1) {
+                // 第一轮，使用所有错词
+                funnelWords = shuffleArray([...allWrongWords]);
+            }
+            
             currentWordIndex = 0;
             funnelCorrectCount = 0;
             
@@ -1087,6 +1097,12 @@
             if (funnelWords.length === 0) {
                 setStage(5);
                 return;
+            }
+            
+            // 更新轮次显示
+            const roundIndicator = document.getElementById('funnel-round-indicator');
+            if (roundIndicator) {
+                roundIndicator.textContent = `第 ${funnelRound} 轮靶向收敛`;
             }
             
             updateFunnelDisplay();
@@ -1115,14 +1131,12 @@
                 showToast('正确！');
                 currentWordIndex++;
             } else {
-                // 错误，先拼写强化再放回队列末尾
+                // 错误，收集到本轮错词，并进行拼写强化
                 const wrongWord = funnelWords[currentWordIndex];
+                funnelWrongWords.push(wrongWord);
                 showToast(`错误：${correct}，先进行拼写强化`);
-                funnelWords.splice(currentWordIndex, 1);
-                funnelWords.push(wrongWord);
                 // 暂停漏斗，进入拼写强化
                 funnelPaused = true;
-                funnelPausedIndex = funnelWords.length - 1;
                 currentGroup = [wrongWord];
                 spellingRound = 1;
                 groupIndex = 0;
@@ -1134,8 +1148,18 @@
             }
 
             if (currentWordIndex >= funnelWords.length) {
-                // 全部完成
-                setStage(5);
+                // 本轮靶向收敛完成，检查是否有错词
+                if (funnelWrongWords.length === 0) {
+                    // 全对，完成学习
+                    setStage(5);
+                } else {
+                    // 有错词，开始新一轮靶向收敛
+                    funnelRound++;
+                    showToast(`本轮有错词，开始第 ${funnelRound} 轮靶向收敛`);
+                    setTimeout(() => {
+                        startStage4();
+                    }, 1500);
+                }
             } else {
                 updateFunnelDisplay();
                 document.getElementById('funnel-input').value = '';
@@ -1188,7 +1212,9 @@
             masteredWords = [];
             failedWords = [];
             allWrongWords = [];
+            funnelWrongWords = [];
             currentGroup = [];
+            funnelRound = 1;
             setStage(1);
         }
 
@@ -1196,8 +1222,10 @@
             masteredWords = [];
             failedWords = [];
             allWrongWords = [];
+            funnelWrongWords = [];
             currentGroup = [];
             funnelWords = [];
+            funnelRound = 1;
             totalSeconds = 0;
             clearProgress();
             setStage(0);
