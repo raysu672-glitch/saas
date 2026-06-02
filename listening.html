@@ -705,6 +705,8 @@
         let funnelPausedIndex = 0;
         let funnelRound = 1;  // 靶向收敛轮次
         let funnelWrongWords = [];  // 本轮靶向收敛的错词
+        let postFunnelSpelling = false;  // 标记是否来自阶段4后的拼写训练
+        let postFunnelTest = false;  // 标记是否来自阶段4后的测试阶段
         let startTime = Date.now();
         let totalSeconds = 0;
         let heartbeatInterval = null;
@@ -965,8 +967,14 @@
                         spellingRound++;
                         if (spellingRound > 3) {
                             // 3轮完成，判断从哪个阶段来的
-                            if (funnelPaused) {
-                                // 从漏斗暂停来的，回到阶段4
+                            if (postFunnelSpelling) {
+                                // 阶段4后的拼写训练完成，进入测试阶段
+                                postFunnelSpelling = false;
+                                postFunnelTest = true; // 标记即将进入阶段4后的测试
+                                setStage(3);
+                                startStage3();
+                            } else if (funnelPaused) {
+                                // 从漏斗暂停来的（旧逻辑，保留兼容）
                                 funnelPaused = false;
                                 setStage(4);
                                 updateFunnelDisplay();
@@ -1059,8 +1067,19 @@
             if (currentWordIndex >= currentGroup.length) {
                 // 检查是否全部正确
                 if (failedWords.length === 0) {
-                    // 100%正确，进入阶段4
-                    setStage(4);
+                    // 100%正确
+                    if (postFunnelTest) {
+                        // 阶段4后的测试全对，进入下一轮靶向收敛
+                        postFunnelTest = false;
+                        funnelRound++;
+                        showToast(`测试全对！开始第 ${funnelRound} 轮靶向收敛`);
+                        setTimeout(() => {
+                            startStage4();
+                        }, 1500);
+                    } else {
+                        // 正常流程，进入阶段4
+                        setStage(4);
+                    }
                 } else {
                     // 有错误，先拼写强化再重新听写
                     showToast(`有 ${failedWords.length} 个错误，先进行拼写强化`);
@@ -1129,23 +1148,14 @@
                 masteredWords.push(funnelWords[currentWordIndex]);
                 funnelCorrectCount++;
                 showToast('正确！');
-                currentWordIndex++;
             } else {
-                // 错误，收集到本轮错词，并进行拼写强化
+                // 错误，收集到本轮错词，继续听写其他词
                 const wrongWord = funnelWords[currentWordIndex];
                 funnelWrongWords.push(wrongWord);
-                showToast(`错误：${correct}，先进行拼写强化`);
-                // 暂停漏斗，进入拼写强化
-                funnelPaused = true;
-                currentGroup = [wrongWord];
-                spellingRound = 1;
-                groupIndex = 0;
-                setTimeout(() => {
-                    setStage(2);
-                    startStage2();
-                }, 1500);
-                return;
+                showToast(`错误：${correct}`);
             }
+            
+            currentWordIndex++;
 
             if (currentWordIndex >= funnelWords.length) {
                 // 本轮靶向收敛完成，检查是否有错词
@@ -1153,11 +1163,14 @@
                     // 全对，完成学习
                     setStage(5);
                 } else {
-                    // 有错词，开始新一轮靶向收敛
-                    funnelRound++;
-                    showToast(`本轮有错词，开始第 ${funnelRound} 轮靶向收敛`);
+                    // 有错词，先统一进行拼写训练
+                    showToast(`本轮完成，${funnelWrongWords.length} 个错词需要拼写训练`);
+                    currentGroup = [...funnelWrongWords];
+                    funnelWrongWords = []; // 清空，准备收集下一轮错词
+                    postFunnelSpelling = true; // 标记来自阶段4后的拼写
                     setTimeout(() => {
-                        startStage4();
+                        setStage(2);
+                        startStage2();
                     }, 1500);
                 }
             } else {
@@ -1215,6 +1228,8 @@
             funnelWrongWords = [];
             currentGroup = [];
             funnelRound = 1;
+            postFunnelSpelling = false;
+            postFunnelTest = false;
             setStage(1);
         }
 
@@ -1226,6 +1241,8 @@
             currentGroup = [];
             funnelWords = [];
             funnelRound = 1;
+            postFunnelSpelling = false;
+            postFunnelTest = false;
             totalSeconds = 0;
             clearProgress();
             setStage(0);
