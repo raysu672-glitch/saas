@@ -3052,6 +3052,32 @@
                     console.error('写入学习记录异常:', e);
                 }
             }
+
+            if (data.type === 'listeningStudyTime') {
+                console.log('收到听力学习时长:', data);
+
+                const studentId = currentStudent?.student_id;
+                if (!studentId) return;
+
+                try {
+                    const { error } = await db.from('study_sessions').insert({
+                        student_id: studentId,
+                        module_type: 'dictation',
+                        words_tested: data.wordsTested,
+                        initial_correct: data.masteredCount,
+                        initial_wrong: data.wrongCount,
+                        groups_completed: data.completedGroups,
+                        duration_seconds: data.durationSeconds
+                    });
+
+                    if (!error) {
+                        console.log('学习时长已保存');
+                        loadProgressTable();
+                    }
+                } catch (e) {
+                    console.error('保存学习时长失败:', e);
+                }
+            }
         });
     </script>
 </body>

@@ -1362,9 +1362,32 @@
         }
 
         function backToGroupSelection() {
+            // 退出前回传学习时长
+            sendStudyTime();
             renderGroupGrid();
             selectGroup(currentGroupIndex);
             setStage(0);
+        }
+
+        // 回传学习时长（不需要学完一组）
+        function sendStudyTime() {
+            if (totalSeconds <= 0) return; // 没有学习时长就不发送
+
+            const record = {
+                type: 'listeningStudyTime',
+                groupIndex: currentGroupIndex + 1,
+                totalGroups: TOTAL_GROUPS,
+                wordsTested: currentGroupWords ? currentGroupWords.length : 0,
+                masteredCount: masteredWords.length,
+                wrongCount: allWrongWords.length,
+                completedGroups: groupStatus.filter(s => s === 'completed').length,
+                durationSeconds: totalSeconds
+            };
+
+            if (window.parent !== window) {
+                window.parent.postMessage(record, '*');
+            }
+            console.log('学习时长已回传:', totalSeconds + '秒');
         }
 
         function startNextGroup() {
@@ -1430,6 +1453,11 @@
 
         // 初始化
         window.onload = init;
+
+        // iframe 关闭或页面卸载时回传学习时长
+        window.addEventListener('beforeunload', function() {
+            sendStudyTime();
+        });
     </script>
 </body>
 </html>
