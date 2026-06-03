@@ -1265,6 +1265,32 @@
                 titleEl.textContent = '恭喜完成所有单词学习！';
                 descEl.textContent = `您已完成全部 ${TOTAL_GROUPS} 组共 ${ALL_WORDS.length} 个单词的学习`;
             }
+
+            // 回传学习记录给主系统
+            sendStudyRecord();
+        }
+
+        // 回传学习记录给主系统
+        function sendStudyRecord() {
+            const completedCount = groupStatus.filter(s => s === 'completed').length;
+            const record = {
+                type: 'listeningStudyComplete',
+                groupIndex: currentGroupIndex + 1,
+                totalGroups: TOTAL_GROUPS,
+                wordsTested: currentGroupWords.length,
+                masteredCount: masteredWords.length,
+                wrongCount: allWrongWords.length,
+                completedGroups: completedCount,
+                durationSeconds: totalSeconds
+            };
+
+            // 如果在 iframe 中，回传给父窗口
+            if (window.parent !== window) {
+                window.parent.postMessage(record, '*');
+            } else {
+                // 如果不在 iframe 中，直接打印（调试用）
+                console.log('Study record:', record);
+            }
         }
 
         // ==================== 工具函数 ====================
