@@ -997,10 +997,11 @@
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
+                    // 只要有学习记录就算"进行中"
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
                         statusText = '达标';
-                    } else if (bestScore > 0) {
+                    } else if (moduleSessions.length > 0 || bestScore > 0) {
                         statusClass = 'badge-warning';
                         statusText = '进行中';
                     } else {
