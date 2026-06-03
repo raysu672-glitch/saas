@@ -964,6 +964,10 @@
             const recordsResult = await db.from('test_records').select('*').eq('student_id', currentStudent.student_id);
             const records = recordsResult.data || [];
             
+            // 获取学习记录
+            const sessionsResult = await db.from('study_sessions').select('*').eq('student_id', currentStudent.student_id).eq('module_type', 'dictation');
+            const sessions = sessionsResult.data || [];
+            
             // 获取错题数量
             const wrongResult = await db.from('wrong_words').select('*').eq('student_id', currentStudent.student_id).eq('is_mastered', false);
             const wrongCount = wrongResult.data ? wrongResult.data.length : 0;
@@ -976,6 +980,10 @@
                 passCount = records.filter(r => r.is_passed).length;
             }
             
+            // 计算该模块的学习时长
+            const dictationSessions = sessions.filter(s => s.module_type === 'dictation');
+            const totalStudySeconds = dictationSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
+            
             // 渲染进度表
             const container = document.getElementById('progressTable');
             let html = '<table style="width:100%; border-collapse: collapse;">';
@@ -983,6 +991,7 @@
             html += '<th style="padding:12px; text-align:left; border-bottom:2px solid #dee2e6;">科目</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">目标</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">当前进度</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">时长</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">操作</th>';
             html += '</tr></thead><tbody>';
             
@@ -1001,7 +1010,7 @@
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
                         statusText = '达标';
-                    } else if (moduleSessions.length > 0 || bestScore > 0) {
+                    } else if (dictationSessions.length > 0 || bestScore > 0) {
                         statusClass = 'badge-warning';
                         statusText = '进行中';
                     } else {
@@ -1024,6 +1033,14 @@
                 html += '<span class="badge ' + statusClass + '" style="font-size:0.75rem;">' + statusText + '</span>';
                 html += '</div>';
                 html += '</td>';
+                // 学习时长列
+                let timeDisplay = '-';
+                if (m.id === 'dictation' && totalStudySeconds > 0) {
+                    const mins = Math.floor(totalStudySeconds / 60);
+                    const secs = totalStudySeconds % 60;
+                    timeDisplay = mins + ':' + (secs < 10 ? '0' : '') + secs;
+                }
+                html += '<td style="padding:15px 12px; text-align:center; color:#667eea;">' + timeDisplay + '</td>';
                 html += '<td style="padding:15px 12px; text-align:center;">';
                 
                 // 三个按钮：测试、学习、历史
