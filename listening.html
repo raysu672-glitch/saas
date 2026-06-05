@@ -758,8 +758,8 @@
         let funnelWrongWords = [];  // 本轮靶向收敛的错词
         let postFunnelSpelling = false;  // 标记是否来自阶段4后的拼写训练
         let postFunnelTest = false;  // 标记是否来自阶段4后的测试阶段
-        let startTime = Date.now();
-        let totalSeconds = 0;
+        let sessionStartAt = 0;      // 当前学习会话开始时间戳（进入学习时设置）
+        let totalSeconds = 0;        // 累计学习时长（已保存的）
         let heartbeatInterval = null;
 
         // ==================== 初始化 ====================
@@ -774,17 +774,40 @@
         }
 
         function startHeartbeat() {
+            // 用时间差计算真实学习时长（不受浏览器节流影响）
             heartbeatInterval = setInterval(() => {
-                totalSeconds++;
-                updateTimeDisplay();
-                saveProgress();
-            }, 5000);
+                // 只有在学习中才计算时长
+                if (sessionStartAt > 0 && currentStage >= 1 && currentStage <= 4) {
+                    const sessionElapsed = Math.floor((Date.now() - sessionStartAt) / 1000);
+                    const displaySeconds = totalSeconds + sessionElapsed;
+                    updateTimeDisplay(displaySeconds);
+                }
+            }, 1000);  // 每秒刷新显示
         }
 
-        function updateTimeDisplay() {
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            document.getElementById('stat-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // 进入学习时调用，重置会话开始时间
+        function resumeTimer() {
+            if (sessionStartAt === 0) {
+                sessionStartAt = Date.now();
+            }
+        }
+
+        // 退出学习时调用，结算当前会话时长到累计时长
+        function pauseTimer() {
+            if (sessionStartAt > 0) {
+                const sessionElapsed = Math.floor((Date.now() - sessionStartAt) / 1000);
+                totalSeconds += sessionElapsed;
+                sessionStartAt = 0;
+                saveProgress();
+            }
+            updateTimeDisplay(totalSeconds);
+        }
+
+        function updateTimeDisplay(seconds) {
+            seconds = seconds !== undefined ? seconds : totalSeconds;
+            const minutes = Math.floor(seconds / 60);
+            const secondsPart = seconds % 60;
+            document.getElementById('stat-time').textContent = `${minutes}:${secondsPart.toString().padStart(2, '0')}`;
         }
 
         // ==================== 本地存储 ====================
@@ -857,6 +880,15 @@
         // ==================== 阶段切换 ====================
         function setStage(stage) {
             currentStage = stage;
+            
+            // 控制计时器
+            if (stage === 0 || stage === 5) {
+                // 返回组选择或完成：暂停计时
+                pauseTimer();
+            } else if (stage >= 1 && stage <= 4) {
+                // 进入学习阶段：启动计时
+                resumeTimer();
+            }
             
             // 更新指示器
             for (let i = 1; i <= 4; i++) {
@@ -1272,6 +1304,12 @@
 
         // 回传学习记录给主系统
         function sendStudyRecord() {
+            // 计算当前总时长 = 累计时长 + 当前会话时长
+            let currentTotalSeconds = totalSeconds;
+            if (sessionStartAt > 0) {
+                currentTotalSeconds += Math.floor((Date.now() - sessionStartAt) / 1000);
+            }
+            
             const completedCount = groupStatus.filter(s => s === 'completed').length;
             const record = {
                 type: 'listeningStudyComplete',
@@ -1281,7 +1319,7 @@
                 masteredCount: masteredWords.length,
                 wrongCount: allWrongWords.length,
                 completedGroups: completedCount,
-                durationSeconds: totalSeconds
+                durationSeconds: currentTotalSeconds
             };
 
             // 如果在 iframe 中，回传给父窗口
@@ -1371,7 +1409,12 @@
 
         // 回传学习时长（不需要学完一组）
         function sendStudyTime() {
-            if (totalSeconds <= 0) return; // 没有学习时长就不发送
+            // 计算当前总时长 = 累计时长 + 当前会话时长
+            let currentTotalSeconds = totalSeconds;
+            if (sessionStartAt > 0) {
+                currentTotalSeconds += Math.floor((Date.now() - sessionStartAt) / 1000);
+            }
+            if (currentTotalSeconds <= 0) return; // 没有学习时长就不发送
 
             const record = {
                 type: 'listeningStudyTime',
@@ -1381,13 +1424,13 @@
                 masteredCount: masteredWords.length,
                 wrongCount: allWrongWords.length,
                 completedGroups: groupStatus.filter(s => s === 'completed').length,
-                durationSeconds: totalSeconds
+                durationSeconds: currentTotalSeconds
             };
 
             if (window.parent !== window) {
                 window.parent.postMessage(record, '*');
             }
-            console.log('学习时长已回传:', totalSeconds + '秒');
+            console.log('学习时长已回传:', currentTotalSeconds + '秒');
         }
 
         function startNextGroup() {
@@ -1426,7 +1469,8 @@
             funnelRound = 1;
             postFunnelSpelling = false;
             postFunnelTest = false;
-            totalSeconds = 0;
+            // 只重置当前会话时间，不重置累计时长
+            sessionStartAt = 0;
             // Reset current group only, not all groups
             groupStatus[currentGroupIndex] = 'pending';
             saveGroupStatus();
