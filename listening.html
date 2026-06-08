@@ -1453,6 +1453,10 @@
             postFunnelSpelling = false;
             postFunnelTest = false;
 
+            // 清零学习时长（每次开始学习从0计时）
+            totalSeconds = 0;
+            sessionStartAt = 0;
+
             // Update total count display for current group
             document.getElementById('total-count').textContent = currentGroupWords.length;
 
