@@ -1006,11 +1006,11 @@
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
-                    // 只要有学习记录就算"进行中"
+                    // 只要开始学习（有学习记录或学习时长>0）就算"进行中"
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
                         statusText = '达标';
-                    } else if (dictationSessions.length > 0 || bestScore > 0) {
+                    } else if (dictationSessions.length > 0 || totalStudySeconds > 0 || bestScore > 0) {
                         statusClass = 'badge-warning';
                         statusText = '进行中';
                     } else {
@@ -1325,6 +1325,10 @@
             const recordsResult = await db.from('test_records').select('*');
             const allRecords = recordsResult.data || [];
             
+            // 获取所有学生的学习时长记录（用于判断是否开始学习）
+            const studyResult = await db.from('study_sessions').select('*');
+            const allStudySessions = studyResult.data || [];
+            
             let html = '<h4 style="margin-bottom:15px;">全体学生听力1000词进度</h4>';
             html += '<table style="width:100%; border-collapse: collapse;">';
             html += '<thead><tr style="background:#f8f9fa;">';
@@ -1340,6 +1344,7 @@
             for (let i = 0; i < students.length; i++) {
                 const s = students[i];
                 const studentRecords = allRecords.filter(function(r) { return r.student_id === s.student_id; });
+                const studentStudySessions = allStudySessions.filter(function(r) { return r.student_id === s.student_id; });
                 
                 let bestScore = 0;
                 let passCount = 0;
@@ -1348,13 +1353,17 @@
                     passCount = studentRecords.filter(function(r) { return r.is_passed; }).length;
                 }
                 
+                // 计算学习时长（秒）
+                const totalStudySeconds = studentStudySessions.reduce(function(sum, r) { return sum + (r.duration_seconds || 0); }, 0);
+                
                 const passRate = studentRecords.length > 0 ? Math.round(passCount / studentRecords.length * 100) : 0;
                 let statusClass = 'badge-info';
                 let statusText = '未开始';
+                // 只要开始学习（有学习记录或学习时长>0）就算"进行中"
                 if (bestScore >= 80) {
                     statusClass = 'badge-success';
                     statusText = '已达标';
-                } else if (bestScore > 0) {
+                } else if (studentStudySessions.length > 0 || totalStudySeconds > 0 || bestScore > 0) {
                     statusClass = 'badge-warning';
                     statusText = '进行中';
                 }
@@ -1468,10 +1477,12 @@
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
+                    const moduleTotalSeconds = moduleSessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
+                    // 只要开始学习（有学习记录或学习时长>0）就算"进行中"
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
                         statusText = '达标';
-                    } else if (bestScore > 0) {
+                    } else if (moduleSessions.length > 0 || moduleTotalSeconds > 0 || bestScore > 0) {
                         statusClass = 'badge-warning';
                         statusText = '进行中';
                     } else {
