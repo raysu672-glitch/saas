@@ -1338,6 +1338,7 @@
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">测试次数</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">达标次数</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">达标率</th>';
+            html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">学习时长</th>';
             html += '<th style="padding:12px; text-align:center; border-bottom:2px solid #dee2e6;">状态</th>';
             html += '</tr></thead><tbody>';
             
@@ -1355,6 +1356,20 @@
                 
                 // 计算学习时长（秒）
                 const totalStudySeconds = studentStudySessions.reduce(function(sum, r) { return sum + (r.duration_seconds || 0); }, 0);
+                // 格式化学习时长显示
+                let studyTimeDisplay = '-';
+                if (totalStudySeconds > 0) {
+                    const hours = Math.floor(totalStudySeconds / 3600);
+                    const mins = Math.floor((totalStudySeconds % 3600) / 60);
+                    const secs = totalStudySeconds % 60;
+                    if (hours > 0) {
+                        studyTimeDisplay = hours + '小时' + mins + '分钟';
+                    } else if (mins > 0) {
+                        studyTimeDisplay = mins + '分钟' + secs + '秒';
+                    } else {
+                        studyTimeDisplay = secs + '秒';
+                    }
+                }
                 
                 const passRate = studentRecords.length > 0 ? Math.round(passCount / studentRecords.length * 100) : 0;
                 let statusClass = 'badge-info';
@@ -1375,6 +1390,7 @@
                 html += '<td style="padding:12px; text-align:center;">' + studentRecords.length + '</td>';
                 html += '<td style="padding:12px; text-align:center;">' + passCount + '</td>';
                 html += '<td style="padding:12px; text-align:center;">' + (studentRecords.length > 0 ? passRate + '%' : '-') + '</td>';
+                html += '<td style="padding:12px; text-align:center; color:#667eea;">' + studyTimeDisplay + '</td>';
                 html += '<td style="padding:12px; text-align:center;"><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
                 html += '</tr>';
             }
