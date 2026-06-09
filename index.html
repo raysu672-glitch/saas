@@ -974,7 +974,7 @@
             const records = recordsResult.data || [];
             
             // 获取学习记录
-            const sessionsResult = await db.from('study_sessions').select('*').eq('student_id', currentStudent.student_id).eq('module_type', 'dictation');
+            const sessionsResult = await db.from('study_sessions').select('*').eq('student_id', currentStudent.student_id);
             const sessions = sessionsResult.data || [];
             
             // 获取错题数量
@@ -1012,6 +1012,10 @@
                 let statusClass = '';
                 let statusText = '';
                 
+                // 计算该模块的学习时长和状态
+                const modSessions = sessions.filter(function(s) { return s.module_type === m.id; });
+                const modSeconds = modSessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
+                
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
@@ -1019,13 +1023,20 @@
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
                         statusText = '达标';
-                    } else if (dictationSessions.length > 0 || totalStudySeconds > 0 || bestScore > 0) {
+                    } else if (modSessions.length > 0 || modSeconds > 0 || bestScore > 0) {
                         statusClass = 'badge-warning';
                         statusText = '进行中';
                     } else {
                         statusClass = 'badge-info';
                         statusText = '未开始';
                     }
+                } else if (modSessions.length > 0 || modSeconds > 0) {
+                    // 其他模块：有学习记录则显示"进行中"
+                    statusClass = 'badge-warning';
+                    statusText = '进行中';
+                } else {
+                    statusClass = 'badge-info';
+                    statusText = '未开始';
                 }
                 
                 const progressColor = progressPercent >= 100 ? '#28a745' : '#667eea';
@@ -1044,10 +1055,17 @@
                 html += '</td>';
                 // 学习时长列
                 let timeDisplay = '-';
-                if (m.id === 'dictation' && totalStudySeconds > 0) {
-                    const mins = Math.floor(totalStudySeconds / 60);
-                    const secs = totalStudySeconds % 60;
-                    timeDisplay = mins + ':' + (secs < 10 ? '0' : '') + secs;
+                const modTimeSeconds = modSeconds > 0 ? modSeconds : 
+                    (m.id === 'dictation' ? totalStudySeconds : 0);
+                if (modTimeSeconds > 0) {
+                    const tmin = Math.floor(modTimeSeconds / 60);
+                    const tsec = modTimeSeconds % 60;
+                    if (tmin > 60) {
+                        const thr = Math.floor(tmin / 60);
+                        timeDisplay = thr + '小时' + (tmin % 60) + '分';
+                    } else {
+                        timeDisplay = tmin + ':' + (tsec < 10 ? '0' : '') + tsec;
+                    }
                 }
                 html += '<td style="padding:15px 12px; text-align:center; color:#667eea;">' + timeDisplay + '</td>';
                 html += '<td style="padding:15px 12px; text-align:center;">';
@@ -1499,10 +1517,10 @@
                     moduleLearnTime = moduleHours > 0 ? moduleHours + '小时' + (moduleMinutes % 60) + '分钟' : (moduleMinutes > 0 ? moduleMinutes + '分钟' : moduleSeconds + '秒');
                 }
                 
+                const moduleTotalSeconds = moduleSessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
                 if (m.id === 'dictation') {
                     currentValue = bestScore;
                     progressPercent = Math.min(100, Math.round((bestScore / moduleTarget) * 100));
-                    const moduleTotalSeconds = moduleSessions.reduce(function(sum, s) { return sum + (s.duration_seconds || 0); }, 0);
                     // 只要开始学习（有学习记录或学习时长>0）就算"进行中"
                     if (bestScore >= moduleTarget) {
                         statusClass = 'badge-success';
@@ -1514,6 +1532,13 @@
                         statusClass = 'badge-info';
                         statusText = '未开始';
                     }
+                } else if (moduleSessions.length > 0 || moduleTotalSeconds > 0) {
+                    // 其他模块：有学习记录则显示"进行中"
+                    statusClass = 'badge-warning';
+                    statusText = '进行中';
+                } else {
+                    statusClass = 'badge-info';
+                    statusText = '未开始';
                 }
                 
                 const progressColor = progressPercent >= 100 ? '#28a745' : '#667eea';
