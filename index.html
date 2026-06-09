@@ -3022,137 +3022,26 @@
         // 打开任意配置了 url 的模块（通用 iframe）
         // 打开任意配置了 url 的模块（通用 iframe）- 带学习时长追踪
         function openGenericIframe(moduleId, moduleName, url) {
-            // 记录学习开始信息
+            // 记录学习开始信息（用于识别消息来源）
             window._currentModule = { id: moduleId, name: moduleName };
-            window._moduleStartTime = Date.now();
-            // 打开时立即写入一条初始记录（确保有记录）
-            if (currentStudent) {
-                try {
-                    db.from('study_sessions').insert({
-                        student_id: currentStudent.student_id,
-                        module_type: moduleId,
-                        words_tested: 0,
-                        initial_correct: 0,
-                        initial_wrong: 0,
-                        groups_completed: 0,
-                        duration_seconds: 1,
-                        created_at: new Date().toISOString()
-                    }).then(function(result) {
-                        console.log('[学习数据] 已写入初始记录: ' + moduleName);
-                    }).catch(function(err) {
-                        console.warn('[学习数据] 初始记录写入失败:', err.message || err);
-                    });
-                } catch(e) {
-                    console.warn('[学习数据] 初始记录写入异常:', e.message);
-                }
-            }
-            // 启动定时保存（每 30 秒保存一次当前时长）
-            if (window._genericSaveTimer) clearInterval(window._genericSaveTimer);
-            window._genericSaveTimer = setInterval(function() {
-                if (window._currentModule && currentStudent) {
-                    var dur = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                    if (dur >= 10) {
-                        try {
-                            db.from('study_sessions').insert({
-                                student_id: currentStudent.student_id,
-                                module_type: window._currentModule.id,
-                                words_tested: window._currentModule.words_tested || 0,
-                                initial_correct: window._currentModule.initial_correct || 0,
-                                initial_wrong: window._currentModule.initial_wrong || 0,
-                                groups_completed: window._currentModule.groups_completed || 0,
-                                duration_seconds: dur,
-                                created_at: new Date().toISOString()
-                            });
-                            console.log('[学习数据] 定时保存: ' + window._currentModule.name + ', ' + dur + '秒');
-                        } catch(e) {}
-                    }
-                }
-            }, 30000);
-            // 打开 iframe
+            // 打开 iframe（学习时长由 iframe 内部计时，通过 postMessage 回传）
             showScreen('genericScreen');
             document.getElementById('genericScreenTitle').textContent = '📘 ' + moduleName;
             document.getElementById('genericIframe').src = url;
         }
 
-        // 保存学习会话到数据库
-        async function saveGenericModuleSession(extras) {
-            if (!window._currentModule || !window._moduleStartTime) return;
-            if (!currentStudent) return;
-            try {
-                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                if (duration < 1) duration = 1;  // 至少记 1 秒
-                await db.from('study_sessions').insert({
-                    student_id: currentStudent.student_id,
-                    module_type: window._currentModule.id,
-                    words_tested: extras && extras.words_tested ? extras.words_tested : 0,
-                    initial_correct: extras && extras.initial_correct ? extras.initial_correct : 0,
-                    initial_wrong: extras && extras.initial_wrong ? extras.initial_wrong : 0,
-                    groups_completed: extras && extras.groups_completed ? extras.groups_completed : 0,
-                    duration_seconds: duration,
-                    created_at: new Date().toISOString()
-                });
-                console.log('[学习数据] 已保存: ' + window._currentModule.name + ', 时长 ' + duration + '秒, words_tested: ' + (extras && extras.words_tested ? extras.words_tested : 0));
-            } catch(e) {
-                console.warn('[学习数据] 保存失败:', e.message);
-            }
-        }
-
-        // 关闭 iframe 时保存学习时长
-        async function exitGenericIframe() {
-            // 先通知 iframe 保存数据（如果有）
+        // 关闭 iframe（学习数据由 iframe 通过 postMessage 发送）
+        function exitGenericIframe() {
             try {
                 var iframe = document.getElementById('genericIframe');
                 if (iframe && iframe.contentWindow) {
                     iframe.contentWindow.postMessage({ type: 'requestSave' }, '*');
                 }
             } catch(e) {}
-            await saveGenericModuleSession();
             window._currentModule = null;
-            window._moduleStartTime = null;
             showStudentHome();
             document.getElementById('genericIframe').src = '';
         }
-
-        // 离开页面/关闭浏览器时自动保存（同步方式确保能执行到写入操作）
-        window.addEventListener('beforeunload', function() {
-            if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
-            if (window._currentModule && currentStudent && window._moduleStartTime) {
-                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                if (duration < 1) duration = 1;
-                try {
-                    db.from('study_sessions').insert({
-                        student_id: currentStudent.student_id,
-                        module_type: window._currentModule.id,
-                        words_tested: window._currentModule.words_tested || 0,
-                        initial_correct: window._currentModule.initial_correct || 0,
-                        initial_wrong: window._currentModule.initial_wrong || 0,
-                        groups_completed: window._currentModule.groups_completed || 0,
-                        duration_seconds: duration,
-                        created_at: new Date().toISOString()
-                    });
-                    console.log('[学习数据] 关闭页面保存: ' + window._currentModule.name + ', ' + duration + '秒');
-                } catch(e) {}
-            }
-        });
-        window.addEventListener('pagehide', function() {
-            if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
-            if (window._currentModule && currentStudent && window._moduleStartTime) {
-                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                if (duration < 1) duration = 1;
-                try {
-                    db.from('study_sessions').insert({
-                        student_id: currentStudent.student_id,
-                        module_type: window._currentModule.id,
-                        words_tested: window._currentModule.words_tested || 0,
-                        initial_correct: window._currentModule.initial_correct || 0,
-                        initial_wrong: window._currentModule.initial_wrong || 0,
-                        groups_completed: window._currentModule.groups_completed || 0,
-                        duration_seconds: duration,
-                        created_at: new Date().toISOString()
-                    });
-                } catch(e) {}
-            }
-        });
 
 
         
