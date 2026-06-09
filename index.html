@@ -3025,6 +3025,49 @@
             // 记录学习开始信息
             window._currentModule = { id: moduleId, name: moduleName };
             window._moduleStartTime = Date.now();
+            // 打开时立即写入一条初始记录（确保有记录）
+            if (window.currentStudent) {
+                try {
+                    db.from('study_sessions').insert({
+                        student_id: window.currentStudent.student_id,
+                        module_type: moduleId,
+                        words_tested: 0,
+                        initial_correct: 0,
+                        initial_wrong: 0,
+                        groups_completed: 0,
+                        duration_seconds: 1,
+                        created_at: new Date().toISOString()
+                    }).then(function(result) {
+                        console.log('[学习数据] 已写入初始记录: ' + moduleName);
+                    }).catch(function(err) {
+                        console.warn('[学习数据] 初始记录写入失败:', err.message || err);
+                    });
+                } catch(e) {
+                    console.warn('[学习数据] 初始记录写入异常:', e.message);
+                }
+            }
+            // 启动定时保存（每 30 秒保存一次当前时长）
+            if (window._genericSaveTimer) clearInterval(window._genericSaveTimer);
+            window._genericSaveTimer = setInterval(function() {
+                if (window._currentModule && window.currentStudent) {
+                    var dur = Math.round((Date.now() - window._moduleStartTime) / 1000);
+                    if (dur >= 10) {
+                        try {
+                            db.from('study_sessions').insert({
+                                student_id: window.currentStudent.student_id,
+                                module_type: window._currentModule.id,
+                                words_tested: window._currentModule.words_tested || 0,
+                                initial_correct: window._currentModule.initial_correct || 0,
+                                initial_wrong: window._currentModule.initial_wrong || 0,
+                                groups_completed: window._currentModule.groups_completed || 0,
+                                duration_seconds: dur,
+                                created_at: new Date().toISOString()
+                            });
+                            console.log('[学习数据] 定时保存: ' + window._currentModule.name + ', ' + dur + '秒');
+                        } catch(e) {}
+                    }
+                }
+            }, 30000);
             // 打开 iframe
             showScreen('genericScreen');
             document.getElementById('genericScreenTitle').textContent = '📘 ' + moduleName;
@@ -3037,7 +3080,7 @@
             if (!window.currentStudent) return;
             try {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                if (duration < 5 && (!extras || !extras.words_tested)) return;  // 太短不计
+                if (duration < 1) duration = 1;  // 至少记 1 秒
                 await db.from('study_sessions').insert({
                     student_id: window.currentStudent.student_id,
                     module_type: window._currentModule.id,
@@ -3070,9 +3113,46 @@
             document.getElementById('genericIframe').src = '';
         }
 
-        // 离开页面/关闭浏览器时自动保存
-        window.addEventListener('beforeunload', function() { saveGenericModuleSession(); });
-        window.addEventListener('pagehide', function() { saveGenericModuleSession(); });
+        // 离开页面/关闭浏览器时自动保存（同步方式确保能执行到写入操作）
+        window.addEventListener('beforeunload', function() {
+            if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
+            if (window._currentModule && window.currentStudent && window._moduleStartTime) {
+                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
+                if (duration < 1) duration = 1;
+                try {
+                    db.from('study_sessions').insert({
+                        student_id: window.currentStudent.student_id,
+                        module_type: window._currentModule.id,
+                        words_tested: window._currentModule.words_tested || 0,
+                        initial_correct: window._currentModule.initial_correct || 0,
+                        initial_wrong: window._currentModule.initial_wrong || 0,
+                        groups_completed: window._currentModule.groups_completed || 0,
+                        duration_seconds: duration,
+                        created_at: new Date().toISOString()
+                    });
+                    console.log('[学习数据] 关闭页面保存: ' + window._currentModule.name + ', ' + duration + '秒');
+                } catch(e) {}
+            }
+        });
+        window.addEventListener('pagehide', function() {
+            if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
+            if (window._currentModule && window.currentStudent && window._moduleStartTime) {
+                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
+                if (duration < 1) duration = 1;
+                try {
+                    db.from('study_sessions').insert({
+                        student_id: window.currentStudent.student_id,
+                        module_type: window._currentModule.id,
+                        words_tested: window._currentModule.words_tested || 0,
+                        initial_correct: window._currentModule.initial_correct || 0,
+                        initial_wrong: window._currentModule.initial_wrong || 0,
+                        groups_completed: window._currentModule.groups_completed || 0,
+                        duration_seconds: duration,
+                        created_at: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+        });
 
 
         
