@@ -3026,10 +3026,10 @@
             window._currentModule = { id: moduleId, name: moduleName };
             window._moduleStartTime = Date.now();
             // 打开时立即写入一条初始记录（确保有记录）
-            if (window.currentStudent) {
+            if (currentStudent) {
                 try {
                     db.from('study_sessions').insert({
-                        student_id: window.currentStudent.student_id,
+                        student_id: currentStudent.student_id,
                         module_type: moduleId,
                         words_tested: 0,
                         initial_correct: 0,
@@ -3049,12 +3049,12 @@
             // 启动定时保存（每 30 秒保存一次当前时长）
             if (window._genericSaveTimer) clearInterval(window._genericSaveTimer);
             window._genericSaveTimer = setInterval(function() {
-                if (window._currentModule && window.currentStudent) {
+                if (window._currentModule && currentStudent) {
                     var dur = Math.round((Date.now() - window._moduleStartTime) / 1000);
                     if (dur >= 10) {
                         try {
                             db.from('study_sessions').insert({
-                                student_id: window.currentStudent.student_id,
+                                student_id: currentStudent.student_id,
                                 module_type: window._currentModule.id,
                                 words_tested: window._currentModule.words_tested || 0,
                                 initial_correct: window._currentModule.initial_correct || 0,
@@ -3077,12 +3077,12 @@
         // 保存学习会话到数据库
         async function saveGenericModuleSession(extras) {
             if (!window._currentModule || !window._moduleStartTime) return;
-            if (!window.currentStudent) return;
+            if (!currentStudent) return;
             try {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
                 if (duration < 1) duration = 1;  // 至少记 1 秒
                 await db.from('study_sessions').insert({
-                    student_id: window.currentStudent.student_id,
+                    student_id: currentStudent.student_id,
                     module_type: window._currentModule.id,
                     words_tested: extras && extras.words_tested ? extras.words_tested : 0,
                     initial_correct: extras && extras.initial_correct ? extras.initial_correct : 0,
@@ -3116,12 +3116,12 @@
         // 离开页面/关闭浏览器时自动保存（同步方式确保能执行到写入操作）
         window.addEventListener('beforeunload', function() {
             if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
-            if (window._currentModule && window.currentStudent && window._moduleStartTime) {
+            if (window._currentModule && currentStudent && window._moduleStartTime) {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
                 if (duration < 1) duration = 1;
                 try {
                     db.from('study_sessions').insert({
-                        student_id: window.currentStudent.student_id,
+                        student_id: currentStudent.student_id,
                         module_type: window._currentModule.id,
                         words_tested: window._currentModule.words_tested || 0,
                         initial_correct: window._currentModule.initial_correct || 0,
@@ -3136,12 +3136,12 @@
         });
         window.addEventListener('pagehide', function() {
             if (window._genericSaveTimer) { clearInterval(window._genericSaveTimer); window._genericSaveTimer = null; }
-            if (window._currentModule && window.currentStudent && window._moduleStartTime) {
+            if (window._currentModule && currentStudent && window._moduleStartTime) {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
                 if (duration < 1) duration = 1;
                 try {
                     db.from('study_sessions').insert({
-                        student_id: window.currentStudent.student_id,
+                        student_id: currentStudent.student_id,
                         module_type: window._currentModule.id,
                         words_tested: window._currentModule.words_tested || 0,
                         initial_correct: window._currentModule.initial_correct || 0,
@@ -3162,7 +3162,7 @@
             if (!data || !data.type) return;
             if (data.type === 'genericStudyComplete') {
                 console.log('收到同义替换学习记录:', data);
-                var studentId = window.currentStudent ? window.currentStudent.student_id : null;
+                var studentId = currentStudent ? currentStudent.student_id : null;
                 var modType = window._currentModule ? window._currentModule.id : 'reading_synonym';
                 if (!studentId) {
                     console.error('无法获取学生ID');
