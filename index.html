@@ -2995,16 +2995,53 @@
         }
 
         // 打开任意配置了 url 的模块（通用 iframe）
+        // 打开任意配置了 url 的模块（通用 iframe）- 带学习时长追踪
         function openGenericIframe(moduleId, moduleName, url) {
+            // 记录学习开始信息
+            window._currentModule = { id: moduleId, name: moduleName };
+            window._moduleStartTime = Date.now();
+            // 打开 iframe
             showScreen('genericScreen');
             document.getElementById('genericScreenTitle').textContent = '📘 ' + moduleName;
             document.getElementById('genericIframe').src = url;
         }
 
+        // 保存学习会话到数据库
+        async function saveGenericModuleSession(extras) {
+            if (!window._currentModule || !window._moduleStartTime) return;
+            if (!window.currentStudent) return;
+            try {
+                var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
+                if (duration < 5 && (!extras || !extras.correct_count)) return;  // 太短不计
+                await db.from('learning_sessions').insert({
+                    student_id: window.currentStudent.student_id,
+                    module_type: window._currentModule.id,
+                    module_name: window._currentModule.name,
+                    duration_seconds: duration,
+                    correct_count: extras && extras.correct_count ? extras.correct_count : 0,
+                    total_count: extras && extras.total_count ? extras.total_count : 0,
+                    score: extras && extras.score ? extras.score : null,
+                    details: extras || {}
+                });
+                console.log('[学习数据] 已保存: ' + window._currentModule.name + ', 时长 ' + duration + '秒');
+            } catch(e) {
+                console.warn('[学习数据] 保存失败:', e.message);
+            }
+        }
+
+        // 关闭 iframe 时保存学习时长
         function exitGenericIframe() {
+            saveGenericModuleSession();
+            window._currentModule = null;
+            window._moduleStartTime = null;
             showStudentHome();
             document.getElementById('genericIframe').src = '';
         }
+
+        // 离开页面/关闭浏览器时自动保存
+        window.addEventListener('beforeunload', function() { saveGenericModuleSession(); });
+        window.addEventListener('pagehide', function() { saveGenericModuleSession(); });
+
 
         
         // 监听 iframe 发来的学习时长消息
