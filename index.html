@@ -3037,26 +3037,33 @@
             if (!window.currentStudent) return;
             try {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
-                if (duration < 5 && (!extras || !extras.correct_count)) return;  // 太短不计
+                if (duration < 5 && (!extras || !extras.words_tested)) return;  // 太短不计
                 await db.from('study_sessions').insert({
                     student_id: window.currentStudent.student_id,
                     module_type: window._currentModule.id,
-                    module_name: window._currentModule.name,
+                    words_tested: extras && extras.words_tested ? extras.words_tested : 0,
+                    initial_correct: extras && extras.initial_correct ? extras.initial_correct : 0,
+                    initial_wrong: extras && extras.initial_wrong ? extras.initial_wrong : 0,
+                    groups_completed: extras && extras.groups_completed ? extras.groups_completed : 0,
                     duration_seconds: duration,
-                    correct_count: extras && extras.correct_count ? extras.correct_count : 0,
-                    total_count: extras && extras.total_count ? extras.total_count : 0,
-                    score: extras && extras.score ? extras.score : null,
-                    details: extras || {}
+                    created_at: new Date().toISOString()
                 });
-                console.log('[学习数据] 已保存: ' + window._currentModule.name + ', 时长 ' + duration + '秒');
+                console.log('[学习数据] 已保存: ' + window._currentModule.name + ', 时长 ' + duration + '秒, words_tested: ' + (extras && extras.words_tested ? extras.words_tested : 0));
             } catch(e) {
                 console.warn('[学习数据] 保存失败:', e.message);
             }
         }
 
         // 关闭 iframe 时保存学习时长
-        function exitGenericIframe() {
-            saveGenericModuleSession();
+        async function exitGenericIframe() {
+            // 先通知 iframe 保存数据（如果有）
+            try {
+                var iframe = document.getElementById('genericIframe');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'requestSave' }, '*');
+                }
+            } catch(e) {}
+            await saveGenericModuleSession();
             window._currentModule = null;
             window._moduleStartTime = null;
             showStudentHome();
@@ -3069,6 +3076,30 @@
 
 
         
+        // 监听通用 iframe 发来的学习进度消息
+        window.addEventListener('message', function(event) {
+            if (!event.data || !event.data.type) return;
+            // 通用模块学习进度（同义替换等）
+            if (event.data.type === 'genericModuleProgress' || event.data.type === 'genericStudyComplete') {
+                if (!window.currentStudent || !window._currentModule) return;
+                var data = event.data;
+                // 更新当前模块的统计数据（用于最终保存）
+                window._currentModule.words_tested = data.wordsTested || 0;
+                window._currentModule.initial_correct = data.initialCorrect || 0;
+                window._currentModule.initial_wrong = data.initialWrong || 0;
+                window._currentModule.groups_completed = data.completedGroups || 0;
+                if (event.data.type === 'genericStudyComplete') {
+                    console.log('收到通用模块学习完成消息:', data);
+                    saveGenericModuleSession({
+                        words_tested: data.wordsTested || 0,
+                        initial_correct: data.initialCorrect || 0,
+                        initial_wrong: data.initialWrong || 0,
+                        groups_completed: data.completedGroups || 0
+                    });
+                }
+            }
+        });
+
         // 监听 iframe 发来的学习时长消息
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'phraseStudyComplete') {
