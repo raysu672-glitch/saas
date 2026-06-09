@@ -361,6 +361,15 @@
             </div>
         </div>
         
+        
+        <!-- 通用外部模块学习界面（iframe 嵌入，用于所有配置了 url 的模块） -->
+        <div class="card screen" id="genericScreen" style="padding:0; overflow:hidden;">
+            <div class="admin-header" style="padding:15px 20px;">
+                <h2 id="genericScreenTitle">📘 外部模块学习</h2>
+                <button class="btn btn-secondary btn-sm" onclick="exitGenericIframe()">返回</button>
+            </div>
+            <iframe id="genericIframe" src="" style="width:100%; height:calc(100vh - 120px); border:none;" allow="autoplay"></iframe>
+        </div>
         <!-- 写作词伙学习界面（iframe 嵌入完整功能） -->
         <div class="card screen" id="phraseScreen" style="padding:0; overflow:hidden;">
             <div class="admin-header" style="padding:15px 20px;">
@@ -917,15 +926,15 @@
             { id: 'highschool_words', name: '高中单词', target_type: 'dynamic', targets: { 6: 85, 6.5: 95, 7: 100 }, unit: '%', url: '', icon: 'book' },
             { id: 'ielts_core', name: '雅思核心800词', target_type: 'dynamic', targets: { 6: 65, 6.5: 80, 7: 95 }, unit: '%', url: '', icon: 'star' },
             { id: 'grammar', name: '基础语法', target_type: 'dynamic', targets: { 6: 75, 6.5: 85, 7: 85 }, unit: '%', url: '', icon: 'academic' },
-            { id: 'reading_synonym', name: '阅读同义替换', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'eye' },
+            { id: 'reading_synonym', name: '阅读同义替换', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: 'https://raysu672-glitch.github.io/tongyitihuan/', icon: 'eye' },
             { id: 'sentence', name: '长难句分析', target_type: 'dynamic', targets: { 6: 60, 6.5: 80, 7: 80 }, unit: '%', url: '', icon: 'analysis' },
             { id: 'dictation', name: '听力1000词', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'headphones' },
             { id: 'listening_synonym', name: '听力同义替换', target_type: 'dynamic', targets: { 6: 70, 6.5: 80, 7: 90 }, unit: '%', url: '', icon: 'headphones' },
             { id: 'writing_phrase', name: '写作词伙', target_type: 'dynamic', targets: { 6: 50, 6.5: 70, 7: 90 }, unit: '%', url: '', icon: 'writing' },
-            { id: 'writing_translate', name: '写作句子翻译', target_type: 'dynamic', targets: { 6: 50, 6.5: 70, 7: 90 }, unit: '%', url: '', icon: 'translate' },
+            { id: 'writing_translate', name: '写作句子翻译', target_type: 'dynamic', targets: { 6: 50, 6.5: 70, 7: 90 }, unit: '%', url: 'https://raysu672-glitch.github.io/juzifanyi1/', icon: 'translate' },
             
             // 二、音频倍速（听力P4跟读）- 特殊处理，显示为文本
-            { id: 'listening_p4_speed', name: '听力P4跟读倍速', target_type: 'dynamic', targets: { 6: 0.75, 6.5: 1, 7: 1 }, unit: '倍', url: '', icon: 'mic' },
+            { id: 'listening_p4_speed', name: '听力P4跟读倍速', target_type: 'dynamic', targets: { 6: 0.75, 6.5: 1, 7: 1 }, unit: '倍', url: 'https://raysu672-glitch.github.io/P4gendu/', icon: 'mic' },
             
             // 三、每项需要答对个数
             { id: 'reading_p1', name: '第一篇阅读', target_type: 'dynamic', targets: { 6: 9, 6.5: 11, 7: 12 }, unit: '个', url: '', icon: 'eye' },
@@ -1056,8 +1065,8 @@
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else if (m.url) {
                     // 有外部链接
-                    html += '<a href="' + m.url + '" target="_blank" style="margin-right:5px;"><button class="btn btn-sm">测试</button></a>';
-                    html += '<a href="' + m.url + '" target="_blank" style="margin-right:5px;"><button class="btn btn-sm btn-secondary">学习</button></a>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openGenericIframe(\'' + m.id + '\', \'' + m.name + '\', \'' + m.url + '\')">测试</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openGenericIframe(\'' + m.id + '\', \'' + m.name + '\', \'' + m.url + '\')">学习</button>';
                     html += '<button class="btn btn-sm btn-success" onclick="alert(\'该模块历史记录功能开发中...\')">历史</button>';
                 } else {
                     // 无链接 - 显示开发中
@@ -2984,6 +2993,19 @@
             showScreen('phraseScreen');
             document.getElementById('phraseIframe').src = 'https://raysu672-glitch.github.io/xiezuocihuo/';
         }
+
+        // 打开任意配置了 url 的模块（通用 iframe）
+        function openGenericIframe(moduleId, moduleName, url) {
+            showScreen('genericScreen');
+            document.getElementById('genericScreenTitle').textContent = '📘 ' + moduleName;
+            document.getElementById('genericIframe').src = url;
+        }
+
+        function exitGenericIframe() {
+            showStudentHome();
+            document.getElementById('genericIframe').src = '';
+        }
+
         
         // 监听 iframe 发来的学习时长消息
         window.addEventListener('message', function(event) {
