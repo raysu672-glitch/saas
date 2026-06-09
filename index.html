@@ -3013,7 +3013,7 @@
             try {
                 var duration = Math.round((Date.now() - window._moduleStartTime) / 1000);
                 if (duration < 5 && (!extras || !extras.correct_count)) return;  // 太短不计
-                await db.from('learning_sessions').insert({
+                await db.from('study_sessions').insert({
                     student_id: window.currentStudent.student_id,
                     module_type: window._currentModule.id,
                     module_name: window._currentModule.name,
