@@ -3156,26 +3156,40 @@
 
 
         
-        // 监听通用 iframe 发来的学习进度消息
+        // 监听通用 iframe 发来的学习进度消息（同义替换等）
         window.addEventListener('message', function(event) {
-            if (!event.data || !event.data.type) return;
-            // 通用模块学习进度（同义替换等）
-            if (event.data.type === 'genericModuleProgress' || event.data.type === 'genericStudyComplete') {
-                if (!window.currentStudent || !window._currentModule) return;
-                var data = event.data;
-                // 更新当前模块的统计数据（用于最终保存）
-                window._currentModule.words_tested = data.wordsTested || 0;
-                window._currentModule.initial_correct = data.initialCorrect || 0;
-                window._currentModule.initial_wrong = data.initialWrong || 0;
-                window._currentModule.groups_completed = data.completedGroups || 0;
-                if (event.data.type === 'genericStudyComplete') {
-                    console.log('收到通用模块学习完成消息:', data);
-                    saveGenericModuleSession({
+            var data = event.data;
+            if (!data || !data.type) return;
+            if (data.type === 'genericStudyComplete') {
+                console.log('收到同义替换学习记录:', data);
+                var studentId = window.currentStudent ? window.currentStudent.student_id : null;
+                var modType = window._currentModule ? window._currentModule.id : 'reading_synonym';
+                if (!studentId) {
+                    console.error('无法获取学生ID');
+                    return;
+                }
+                try {
+                    db.from('study_sessions').insert({
+                        student_id: studentId,
+                        module_type: modType,
                         words_tested: data.wordsTested || 0,
                         initial_correct: data.initialCorrect || 0,
                         initial_wrong: data.initialWrong || 0,
-                        groups_completed: data.completedGroups || 0
+                        groups_completed: data.completedGroups || 0,
+                        duration_seconds: data.durationSeconds,
+                        created_at: new Date().toISOString()
+                    }).then(function(result) {
+                        if (result && result.error) {
+                            console.error('写入同义替换学习记录失败:', result.error);
+                        } else {
+                            console.log('同义替换学习记录已保存, ' + data.durationSeconds + '秒');
+                            loadProgressTable();
+                        }
+                    }).catch(function(err) {
+                        console.error('写入同义替换学习记录异常:', err);
                     });
+                } catch(e) {
+                    console.error('写入同义替换学习记录异常:', e);
                 }
             }
         });
