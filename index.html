@@ -1443,10 +1443,17 @@
                 html += '<tr style="border-bottom:1px solid #dee2e6; cursor:pointer;" onclick="showStudentDetailProgress(\'' + s.student_id + '\', \'' + s.name + '\')">';
                 html += '<td style="padding:12px;">' + s.student_id + '</td>';
                 html += '<td style="padding:12px;"><strong style="color:#667eea; text-decoration:underline;">' + s.name + '</strong></td>';
-                html += '<td style="padding:12px; text-align:center;">' + (bestScore > 0 ? bestScore + '%' : '-') + '</td>';
-                html += '<td style="padding:12px; text-align:center;">' + studentRecords.length + '</td>';
-                html += '<td style="padding:12px; text-align:center;">' + passCount + '</td>';
-                html += '<td style="padding:12px; text-align:center;">' + (studentRecords.length > 0 ? passRate + '%' : '-') + '</td>';
+                if (moduleId === 'dictation') {
+                    html += '<td style="padding:12px; text-align:center;">' + (bestScore > 0 ? bestScore + '%' : '-') + '</td>';
+                    html += '<td style="padding:12px; text-align:center;">' + studentRecords.length + '</td>';
+                    html += '<td style="padding:12px; text-align:center;">' + passCount + '</td>';
+                    html += '<td style="padding:12px; text-align:center;">' + (studentRecords.length > 0 ? passRate + '%' : '-') + '</td>';
+                } else {
+                    html += '<td style="padding:12px; text-align:center;">-</td>';
+                    html += '<td style="padding:12px; text-align:center;">-</td>';
+                    html += '<td style="padding:12px; text-align:center;">-</td>';
+                    html += '<td style="padding:12px; text-align:center;">-</td>';
+                }
                 html += '<td style="padding:12px; text-align:center; color:#667eea;">' + studyTimeDisplay + '</td>';
                 html += '<td style="padding:12px; text-align:center;"><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
                 html += '</tr>';
@@ -1455,17 +1462,32 @@
             html += '</tbody></table>';
             
             // 统计概览
-            const passStudents = students.filter(function(s) {
-                const records = allRecords.filter(function(r) { return r.student_id === s.student_id; });
-                return records.some(function(r) { return r.is_passed; });
-            }).length;
-            
-            html += '<div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">';
-            html += '<strong>统计概览：</strong> 总学生 ' + students.length + ' 人 | ';
-            html += '已完成测试 ' + allRecords.length + ' 次 | ';
-            html += '达标学生 ' + passStudents + ' 人 | ';
-            html += '班级达标率 ' + (students.length > 0 ? Math.round(passStudents / students.length * 100) : 0) + '%';
-            html += '</div>';
+            if (moduleId === 'dictation') {
+                const passStudents = students.filter(function(s) {
+                    const records = allRecords.filter(function(r) { return r.student_id === s.student_id; });
+                    return records.some(function(r) { return r.is_passed; });
+                }).length;
+                html += '<div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">';
+                html += '<strong>统计概览：</strong> 总学生 ' + students.length + ' 人 | ';
+                html += '已完成测试 ' + allRecords.length + ' 次 | ';
+                html += '达标学生 ' + passStudents + ' 人 | ';
+                html += '班级达标率 ' + (students.length > 0 ? Math.round(passStudents / students.length * 100) : 0) + '%';
+                html += '</div>';
+            } else {
+                // 非听力模块：只统计学习时长
+                const activeStudents = students.filter(function(s) {
+                    const sessions = allStudySessions.filter(function(r) { return r.student_id === s.student_id; });
+                    return sessions.length > 0;
+                }).length;
+                const totalSeconds = allStudySessions.reduce(function(sum, r) { return sum + (r.duration_seconds || 0); }, 0);
+                const totalHours = Math.floor(totalSeconds / 3600);
+                const totalMins = Math.floor((totalSeconds % 3600) / 60);
+                html += '<div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">';
+                html += '<strong>统计概览：</strong> 总学生 ' + students.length + ' 人 | ';
+                html += '已学习 ' + activeStudents + ' 人 | ';
+                html += '总学习时长 ' + (totalHours > 0 ? totalHours + '小时' : '') + totalMins + '分钟';
+                html += '</div>';
+            }
             
             container.innerHTML = html;
         }
