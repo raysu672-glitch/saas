@@ -209,11 +209,14 @@
                             <option value="writing_phrase">写作词伙</option>
                         </select>
                     </div>
-                    <div class="input-group" style="max-width:250px;">
-                        <label>选择学生查看进度</label>
-                        <select id="teacherFilterStudent" onchange="loadTeacherStudentProgress()">
-                            <option value="">全部学生</option>
-                        </select>
+                    <div class="input-group" style="max-width:350px;">
+                        <label>搜索学生（支持学号/姓名模糊搜索）</label>
+                        <input type="text" id="teacherFilterStudent" placeholder="输入学号或姓名搜索，留空显示全部学生" onkeyup="handleTeacherStudentSearch(event)" oninput="showStudentSearchList()">
+                        <div id="studentSearchList" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ddd; border-radius:5px; max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+                        <div style="margin-top:8px; display:flex; gap:10px; align-items:center;">
+                            <span id="teacherFilterSelected" style="font-size:12px; color:#667eea;"></span>
+                            <a href="#" onclick="clearStudentFilter(event)" style="font-size:12px; color:#999; text-decoration:none; display:none;" id="teacherClearFilter">清除筛选</a>
+                        </div>
                     </div>
                 </div>
                 <div id="teacherStudentProgress"></div>
@@ -1345,20 +1348,88 @@
             container.innerHTML = html;
         }
         
+        let _teacherStudents = [];  // 学生搜索的全局数据
+
         async function loadTeacherProgressData() {
-            // 加载学生列表到下拉框
+            // 加载学生列表到全局变量（供模糊搜索使用）
             const studentsResult = await db.from('students').select('*').order('name');
             const students = studentsResult.data || [];
+            _teacherStudents = students;
             
-            const select = document.getElementById('teacherFilterStudent');
-            let optionsHtml = '<option value="">全部学生</option>';
-            for (let i = 0; i < students.length; i++) {
-                optionsHtml += '<option value="' + students[i].student_id + '">' + students[i].name + ' (' + students[i].student_id + ')</option>';
-            }
-            select.innerHTML = optionsHtml;
+            document.getElementById('teacherFilterStudent').value = '';
+            document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + students.length + ' 人)';
+            document.getElementById('teacherClearFilter').style.display = 'none';
             
             // 默认显示全部学生汇总
             renderTeacherProgressSummary(students);
+        }
+
+        function showStudentSearchList() {
+            const keyword = document.getElementById('teacherFilterStudent').value.trim();
+            const list = document.getElementById('studentSearchList');
+            if (!keyword) {
+                list.style.display = 'none';
+                return;
+            }
+            const lowerKw = keyword.toLowerCase();
+            const matches = _teacherStudents.filter(function(s) {
+                return s.student_id.toLowerCase().includes(lowerKw) || s.name.toLowerCase().includes(lowerKw);
+            });
+            if (matches.length === 0) {
+                list.innerHTML = '<div style="padding:10px; text-align:center; color:#999;">没有匹配的学生</div>';
+            } else {
+                let html = '';
+                for (let i = 0; i < matches.length; i++) {
+                    html += '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee;" onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'white\'" onclick="selectTeacherStudent('' + matches[i].student_id + '', '' + matches[i].name + '')">';
+                    html += '<strong>' + matches[i].name + '</strong> (' + matches[i].student_id + ')';
+                    html += '</div>';
+                }
+                list.innerHTML = html;
+            }
+            list.style.display = 'block';
+        }
+
+        function selectTeacherStudent(studentId, name) {
+            document.getElementById('teacherFilterStudent').value = studentId;
+            document.getElementById('studentSearchList').style.display = 'none';
+            document.getElementById('teacherFilterSelected').textContent = '已选择：' + name + ' (' + studentId + ')';
+            document.getElementById('teacherClearFilter').style.display = 'inline-block';
+            loadTeacherStudentProgress();
+        }
+
+        function handleTeacherStudentSearch(event) {
+            if (event.key === 'Enter') {
+                const keyword = document.getElementById('teacherFilterStudent').value.trim();
+                const list = document.getElementById('studentSearchList');
+                if (!keyword) {
+                    list.style.display = 'none';
+                    document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + _teacherStudents.length + ' 人)';
+                    document.getElementById('teacherClearFilter').style.display = 'none';
+                    loadTeacherStudentProgress();
+                } else {
+                    // 自动选择第一个匹配项（回车=快速搜索）
+                    const lowerKw = keyword.toLowerCase();
+                    const matches = _teacherStudents.filter(function(s) {
+                        return s.student_id.toLowerCase().includes(lowerKw) || s.name.toLowerCase().includes(lowerKw);
+                    });
+                    if (matches.length > 0) {
+                        selectTeacherStudent(matches[0].student_id, matches[0].name);
+                    } else {
+                        list.style.display = 'none';
+                    }
+                }
+            } else if (event.key === 'Escape') {
+                document.getElementById('studentSearchList').style.display = 'none';
+            }
+        }
+
+        function clearStudentFilter(event) {
+            if (event) event.preventDefault();
+            document.getElementById('teacherFilterStudent').value = '';
+            document.getElementById('studentSearchList').style.display = 'none';
+            document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + _teacherStudents.length + ' 人)';
+            document.getElementById('teacherClearFilter').style.display = 'none';
+            loadTeacherStudentProgress();
         }
         
         async function renderTeacherProgressSummary(students) {
@@ -1633,12 +1704,17 @@
         }
         
         async function loadTeacherStudentProgress() {
-            const selectedId = document.getElementById('teacherFilterStudent').value;
-            const studentsResult = await db.from('students').select('*').order('name');
-            let students = studentsResult.data || [];
+            const keyword = document.getElementById('teacherFilterStudent').value.trim();
+            let students = _teacherStudents.slice();
             
-            if (selectedId) {
-                students = students.filter(function(s) { return s.student_id === selectedId; });
+            if (keyword) {
+                // 支持模糊搜索：学号完全匹配或学号/姓名包含
+                const lowerKw = keyword.toLowerCase();
+                students = students.filter(function(s) {
+                    return s.student_id.toLowerCase() === lowerKw ||
+                           s.student_id.toLowerCase().includes(lowerKw) ||
+                           s.name.toLowerCase().includes(lowerKw);
+                });
             }
             
             renderTeacherProgressSummary(students);
