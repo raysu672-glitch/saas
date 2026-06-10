@@ -1369,8 +1369,8 @@
             const module = MODULES.find(m => m.id === moduleId);
             const moduleName = module ? module.name : '听力1000词';
             
-            // 获取所有学生的测试记录（按模块过滤）
-            const recordsResult = await db.from('test_records').select('*').eq('module_type', moduleId);
+            // 获取所有学生的测试记录（test_records表只有听力测试，无module_type列）
+            const recordsResult = await db.from('test_records').select('*');
             const allRecords = recordsResult.data || [];
             
             // 获取所有学生的学习时长记录（按模块过滤）
@@ -1422,13 +1422,22 @@
                 const passRate = studentRecords.length > 0 ? Math.round(passCount / studentRecords.length * 100) : 0;
                 let statusClass = 'badge-info';
                 let statusText = '未开始';
-                // 只要开始学习（有学习记录或学习时长>0）就算"进行中"
-                if (bestScore >= 80) {
-                    statusClass = 'badge-success';
-                    statusText = '已达标';
-                } else if (studentStudySessions.length > 0 || totalStudySeconds > 0 || bestScore > 0) {
-                    statusClass = 'badge-warning';
-                    statusText = '进行中';
+                // 听力1000词用测试成绩判断，其他模块用学习时长判断
+                if (moduleId === 'dictation') {
+                    // 听力模块：通过测试成绩判断
+                    if (bestScore >= 80) {
+                        statusClass = 'badge-success';
+                        statusText = '已达标';
+                    } else if (studentRecords.length > 0 || bestScore > 0) {
+                        statusClass = 'badge-warning';
+                        statusText = '进行中';
+                    }
+                } else {
+                    // 其他模块：通过学习时长判断
+                    if (totalStudySeconds > 0) {
+                        statusClass = 'badge-warning';
+                        statusText = '进行中';
+                    }
                 }
                 
                 html += '<tr style="border-bottom:1px solid #dee2e6; cursor:pointer;" onclick="showStudentDetailProgress(\'' + s.student_id + '\', \'' + s.name + '\')">';
