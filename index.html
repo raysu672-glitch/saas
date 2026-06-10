@@ -3224,10 +3224,13 @@
         function openGenericIframe(moduleId, moduleName, url) {
             // 记录学习开始信息（用于识别消息来源）
             window._currentModule = { id: moduleId, name: moduleName };
+            // 在 iframe URL 中附加 student_id 参数，便于子模块获取
+            var studentIdPart = currentStudent && currentStudent.student_id ? '?student_id=' + encodeURIComponent(currentStudent.student_id) : '';
+            var finalUrl = url + studentIdPart;
             // 打开 iframe（学习时长由 iframe 内部计时，通过 postMessage 回传）
             showScreen('genericScreen');
             document.getElementById('genericScreenTitle').textContent = '📘 ' + moduleName;
-            document.getElementById('genericIframe').src = url;
+            document.getElementById('genericIframe').src = finalUrl;
         }
 
         // 关闭 iframe（学习数据由 iframe 通过 postMessage 发送）
@@ -3250,35 +3253,41 @@
             var data = event.data;
             if (!data || !data.type) return;
             if (data.type === 'genericStudyComplete') {
-                console.log('收到同义替换学习记录:', data);
-                var studentId = currentStudent ? currentStudent.student_id : null;
-                var modType = window._currentModule ? window._currentModule.id : 'reading_synonym';
+                console.log('收到学习记录:', data);
+                var studentId = data.student_id || (currentStudent ? currentStudent.student_id : null);
+                var modType = (window._currentModule ? window._currentModule.id : data.moduleType) || 'reading_synonym';
+                var modName = (window._currentModule ? window._currentModule.name : data.moduleName) || '阅读同义替换';
                 if (!studentId) {
                     console.error('无法获取学生ID');
+                    return;
+                }
+                if (!db) {
+                    console.error('数据库连接失败');
                     return;
                 }
                 try {
                     db.from('study_sessions').insert({
                         student_id: studentId,
                         module_type: modType,
-                        words_tested: data.wordsTested || 0,
-                        initial_correct: data.initialCorrect || 0,
-                        initial_wrong: data.initialWrong || 0,
+                        module_name: modName,
+                        words_tested: data.totalCount || data.wordsTested || 0,
+                        initial_correct: data.rightCount || data.initialCorrect || 0,
+                        initial_wrong: data.wrongCount || data.initialWrong || 0,
                         groups_completed: data.completedGroups || 0,
                         duration_seconds: data.durationSeconds,
                         created_at: new Date().toISOString()
                     }).then(function(result) {
                         if (result && result.error) {
-                            console.error('写入同义替换学习记录失败:', result.error);
+                            console.error('写入学习记录失败:', result.error);
                         } else {
-                            console.log('同义替换学习记录已保存, ' + data.durationSeconds + '秒');
-                            loadProgressTable();
+                            console.log(modName + '学习记录已保存, ' + data.durationSeconds + '秒');
+                            try { loadProgressTable(); } catch(e) {}
                         }
                     }).catch(function(err) {
-                        console.error('写入同义替换学习记录异常:', err);
+                        console.error('写入学习记录异常:', err);
                     });
                 } catch(e) {
-                    console.error('写入同义替换学习记录异常:', e);
+                    console.error('写入学习记录异常:', e);
                 }
             }
         });
@@ -3287,10 +3296,11 @@
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'phraseStudyComplete') {
                 var data = event.data;
-                if (data.durationSeconds > 0 && currentStudent) {
+                if (data.durationSeconds > 0 && currentStudent && db) {
                     db.from('study_sessions').insert({
                         student_id: currentStudent.student_id,
                         module_type: data.moduleType || 'writing_phrase',
+                        module_name: '写作词伙',
                         words_tested: data.totalWords || 0,
                         initial_correct: data.totalCorrect || 0,
                         initial_wrong: (data.totalWords || 0) - (data.totalCorrect || 0),
@@ -3348,9 +3358,13 @@
                 console.log('收到听力学习记录:', data);
 
                 // 获取当前学生ID
-                const studentId = currentStudent?.student_id;
+                const studentId = currentStudent && currentStudent.student_id;
                 if (!studentId) {
                     console.error('无法获取学生ID');
+                    return;
+                }
+                if (!db) {
+                    console.error('数据库连接失败');
                     return;
                 }
 
@@ -3359,11 +3373,13 @@
                     const { error } = await db.from('study_sessions').insert({
                         student_id: studentId,
                         module_type: 'dictation',
+                        module_name: '听力1000词',
                         words_tested: data.wordsTested,
                         initial_correct: data.masteredCount,
                         initial_wrong: data.wrongCount,
                         groups_completed: data.completedGroups,
-                        duration_seconds: data.durationSeconds
+                        duration_seconds: data.durationSeconds,
+                        created_at: new Date().toISOString()
                     });
 
                     if (error) {
@@ -3371,7 +3387,7 @@
                     } else {
                         console.log('学习记录已保存');
                         // 刷新进度表
-                        loadProgressTable();
+                        try { loadProgressTable(); } catch(e) {}
                     }
                 } catch (e) {
                     console.error('写入学习记录异常:', e);
