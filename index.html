@@ -1369,8 +1369,8 @@
             const module = MODULES.find(m => m.id === moduleId);
             const moduleName = module ? module.name : '听力1000词';
             
-            // 获取所有学生的测试记录
-            const recordsResult = await db.from('test_records').select('*');
+            // 获取所有学生的测试记录（按模块过滤）
+            const recordsResult = await db.from('test_records').select('*').eq('module_type', moduleId);
             const allRecords = recordsResult.data || [];
             
             // 获取所有学生的学习时长记录（按模块过滤）
