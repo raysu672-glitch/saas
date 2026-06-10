@@ -209,10 +209,10 @@
                             <option value="writing_phrase">写作词伙</option>
                         </select>
                     </div>
-                    <div class="input-group" style="max-width:350px;">
+                    <div class="input-group" style="max-width:350px; position:relative;">
                         <label>搜索学生（支持学号/姓名模糊搜索）</label>
-                        <input type="text" id="teacherFilterStudent" placeholder="输入学号或姓名搜索，留空显示全部学生" onkeyup="handleTeacherStudentSearch(event)" oninput="showStudentSearchList()">
-                        <div id="studentSearchList" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ddd; border-radius:5px; max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+                        <input type="text" id="teacherFilterStudent" placeholder="输入学号或姓名搜索，留空显示全部学生" onkeyup="handleTeacherStudentSearch(event)" oninput="onTeacherFilterInput(event)">
+                        <div id="studentSearchList" style="position:absolute; top:auto; left:0; right:0; background:white; border:1px solid #ddd; border-radius:5px; max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
                         <div style="margin-top:8px; display:flex; gap:10px; align-items:center;">
                             <span id="teacherFilterSelected" style="font-size:12px; color:#667eea;"></span>
                             <a href="#" onclick="clearStudentFilter(event)" style="font-size:12px; color:#999; text-decoration:none; display:none;" id="teacherClearFilter">清除筛选</a>
@@ -477,10 +477,19 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // Supabase 配置
+        // Supabase 配置（带容错：CDN 失败时不中断页面基础功能）
         const SUPABASE_URL = 'https://xoyctsbcrfwhhrxkerwr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhveWN0c2JjcmZ3aGhyeGtlcndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTQ1NzIsImV4cCI6MjA5NDkzMDU3Mn0.EZKqTt-w2N4y5BqZNa-QYA9F1mi51yjl8tF6gQ2aYKQ';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let db = null;
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } else {
+                console.warn('Supabase 未加载，网络功能不可用');
+            }
+        } catch (e) {
+            console.error('Supabase 初始化失败:', e);
+        }
         
         // 全局状态
         let currentStudent = null;
@@ -924,14 +933,20 @@
             const studentId = document.getElementById('studentId').value.trim();
             const password = document.getElementById('studentPassword').value;
             if (!studentId || !password) { showToast('请输入学号和密码', 'error'); return; }
-            const result = await db.from('students').select('*').eq('student_id', studentId).eq('password', password).single();
-            if (result.error || !result.data) { showToast('学号或密码错误', 'error'); return; }
-            if (result.data.status !== 'active') { showToast('账号已被禁用', 'error'); return; }
-            currentStudent = result.data;
-            if (!result.data.is_password_changed) {
-                showChangePasswordModal();
-            } else {
-                showStudentHome();
+            if (!db) { showToast('数据库连接失败，请检查网络', 'error'); return; }
+            try {
+                const result = await db.from('students').select('*').eq('student_id', studentId).eq('password', password).single();
+                if (result.error || !result.data) { showToast('学号或密码错误', 'error'); return; }
+                if (result.data.status !== 'active') { showToast('账号已被禁用', 'error'); return; }
+                currentStudent = result.data;
+                if (!result.data.is_password_changed) {
+                    showChangePasswordModal();
+                } else {
+                    showStudentHome();
+                }
+            } catch (e) {
+                console.error('登录失败:', e);
+                showToast('登录失败：' + (e.message || '请稍后再试'), 'error');
             }
         }
         
@@ -1290,7 +1305,25 @@
         }
         
         async function loadTeacherData() {
-            await Promise.all([loadStudents(), loadRecords(), loadStandards()]);
+            try {
+                if (!db) {
+                    showToast('数据库连接失败，请检查网络', 'error');
+                    return;
+                }
+                await Promise.all([loadStudents(), loadRecords(), loadStandards()]);
+            } catch (e) {
+                console.error('加载教师数据失败:', e);
+            }
+            // 同时把学生列表加载到搜索缓存（供学习进度页面搜索）
+            try {
+                if (db) {
+                    const studentsResult = await db.from('students').select('*').order('name');
+                    _teacherStudents = studentsResult.data || [];
+                }
+            } catch (e) {
+                console.error('加载学生列表失败:', e);
+                _teacherStudents = [];
+            }
         }
         
         async function loadStudents() {
@@ -1351,17 +1384,41 @@
         let _teacherStudents = [];  // 学生搜索的全局数据
 
         async function loadTeacherProgressData() {
-            // 加载学生列表到全局变量（供模糊搜索使用）
-            const studentsResult = await db.from('students').select('*').order('name');
-            const students = studentsResult.data || [];
-            _teacherStudents = students;
-            
-            document.getElementById('teacherFilterStudent').value = '';
-            document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + students.length + ' 人)';
-            document.getElementById('teacherClearFilter').style.display = 'none';
-            
-            // 默认显示全部学生汇总
-            renderTeacherProgressSummary(students);
+            try {
+                if (!db) {
+                    document.getElementById('teacherFilterSelected').textContent = '数据库未连接';
+                    return;
+                }
+                // 加载学生列表到全局变量（供模糊搜索使用）
+                const studentsResult = await db.from('students').select('*').order('name');
+                const students = studentsResult.data || [];
+                _teacherStudents = students;
+
+                document.getElementById('teacherFilterStudent').value = '';
+                document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + students.length + ' 人)';
+                document.getElementById('teacherClearFilter').style.display = 'none';
+
+                // 默认显示全部学生汇总
+                renderTeacherProgressSummary(students);
+            } catch (e) {
+                console.error('加载进度数据失败:', e);
+                showToast('加载进度数据失败', 'error');
+            }
+        }
+
+        function onTeacherFilterInput(event) {
+            // 显示匹配下拉列表
+            showStudentSearchList();
+            // 输入时同时实时过滤进度表（模糊搜索）
+            const keyword = document.getElementById('teacherFilterStudent').value.trim();
+            if (!keyword) {
+                document.getElementById('teacherFilterSelected').textContent = '显示全部学生 (' + _teacherStudents.length + ' 人)';
+                document.getElementById('teacherClearFilter').style.display = 'none';
+            } else {
+                document.getElementById('teacherFilterSelected').textContent = '正在搜索：' + keyword;
+                document.getElementById('teacherClearFilter').style.display = 'inline-block';
+            }
+            loadTeacherStudentProgress();
         }
 
         function showStudentSearchList() {
@@ -1380,7 +1437,9 @@
             } else {
                 let html = '';
                 for (let i = 0; i < matches.length; i++) {
-                    html += '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee;" onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'white\'" onclick="selectTeacherStudent('' + matches[i].student_id + '', '' + matches[i].name + '')">';
+                    const sid = matches[i].student_id.replace(/'/g, "\\'");
+                    const sname = matches[i].name.replace(/'/g, "\\'");
+                    html += '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee;" onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'white\'" onclick="selectTeacherStudent(\'' + sid + '\', \'' + sname + '\')">';
                     html += '<strong>' + matches[i].name + '</strong> (' + matches[i].student_id + ')';
                     html += '</div>';
                 }
@@ -1744,9 +1803,15 @@
             showToast('已更新', 'success');
         }
         
-        function switchTeacherTab(tab) {
-            document.querySelectorAll('#teacherDashboard .tab').forEach(function(t) { t.classList.remove('active'); });
-            event.target.classList.add('active');
+        function switchTeacherTab(tab, evt) {
+            var tabs = document.querySelectorAll('#teacherDashboard .tab');
+            tabs.forEach(function(t, i) {
+                t.classList.remove('active');
+                var id = t.getAttribute('onclick') || '';
+                if (id.indexOf("'" + tab + "'") >= 0) {
+                    t.classList.add('active');
+                }
+            });
             document.getElementById('tabStudents').style.display = tab === 'students' ? 'block' : 'none';
             document.getElementById('tabRecords').style.display = tab === 'records' ? 'block' : 'none';
             document.getElementById('tabProgress').style.display = tab === 'progress' ? 'block' : 'none';
@@ -3337,6 +3402,16 @@
                 } catch (e) {
                     console.error('保存学习时长失败:', e);
                 }
+            }
+        });
+
+        // 点击搜索框外部区域时关闭下拉列表
+        document.addEventListener('click', function(e) {
+            const list = document.getElementById('studentSearchList');
+            const input = document.getElementById('teacherFilterStudent');
+            if (!list || !input) return;
+            if (!list.contains(e.target) && e.target !== input) {
+                list.style.display = 'none';
             }
         });
     </script>
