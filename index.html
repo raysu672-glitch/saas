@@ -3235,15 +3235,32 @@
 
         // 关闭 iframe（学习数据由 iframe 通过 postMessage 发送）
         function exitGenericIframe() {
+            var hasPendingSave = false;
             try {
                 var iframe = document.getElementById('genericIframe');
                 if (iframe && iframe.contentWindow) {
+                    // 向 iframe 请求保存
                     iframe.contentWindow.postMessage({ type: 'requestSave' }, '*');
+                    hasPendingSave = true;
                 }
             } catch(e) {}
-            window._currentModule = null;
-            showStudentHome();
-            document.getElementById('genericIframe').src = '';
+
+            if (hasPendingSave) {
+                // 等待 500ms 让 iframe 回传 postMessage，再销毁
+                setTimeout(function() {
+                    window._currentModule = null;
+                    showStudentHome();
+                    try {
+                        document.getElementById('genericIframe').src = '';
+                    } catch(e) {}
+                }, 500);
+            } else {
+                window._currentModule = null;
+                showStudentHome();
+                try {
+                    document.getElementById('genericIframe').src = '';
+                } catch(e) {}
+            }
         }
 
 
@@ -3269,7 +3286,6 @@
                     db.from('study_sessions').insert({
                         student_id: studentId,
                         module_type: modType,
-                        module_name: modName,
                         words_tested: data.totalCount || data.wordsTested || 0,
                         initial_correct: data.rightCount || data.initialCorrect || 0,
                         initial_wrong: data.wrongCount || data.initialWrong || 0,
@@ -3279,8 +3295,10 @@
                     }).then(function(result) {
                         if (result && result.error) {
                             console.error('写入学习记录失败:', result.error);
+                            try { showToast('保存学习时长失败', 'error'); } catch(e) {}
                         } else {
                             console.log(modName + '学习记录已保存, ' + data.durationSeconds + '秒');
+                            try { showToast('学习时长已保存：' + data.durationSeconds + '秒'); } catch(e) {}
                             try { loadProgressTable(); } catch(e) {}
                         }
                     }).catch(function(err) {
@@ -3300,7 +3318,6 @@
                     db.from('study_sessions').insert({
                         student_id: currentStudent.student_id,
                         module_type: data.moduleType || 'writing_phrase',
-                        module_name: '写作词伙',
                         words_tested: data.totalWords || 0,
                         initial_correct: data.totalCorrect || 0,
                         initial_wrong: (data.totalWords || 0) - (data.totalCorrect || 0),
@@ -3373,7 +3390,6 @@
                     const { error } = await db.from('study_sessions').insert({
                         student_id: studentId,
                         module_type: 'dictation',
-                        module_name: '听力1000词',
                         words_tested: data.wordsTested,
                         initial_correct: data.masteredCount,
                         initial_wrong: data.wrongCount,
@@ -3397,8 +3413,9 @@
             if (data.type === 'listeningStudyTime') {
                 console.log('收到听力学习时长:', data);
 
-                const studentId = currentStudent?.student_id;
+                const studentId = currentStudent && currentStudent.student_id;
                 if (!studentId) return;
+                if (!db) return;
 
                 try {
                     const { error } = await db.from('study_sessions').insert({
@@ -3408,12 +3425,13 @@
                         initial_correct: data.masteredCount,
                         initial_wrong: data.wrongCount,
                         groups_completed: data.completedGroups,
-                        duration_seconds: data.durationSeconds
+                        duration_seconds: data.durationSeconds,
+                        created_at: new Date().toISOString()
                     });
 
                     if (!error) {
                         console.log('学习时长已保存');
-                        loadProgressTable();
+                        try { loadProgressTable(); } catch(e) {}
                     }
                 } catch (e) {
                     console.error('保存学习时长失败:', e);
