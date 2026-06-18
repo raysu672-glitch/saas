@@ -594,6 +594,8 @@
         let timerInterval = null;
         let timeLeft = 6;
         let isPlaying = false;
+        let questionToken = 0;
+        let autoNextTimeout = null;
 
         function shuffleArray(array) {
             const shuffled = [...array];
@@ -602,6 +604,19 @@
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
             return shuffled;
+        }
+
+        function stopSpeaking() {
+            speechSynthesis.cancel();
+            isPlaying = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (autoNextTimeout) {
+                clearTimeout(autoNextTimeout);
+                autoNextTimeout = null;
+            }
         }
 
         function startTest() {
@@ -617,6 +632,9 @@
         }
 
         function showQuestion() {
+            stopSpeaking();
+            questionToken++;
+
             const word = selectedWords[currentIndex];
             document.getElementById('questionCounter').textContent = `第 ${currentIndex + 1} / 50 题`;
             document.getElementById('progressFill').style.width = `${((currentIndex + 1) / 50) * 100}%`;
@@ -626,12 +644,11 @@
             document.getElementById('timerDisplay').className = 'timer-display';
             document.getElementById('statusIcon').className = 'status-icon';
 
-            // Auto-play the word once
-            playWord();
+            playWord(questionToken);
         }
 
-        function playWord() {
-            if (isPlaying) return;
+        function playWord(token) {
+            stopSpeaking();
 
             const word = selectedWords[currentIndex];
             const utterance = new SpeechSynthesisUtterance(word);
@@ -643,15 +660,23 @@
             isPlaying = true;
 
             utterance.onend = () => {
+                if (token !== questionToken) return;
                 statusIcon.className = 'status-icon';
                 isPlaying = false;
-                startTimer();
+                startTimer(token);
+            };
+
+            utterance.onerror = () => {
+                if (token !== questionToken) return;
+                statusIcon.className = 'status-icon';
+                isPlaying = false;
+                startTimer(token);
             };
 
             speechSynthesis.speak(utterance);
         }
 
-        function startTimer() {
+        function startTimer(token) {
             timeLeft = 6;
             updateTimerDisplay();
 
@@ -661,9 +686,11 @@
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
+                    timerInterval = null;
                     document.getElementById('timerDisplay').textContent = '时间到！';
                     // 自动跳到下一题，检查答案是否正确
-                    setTimeout(() => {
+                    autoNextTimeout = setTimeout(() => {
+                        if (token !== questionToken) return;
                         const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
                         const correctAnswer = selectedWords[currentIndex].toLowerCase();
                         const isCorrect = userAnswer === correctAnswer;
@@ -693,11 +720,11 @@
         }
 
         function submitAnswer() {
+            stopSpeaking();
+
             const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
             const correctAnswer = selectedWords[currentIndex].toLowerCase();
             const isCorrect = userAnswer === correctAnswer;
-
-            clearInterval(timerInterval);
 
             const input = document.getElementById('answerInput');
             input.classList.add(isCorrect ? 'correct' : 'incorrect');
@@ -709,13 +736,13 @@
                 skipped: false
             });
 
-            setTimeout(() => {
+            autoNextTimeout = setTimeout(() => {
                 nextQuestion();
             }, 1000);
         }
 
         function skipWord() {
-            clearInterval(timerInterval);
+            stopSpeaking();
 
             results.push({
                 word: selectedWords[currentIndex],
