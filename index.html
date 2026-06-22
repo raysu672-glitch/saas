@@ -1080,21 +1080,21 @@
                 html += '<td style="padding:15px 12px; text-align:center; color:#667eea;">' + timeDisplay + '</td>';
                 html += '<td style="padding:15px 12px; text-align:center;">';
                 
-                // 三个按钮：测试、学习、历史
+                // 三个按钮：学习、测试、历史（顺序统一）
                 if (m.id === 'dictation') {
                     // 听力单词 - 测试用原系统，学习用新版分组系统
-                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openListeningIframe()">学习</button>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openListeningIframe()">学习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="startTest(\'random\')">测试</button>';
                     html += '<button class="btn btn-sm btn-success" onclick="switchStudentTab(\'history\')">历史</button>';
                 } else if (m.id === 'answer_dictation') {
                     // 答案句听写 - 打开 dictation-test.html
-                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openGenericIframe(\'' + m.id + '\', \'' + m.name + '\', \'' + m.url + '\')">测试</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" disabled>学习</button>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" disabled>学习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openGenericIframe(\'' + m.id + '\', \'' + m.name + '\', \'' + m.url + '\')">测试</button>';
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else if (m.id === 'writing_phrase') {
                     // 写作词伙 - 打开 iframe 嵌入完整功能
-                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openPhraseIframe()">练习</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openPhraseIframe()">学习</button>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" onclick="openPhraseIframe()">学习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" onclick="openPhraseIframe()">测试</button>';
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else if (m.url) {
                     // 有外部链接（同义替换、P4跟读、句子翻译）
@@ -1103,8 +1103,8 @@
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 } else {
                     // 无链接 - 长难句等
-                    html += '<button class="btn btn-sm" style="margin-right:5px;" disabled>测试</button>';
-                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" disabled>学习</button>';
+                    html += '<button class="btn btn-sm" style="margin-right:5px;" disabled>学习</button>';
+                    html += '<button class="btn btn-sm btn-secondary" style="margin-right:5px;" disabled>测试</button>';
                     html += '<button class="btn btn-sm btn-success" disabled>历史</button>';
                 }
                 html += '</td></tr>';
